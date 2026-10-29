@@ -26,6 +26,7 @@ Label: wayfinder:map
 - [Which clients exist, and how do they talk to the graph?](issues/09-client-surfaces-and-run-controller.md): CLI core, optional Streamlit, all via a Run Controller seam.
 - [How is state persisted so a Run survives the user leaving?](issues/10-persistence-and-durable-resume.md): SQLite checkpointer + Store; pure Pause nodes, run registry, re-shown Pause payloads.
 - [How are Runs traced and explained?](issues/11-tracing-and-run-log.md): LangSmith plus a run log in state feeding Run Notes and samples.
+- [Research: USAJOBS API facts](issues/14-research-usajobs-api-facts.md): 3-header auth, 500/page, salary with rate-interval codes, close date present (hard expiry works); federal-only, and its pay-table salaries must not mix unlabelled into market stats.
 
 ## Not yet specified
 
@@ -33,6 +34,7 @@ Label: wayfinder:map
 - **State ownership map**: which component reads/writes which slice of graph state. Falls out of the component breakdown.
 - **Streaming event model**: what progress events exist and how one stream feeds CLI, Streamlit and later the API.
 - **Currency and period normalisation**: where FX rates and hourly→annual conversion come from; depends on Adzuna/USAJOBS salary facts.
+- **Multi-source stats**: how USAJOBS Postings (federal pay tables) sit alongside Adzuna Postings in compensation stats: separate, labelled, or excluded.
 - **Confidence Tag and Hiring Outlook rules**: how thresholds are set and justified from evidence counts and stats.
 - **`--focus` flags**: which nodes or prompts a focus changes.
 - **Long-term memory contents**: which preferences are remembered, and when they are learned vs asked.
