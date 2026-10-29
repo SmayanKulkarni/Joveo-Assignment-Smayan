@@ -27,6 +27,7 @@ Label: wayfinder:map
 - [How is state persisted so a Run survives the user leaving?](issues/10-persistence-and-durable-resume.md): SQLite checkpointer + Store; pure Pause nodes, run registry, re-shown Pause payloads.
 - [How are Runs traced and explained?](issues/11-tracing-and-run-log.md): LangSmith plus a run log in state feeding Run Notes and samples.
 - [Research: Jev on OpenRouter](issues/12-research-jev-on-openrouter.md): `typesafe/jev-1.14` on OpenRouter returns full Noul/Choice/Score probabilities; `TypeSafeClassifier` works via `base_url`, same OpenRouter key; keep requests under ~32 KB.
+- [Research: Adzuna API facts](issues/13-research-adzuna-api-facts.md): no expiry field (soft expiry + `max_days_old`), per-country categories endpoint, local-currency salaries with unstated period, descriptions truncated to 500 chars, quota unconfirmed (check dashboard), commercial-use licence caveat.
 - [Research: USAJOBS API facts](issues/14-research-usajobs-api-facts.md): 3-header auth, 500/page, salary with rate-interval codes, close date present (hard expiry works); federal-only, and its pay-table salaries must not mix unlabelled into market stats.
 
 ## Not yet specified
@@ -34,12 +35,13 @@ Label: wayfinder:map
 - **Infra shell internals**: API surface, queue technology on MiniStack (SQS?), worker model, threading vs async, how concurrent Runs share the Gateway's daily budget, persistence migration off SQLite (Postgres vs DynamoDB), web UI. Sharpens once the component breakdown fixes the Run Controller seam.
 - **State ownership map**: which component reads/writes which slice of graph state. Falls out of the component breakdown.
 - **Streaming event model**: what progress events exist and how one stream feeds CLI, Streamlit and later the API.
-- **Currency and period normalisation**: where FX rates and hourly→annual conversion come from; depends on Adzuna/USAJOBS salary facts.
+- **Currency and period normalisation**: where FX rates and hourly→annual conversion come from. Adzuna gives local currency (derive from country) with no stated period; USAJOBS gives `RateIntervalCode`. Also how Adzuna-predicted salaries (`salary_is_predicted`) are treated.
+- **Adzuna aggregate endpoints**: whether histogram / top_companies / history feed the brief, given they carry no Posting IDs and so cannot be Evidence in the strict sense.
 - **Multi-source stats**: how USAJOBS Postings (federal pay tables) sit alongside Adzuna Postings in compensation stats: separate, labelled, or excluded.
 - **Confidence Tag and Hiring Outlook rules**: how thresholds are set and justified from evidence counts and stats.
 - **`--focus` flags**: which nodes or prompts a focus changes.
 - **Long-term memory contents**: which preferences are remembered, and when they are learned vs asked.
-- **Batching for large Samples (>500)**: batch sizing against context limits; depends on posting description lengths.
+- **Batching for large Samples (>500)**: batch sizing against context limits. Adzuna descriptions are capped at 500 chars, so batches can be large; skills evidence is snippet-based, which is a known limitation for the write-up.
 - **Sample-run strategy**: picking the three `samples/` requests within the Adzuna budget.
 
 ## Out of scope

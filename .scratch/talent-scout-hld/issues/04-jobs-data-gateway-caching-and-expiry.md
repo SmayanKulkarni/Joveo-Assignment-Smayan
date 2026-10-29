@@ -17,4 +17,5 @@ Resolved during charting. A **Jobs Data Gateway** sits outside the graph, betwee
 - **Expiry**: hard expiry when the source gives a close date that has passed (USAJOBS `ApplicationCloseDate`); soft expiry when the Posting is older than a freshness window (window length is LLD). Expired rows are filtered on read (never served) and purged by a sweep at the start of each Run. No background process in core; in the infra phase the sweep becomes a scheduled job.
 - **Budget guard**: tracks daily Adzuna calls and refuses before the limit.
 - **Replay mode**: the whole graph runs from cached responses; doubles as the test harness.
+- **Update from [Research: Adzuna API facts](13-research-adzuna-api-facts.md)**: the ~50 per page limit is unconfirmed (no documented max). The L2 rationale still holds because each extra page of a broad Domain pull costs quota. Adzuna has no expiry field, so Adzuna Postings only ever soft-expire.
 - **Prompt caching** is a prompt-construction principle, not a component: stable instructions and schema first so batch calls share a cached prefix.
