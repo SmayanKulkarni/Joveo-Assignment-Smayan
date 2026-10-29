@@ -26,6 +26,7 @@ Label: wayfinder:map
 - [Which clients exist, and how do they talk to the graph?](issues/09-client-surfaces-and-run-controller.md): CLI core, optional Streamlit, all via a Run Controller seam.
 - [How is state persisted so a Run survives the user leaving?](issues/10-persistence-and-durable-resume.md): SQLite checkpointer + Store; pure Pause nodes, run registry, re-shown Pause payloads.
 - [How are Runs traced and explained?](issues/11-tracing-and-run-log.md): LangSmith plus a run log in state feeding Run Notes and samples.
+- [Research: Jev on OpenRouter](issues/12-research-jev-on-openrouter.md): `typesafe/jev-1.14` on OpenRouter returns full Noul/Choice/Score probabilities; `TypeSafeClassifier` works via `base_url`, same OpenRouter key; keep requests under ~32 KB.
 - [Research: USAJOBS API facts](issues/14-research-usajobs-api-facts.md): 3-header auth, 500/page, salary with rate-interval codes, close date present (hard expiry works); federal-only, and its pay-table salaries must not mix unlabelled into market stats.
 
 ## Not yet specified
