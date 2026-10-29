@@ -28,6 +28,7 @@ Label: wayfinder:map
 - [How are Runs traced and explained?](issues/11-tracing-and-run-log.md): LangSmith plus a run log in state feeding Run Notes and samples.
 - [Research: Jev on OpenRouter](issues/12-research-jev-on-openrouter.md): `typesafe/jev-1.14` on OpenRouter returns full Noul/Choice/Score probabilities; `TypeSafeClassifier` works via `base_url`, same OpenRouter key; keep requests under ~32 KB.
 - [Research: Adzuna API facts](issues/13-research-adzuna-api-facts.md): no expiry field (soft expiry + `max_days_old`), per-country categories endpoint, local-currency salaries with unstated period, descriptions truncated to 500 chars, quota unconfirmed (check dashboard), commercial-use licence caveat.
+- [Research: LangGraph persistence and resume semantics](issues/15-research-langgraph-persistence-and-resume.md): SqliteStore exists; durable resume needs `durability="sync"`; one `interrupt()` per Pause node; registry in a Store namespace; Run Controller must guard concurrent resumes; ToolNode churn supports the custom executor.
 - [Research: USAJOBS API facts](issues/14-research-usajobs-api-facts.md): 3-header auth, 500/page, salary with rate-interval codes, close date present (hard expiry works); federal-only, and its pay-table salaries must not mix unlabelled into market stats.
 
 ## Not yet specified
