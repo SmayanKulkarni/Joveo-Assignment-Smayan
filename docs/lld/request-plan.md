@@ -2,7 +2,13 @@
 
 The low-level design of Request & Plan (component C in [HLD](../HLD.md) §3), precise enough to build from. Items marked ⏳ belong to the named LLD. Deliberate deferrals live in [future-scope.md](future-scope.md). Shared types, `owned()`, Tiers and Jev come from the [Kernel LLD](kernel.md). The stage contract and Pause protocol come from the [Runtime LLD](runtime.md).
 
-This LLD had no separate tickets, so the reasoning for each decision is written here.
+Source tickets (each holds the full reasoning):
+- [Request parsing and the clarify loop](../../.scratch/request-plan-lld/issues/01-request-parsing-and-clarify-loop.md)
+- [Clarity check and the re-ask cap](../../.scratch/request-plan-lld/issues/02-clarity-check-and-re-ask-cap.md)
+- [Search Plan and its limits](../../.scratch/request-plan-lld/issues/03-search-plan-and-limits.md)
+- [Pause payloads and answers](../../.scratch/request-plan-lld/issues/04-pause-payloads-and-answers.md)
+- [What focus changes](../../.scratch/request-plan-lld/issues/05-what-focus-changes.md)
+- [Prompts](../../.scratch/request-plan-lld/issues/06-prompts.md)
 
 ## 1. What Request & Plan is
 
