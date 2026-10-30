@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     adzuna_daily_limit: int = 25
     l1_ttl_hours: int = 24
     l2_fresh_days: int = 7
+    runs_db: Path = Path(".cache/runs.sqlite")
+    runs_dir: Path = Path("runs")
 
     @field_validator("llm_cheap", "llm_strong", mode="before")
     @classmethod

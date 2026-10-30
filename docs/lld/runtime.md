@@ -131,7 +131,7 @@ ANSWERS = {"clarify": ClarifyAnswer, "plan_review": PlanReviewAnswer, "low_data_
   - `ClarifyPayload`, `ClarifyAnswer`, `PlanReviewPayload`, `PlanReviewAnswer`: final, in [Request & Plan LLD](request-plan.md) §3
   - `LowDataPayload(count: int, target: int)`, `LowDataAnswer(action: broaden | continue | abort)`
 - **A concrete union, not `payload: dict`.** The serializer keeps only the outermost model's class, so an untyped payload comes back from a fresh process as a dict.
-- **Allowlist:** the three Pause classes and the three answer classes go in `JsonPlusSerializer(allowed_msgpack_modules=[...])`. Only the outermost classes need listing.
+- **Allowlist:** the three Pause classes and the three answer classes go in `JsonPlusSerializer(allowed_msgpack_modules=[...])`. Nested models don't need listing, but enums inside them (`PlanAction`, `RequestField`) do, or each load logs a "blocked" warning.
 - **Answers:** the Controller checks a client's answer with `ANSWERS[pause.kind].model_validate(...)` and resumes with `Command(resume=<answer model>)`, so a stage node receives a typed answer. Clients render by `kind`.
 - **Pause nodes stay pure** (HLD §8). Resume re-runs the whole node, which would repeat tokens and cost for any LLM call placed before `interrupt()`.
 
