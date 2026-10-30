@@ -30,21 +30,22 @@ Label: wayfinder:map
 - [Research: Adzuna API facts](issues/13-research-adzuna-api-facts.md): no expiry field (soft expiry + `max_days_old`), per-country categories endpoint, local-currency salaries with unstated period, descriptions truncated to 500 chars, quota unconfirmed (check dashboard), commercial-use licence caveat.
 - [Research: LangGraph persistence and resume semantics](issues/15-research-langgraph-persistence-and-resume.md): SqliteStore exists; durable resume needs `durability="sync"`; one `interrupt()` per Pause node; registry in a Store namespace; Run Controller must guard concurrent resumes; ToolNode churn supports the custom executor.
 - [Research: USAJOBS API facts](issues/14-research-usajobs-api-facts.md): 3-header auth, 500/page, salary with rate-interval codes, close date present (hard expiry works); federal-only, and its pay-table salaries must not mix unlabelled into market stats.
+- [Component breakdown and build order](issues/16-component-breakdown-and-build-order.md): 10 concern-cut components (Kernel, Gateway, Request & Plan, Collection, Analysis, Brief, Runtime, Clients, Long-term memory, Infra shell); slices declared in Kernel, owned per stage; built in tier passes, must-have walking skeleton first.
+- [Assemble docs/HLD.md](issues/17-assemble-hld-doc.md): written at [docs/HLD.md](../../docs/HLD.md); map destination reached.
 
 ## Not yet specified
 
-- **Infra shell internals**: API surface, queue technology on MiniStack (SQS?), worker model, threading vs async, how concurrent Runs share the Gateway's daily budget, persistence migration off SQLite (Postgres vs DynamoDB), web UI. Sharpens once the component breakdown fixes the Run Controller seam.
-- **State ownership map**: which component reads/writes which slice of graph state. Falls out of the component breakdown.
-- **Streaming event model**: what progress events exist and how one stream feeds CLI, Streamlit and later the API.
-- **Currency and period normalisation**: where FX rates and hourly→annual conversion come from. Adzuna gives local currency (derive from country) with no stated period; USAJOBS gives `RateIntervalCode`. Also how Adzuna-predicted salaries (`salary_is_predicted`) are treated.
-- **Adzuna aggregate endpoints**: whether histogram / top_companies / history feed the brief, given they carry no Posting IDs and so cannot be Evidence in the strict sense.
-- **Multi-source stats**: how USAJOBS Postings (federal pay tables) sit alongside Adzuna Postings in compensation stats: separate, labelled, or excluded.
-- **Confidence Tag and Hiring Outlook rules**: how thresholds are set and justified from evidence counts and stats.
-- **`--focus` flags**: which nodes or prompts a focus changes.
-- **Long-term memory contents**: which preferences are remembered, and when they are learned vs asked.
-- **Batching for large Samples (>500)**: batch sizing against context limits. Adzuna descriptions are capped at 500 chars, so batches can be large; skills evidence is snippet-based, which is a known limitation for the write-up.
-- **Sample-run strategy**: picking the three `samples/` requests within the Adzuna budget.
+_Empty: the component breakdown settled state ownership and handed the remaining fog to component LLDs (see Out of scope)._
 
 ## Out of scope
 
 - Supervisor multi-agent setup (assessment stretch goal): not on the user's requirement list; may be revisited as a separate effort.
+- LLD-level questions handed to their component's own LLD effort by [Component breakdown and build order](issues/16-component-breakdown-and-build-order.md), since the destination stops at the HLD:
+  - **Analysis**: currency/period normalisation (Adzuna local currency with no stated period, USAJOBS `RateIntervalCode`, `salary_is_predicted`), multi-source stats (USAJOBS pay tables vs Adzuna), batching for Samples over 500 (snippet-based skills evidence is a known write-up limitation).
+  - **Brief**: Confidence Tag and Hiring Outlook rules.
+  - **Jobs Data Gateway**: whether Adzuna histogram / top_companies / history feed the brief (no Posting IDs, so not strict Evidence).
+  - **Request & Plan + Clients**: which nodes or prompts each `--focus` flag changes.
+  - **Runtime**: streaming event model.
+  - **Long-term memory**: which preferences are remembered, learned vs asked.
+  - **Infra shell**: API surface, queue on MiniStack, worker model, threading vs async, shared daily Adzuna budget across concurrent Runs, persistence migration off SQLite, web UI.
+  - **Delivery task**: sample-run strategy for the three `samples/` requests within the Adzuna budget.

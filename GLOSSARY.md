@@ -37,6 +37,10 @@ _Avoid_: Dataset, results
 **Sufficiency**:
 Whether the Sample is large and relevant enough to analyse, decided by rule against the Search Plan's target.
 
+**Stat**:
+One figure computed by code from the Sample, such as a median salary or a top skill's count, carrying its Evidence.
+_Avoid_: Metric, number
+
 **Batch**:
 A slice of the Sample analysed independently and in parallel with other Batches.
 _Avoid_: Chunk, page
@@ -44,6 +48,10 @@ _Avoid_: Chunk, page
 **Domain**:
 The broad occupational area of a Posting (e.g. IT, engineering, marketing), taken from the jobs source's own category.
 _Avoid_: Industry, sector, vertical
+
+**Region**:
+Where a Posting is, as the jobs source's own place hierarchy from country down to town.
+_Avoid_: Area, geography
 
 ### Output
 
