@@ -407,6 +407,7 @@ def test_stale_row_is_not_served_when_the_budget_has_run_out():
     settings = gateway_settings(adzuna_daily_limit=1)
     run_fetch_keeping_db(serve(fixture_body("adzuna_search")), settings=settings)
     backdate(25)
+    db_exec("DELETE FROM l2_postings")  # L2 would otherwise answer for the stale row
     seen = []
     # With no other source the refusal surfaces as GatewayError; failures[adzuna] carries the same text.
     with pytest.raises(GatewayError, match="adzuna.*limit"):
@@ -904,3 +905,196 @@ def test_replay_row_skips_the_close_date_filter_and_the_purge(set_today, tmp_pat
     assert out.sources[Source.usajobs].cache == CacheStatus.replay
     assert len(out.postings) + sum(len(v) for v in out.merged.values()) == 25  # closed Postings included
     assert len(usajobs_rows()) == 1
+
+
+# --- L2 store ---
+
+def adzuna_batch(n, start=0, **over):
+    """n distinct Adzuna results with distinct employers, so coalesce keeps every one of them."""
+    return [
+        raw_result(id=f"{i:04d}", company={"display_name": f"Co {i}"}, **{"title": "Data Engineer", **over})
+        for i in range(start, start + n)
+    ]
+
+
+def adzuna_page(results, count=None):
+    return {"count": len(results) if count is None else count, "results": results}
+
+
+def l2_rows():
+    return db_exec("SELECT key, via, last_seen_at FROM l2_postings ORDER BY key")
+
+
+def ago(**delta):
+    return (datetime.now(UTC) - timedelta(**delta)).isoformat()
+
+
+def store_page(results, **fetch):
+    """Fills L2 through a live call on an empty gateway_db."""
+    return run_fetch(serve(adzuna_page(results)), make_fetch(**fetch))
+
+
+GB = dict(country="gb")
+
+
+def test_every_live_adzuna_page_is_written_to_l2_before_coalesce_and_the_newest_version_wins():
+    first, second = make_fetch(page=2), make_fetch(page=3)
+    # Same title, employer, text and pay, so coalesce collapses these two.
+    out = run_fetch(serve(adzuna_page([raw_result(id="1"), raw_result(id="2")])), first)
+    assert len(out.postings) == 1
+    assert [r[0] for r in l2_rows()] == ["adzuna:1", "adzuna:2"]
+
+    stamp = ago(days=2)
+    db_exec("UPDATE l2_postings SET last_seen_at = ?", stamp)
+    run_fetch_keeping_db(serve(adzuna_page([raw_result(id="1", title="Data Engineer II")])), second)
+    (_, via1, seen1), (_, via2, seen2) = l2_rows()
+    assert (via1, via2) == (second.model_dump_json(), first.model_dump_json())
+    assert seen1 > ago(days=1) and seen2 == stamp
+    assert json.loads(db_exec("SELECT posting FROM l2_postings WHERE key = 'adzuna:1'")[0][0])["title"] == "Data Engineer II"
+
+
+SENIOR, PLAIN = "Senior Data Engineer", "Data Engineer"
+
+
+@pytest.mark.parametrize(
+    "via_title, via_location, stored_title, new_title, new_location, reused",
+    [
+        ("data engineer", "london", SENIOR, "senior data engineer", "london", True),
+        ("senior data engineer", "london", SENIOR, "data engineer", "london", False),
+        ("data engineer", "camden", PLAIN, "data engineer", "london", False),
+        ("data engineer", "", PLAIN, "data engineer", "camden", True),
+    ],
+    ids=["narrower title", "broader title", "other location", "country-wide"],
+)
+def test_reuse_table(via_title, via_location, stored_title, new_title, new_location, reused):
+    place = {"display_name": "Camden, London", "area": ["GB", "London", "Camden"]}
+    via = dict(title=via_title, location=via_location, **GB)
+    run_fetch(serve(adzuna_page(adzuna_batch(50, 0, title=stored_title, location=place))), make_fetch(**via))
+    # Page 2 holds plain titles, so the first row can show that only the senior jobs are reused.
+    run_fetch_keeping_db(serve(adzuna_page(adzuna_batch(50, 50, location=place))), make_fetch(page=2, **via))
+
+    seen = []
+    out = run_fetch_keeping_db(serve(adzuna_page([]), seen=seen), make_fetch(title=new_title, location=new_location, **GB))
+    outcome = out.sources[Source.adzuna]
+    if reused:
+        assert seen == [] and outcome.cache == CacheStatus.store
+        assert (outcome.total, len(out.postings)) == ((50 if "senior" in new_title else 100), 50)
+        assert all(set(new_title.split()) <= set(p.title.lower().split()) for p in out.postings)
+    else:
+        assert len(seen) == 1 and outcome.cache == CacheStatus.miss
+
+
+@pytest.mark.parametrize(
+    "odd",
+    [
+        dict(title="Data Analyst"),
+        dict(created="2026-08-01T10:00:00Z"),  # 90 days before the pinned day, past max_days_old
+        dict(category={"tag": "sales-jobs"}),
+        dict(location={"display_name": "Soho", "area": ["GB", "London", "Soho"]}),
+    ],
+    ids=["title words", "age", "domain", "region"],
+)
+def test_l2_leaves_out_postings_that_adzuna_would_not_have_returned(odd):
+    base = dict(location={"display_name": "Camden", "area": ["GB", "London", "Camden"]}, category={"tag": "it-jobs"})
+    results = adzuna_batch(50, 0, **base) + adzuna_batch(1, 900, **{**base, **odd})
+    run_fetch(serve(adzuna_page(results)), make_fetch(max_days_old=90, **GB))  # a country-wide, uncategorised Fetch
+
+    out = run_fetch_keeping_db(serve({}, status=500), make_fetch(location="camden", category="it-jobs", **GB))
+    assert out.sources[Source.adzuna].cache == CacheStatus.store and out.failures == {}
+    assert out.sources[Source.adzuna].total == 50 and "adzuna:0900" not in {p.key for p in out.postings}
+
+
+def test_page_n_is_served_only_when_its_slice_is_full():
+    store_page(adzuna_batch(50), **GB)
+    run_fetch_keeping_db(serve(adzuna_page(adzuna_batch(25, 50))), make_fetch(page=2, **GB))
+    seen = []
+    first, second = run_all(
+        serve(adzuna_page([]), seen=seen), make_fetch(max_days_old=45, **GB), make_fetch(max_days_old=45, page=2, **GB)
+    )
+    a, b = first.sources[Source.adzuna], second.sources[Source.adzuna]
+    assert (a.cache, a.total, len(first.postings)) == (CacheStatus.store, 75, 50)
+    assert b.cache == CacheStatus.miss and len(seen) == 1  # 25 rows are a short page 2
+
+
+def test_reading_l2_before_the_call_spends_no_budget():
+    s = gateway_settings(adzuna_daily_limit=1)
+    run_fetch(serve(adzuna_page(adzuna_batch(50))), make_fetch(**GB), settings=s)  # the day's only call
+    seen = []
+    out = run_fetch_keeping_db(serve({}, status=500, seen=seen), make_fetch(max_days_old=45, **GB), settings=s)
+    assert seen == [] and out.sources[Source.adzuna].cache == CacheStatus.store
+    assert out.sources[Source.adzuna].calls_left == 0 and calls_left(s) == 0
+
+
+def test_serving_from_l2_leaves_last_seen_alone_and_reports_the_oldest():
+    store_page(adzuna_batch(50), **GB)
+    oldest, newer = ago(days=3), ago(days=2)
+    db_exec("UPDATE l2_postings SET last_seen_at = ?", newer)
+    db_exec("UPDATE l2_postings SET last_seen_at = ? WHERE key = 'adzuna:0001'", oldest)
+
+    out = run_fetch_keeping_db(serve({}, status=500), make_fetch(max_days_old=45, **GB))
+    o = out.sources[Source.adzuna]
+    assert (o.cache, o.total, o.dropped, o.calls_left) == (CacheStatus.store, 50, 0, 24)
+    assert o.fetched_at == datetime.fromisoformat(oldest)
+    assert {r[2] for r in l2_rows()} == {oldest, newer}
+
+
+@pytest.mark.parametrize("status", [500, 429])
+def test_failed_live_call_falls_back_to_l2s_partial_page_and_still_reports_the_failure(status):
+    store_page(adzuna_batch(10))
+    out = run_fetch_keeping_db(serve({}, status=status), make_fetch(max_days_old=45), usajobs=serve(usajobs_page([])))
+    o = out.sources[Source.adzuna]
+    assert (o.cache, o.total, o.dropped, len(out.postings)) == (CacheStatus.store, 10, 0, 10)
+    assert set(out.failures) == {Source.adzuna} and set(out.sources) == {Source.adzuna, Source.usajobs}
+
+
+def test_failed_live_call_with_no_l2_matches_only_reports_the_failure():
+    store_page(adzuna_batch(10))
+    out = run_fetch_keeping_db(serve({}, status=500), make_fetch(title="nurse"), usajobs=serve(usajobs_page([])))
+    assert set(out.sources) == {Source.usajobs} and set(out.failures) == {Source.adzuna}
+
+
+def test_a_rejected_call_is_not_covered_for_by_l2():
+    store_page(adzuna_batch(10))
+    with pytest.raises(SourceRejected):
+        run_fetch_keeping_db(serve({}, status=401), make_fetch(max_days_old=45))
+
+
+def test_l2_answer_is_not_written_to_l1_and_is_recorded_in_the_replay_file(tmp_path):
+    s = replay_settings(tmp_path)
+    run_fetch(serve(adzuna_page(adzuna_batch(50))), make_fetch(**GB), settings=s)
+    f = make_fetch(max_days_old=45, **GB)
+    out = run_fetch_keeping_db(serve({}, status=500), f, settings=s)
+    assert out.sources[Source.adzuna].cache == CacheStatus.store
+    assert db_exec("SELECT COUNT(*) FROM l1 WHERE fetch = ?", f.model_dump_json()) == [(0,)]
+    assert replay_exec(tmp_path, "SELECT total FROM jobs WHERE fetch = ?", f.model_dump_json()) == [(50,)]
+
+
+def test_replay_hit_returns_before_l2(tmp_path):
+    s = replay_settings(tmp_path)
+    f = make_fetch(**GB)
+    run_fetch(serve(adzuna_page(adzuna_batch(50), count=3200)), f, settings=s)
+    db_exec("DELETE FROM l1")  # leaves L2 as the only other thing that could answer
+    o = run_fetch_keeping_db(serve({}, status=500), f, settings=s).sources[Source.adzuna]
+    assert (o.cache, o.total) == (CacheStatus.replay, 3200)
+
+
+def test_usajobs_postings_are_never_stored_in_l2():
+    out = run_fetch(serve(adzuna_page(adzuna_batch(3))), usajobs=serve(fixture_body("usajobs_search")))
+    assert {p.source for p in out.postings} == {Source.adzuna, Source.usajobs}
+    assert {key.split(":")[0] for key, *_ in l2_rows()} == {"adzuna"}
+
+
+def test_l2_row_that_no_longer_validates_is_skipped():
+    store_page(adzuna_batch(50))
+    db_exec("UPDATE l2_postings SET posting = ? WHERE key = 'adzuna:0007'", '{"title": "old shape"}')
+    out = run_fetch_keeping_db(serve({}, status=500), make_fetch(max_days_old=45), usajobs=serve(usajobs_page([])))
+    assert out.sources[Source.adzuna].total == 49 and Source.adzuna in out.failures  # a short page, so the call was tried
+
+
+def test_l2_rows_past_the_fresh_window_are_hidden_on_read_and_deleted_after_the_next_live_write():
+    store_page(adzuna_batch(50), **GB)
+    db_exec("UPDATE l2_postings SET last_seen_at = ?", ago(days=8))
+    seen = []
+    out = run_fetch_keeping_db(serve(adzuna_page(adzuna_batch(3, 900)), seen=seen), make_fetch(max_days_old=45, **GB))
+    assert len(seen) == 1 and out.sources[Source.adzuna].cache == CacheStatus.miss  # 50 stale rows would have filled the page
+    assert [key for key, *_ in l2_rows()] == ["adzuna:0900", "adzuna:0901", "adzuna:0902"]

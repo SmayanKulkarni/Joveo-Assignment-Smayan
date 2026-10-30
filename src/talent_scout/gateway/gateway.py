@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import httpx
 import langsmith as ls
 
-from talent_scout.gateway.adzuna import AdzunaClient
+from talent_scout.gateway.adzuna import PAGE_SIZE, AdzunaClient
 from talent_scout.gateway.coalesce import coalesce
 from talent_scout.gateway.http import TIMEOUT
 from talent_scout.gateway.store import POSTINGS, Store, without_closed
@@ -60,37 +60,52 @@ class JobsGateway:
         except (ValueError, TypeError):  # a row that no longer validates is a miss, and the live answer overwrites it
             return None
 
-    async def _serve(self, source: Source, f: Fetch) -> tuple[Page, datetime, CacheStatus]:
+    async def _serve(self, source: Source, f: Fetch) -> tuple[Page, datetime, CacheStatus, str | None]:
+        """Returns the answer and, when it is L2's fallback for a failed live call, that call's failure."""
         key = f.model_dump_json()
         async with self._locks.setdefault((source, key), asyncio.Lock()):
             if replayed := self._replayed(source, key):
-                return *replayed, CacheStatus.replay
-            cached = self._store.get_l1(source, key)
-            if cached:
-                (page, fetched_at), cache = cached, CacheStatus.hit
+                return *replayed, CacheStatus.replay, None
+            if cached := self._store.get_l1(source, key):
+                (page, fetched_at), cache, failure = cached, CacheStatus.hit, None
             else:
-                page = await self._clients[source].search(f)
-                fetched_at, cache = datetime.now(UTC), CacheStatus.miss
-                # Stored unfiltered, so the row's expiry still sees every close date.
-                self._store.put_l1(source, key, page, fetched_at)
+                page, fetched_at, cache, failure = await self._beyond_l1(source, f, key)
             page = without_closed(page)
             if self._replay:
                 self._replay.put_jobs(
                     source, key, POSTINGS.dump_json(page.postings).decode(), page.total, page.dropped, fetched_at.isoformat()
                 )
-            return page, fetched_at, cache
+            return page, fetched_at, cache, failure
 
-    async def _resolve(self, source: Source, f: Fetch) -> tuple[list[Posting], SourceOutcome]:
+    async def _beyond_l1(self, source: Source, f: Fetch, key: str) -> tuple[Page, datetime, CacheStatus, str | None]:
+        # L2 holds Adzuna only: USAJOBS calls are free, and its Postings match poorly.
+        stored = self._store.get_l2(f, PAGE_SIZE) if source == Source.adzuna else None
+        if stored and len(stored[0].postings) == PAGE_SIZE:  # a short page would skew the Sample, so only a full one skips the call
+            return *stored, CacheStatus.store, None
+        try:
+            page = await self._clients[source].search(f)
+        except GatewayError as e:  # SourceRejected and bugs are not GatewayErrors, so they still stop the Run
+            if stored is None:
+                raise
+            return *stored, CacheStatus.store, str(e)
+        fetched_at = datetime.now(UTC)
+        # Stored unfiltered, so the row's expiry still sees every close date.
+        self._store.put_l1(source, key, page, fetched_at)
+        if source == Source.adzuna:
+            self._store.put_l2(f, page.postings, fetched_at)
+        return page, fetched_at, CacheStatus.miss, None
+
+    async def _resolve(self, source: Source, f: Fetch) -> tuple[list[Posting], SourceOutcome, str | None]:
         # No inputs and only counts as outputs: Postings, URLs and keys never reach LangSmith.
         with ls.trace(f"gateway:{source}", "tool", metadata={"source": source, "page": f.page}) as run:
-            page, fetched_at, cache = await self._serve(source, f)
+            page, fetched_at, cache, failure = await self._serve(source, f)
             outcome = SourceOutcome(
                 total=page.total, dropped=page.dropped, cache=cache, fetched_at=fetched_at,
                 calls_left=self._store.calls_left(source),
             )
             run.add_metadata({"cache": cache, "calls_left": outcome.calls_left})
             run.add_outputs({"count": len(page.postings), "dropped": page.dropped, "total": page.total})
-        return page.postings, outcome
+        return page.postings, outcome, failure
 
     async def fetch(self, f: Fetch) -> FetchResult:
         if not self._clients:
@@ -106,8 +121,10 @@ class JobsGateway:
             elif isinstance(answer, BaseException):
                 raise answer  # SourceRejected and bugs stop the Run, even if another source answered
             else:
-                source_postings, sources[source] = answer
+                source_postings, sources[source], failure = answer
                 postings += source_postings
+                if failure:  # L2 answered for a source whose live call failed, and Collection still needs to know
+                    failures[source] = failure
         if not sources:
             raise GatewayError("; ".join(f"{s}: {m}" for s, m in failures.items()))
 

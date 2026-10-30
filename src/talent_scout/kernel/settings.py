@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     gateway_db: Path = Path(".cache/gateway.sqlite")
     adzuna_daily_limit: int = 25
     l1_ttl_hours: int = 24
+    l2_fresh_days: int = 7
 
     @field_validator("llm_cheap", "llm_strong", mode="before")
     @classmethod
