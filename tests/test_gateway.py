@@ -7,7 +7,9 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import httpx
+import langsmith as ls
 import pytest
+from unittest.mock import MagicMock
 
 from talent_scout.gateway import http
 from talent_scout.gateway.adzuna import AdzunaClient
@@ -53,7 +55,7 @@ def run_all(handler, *fetches, settings=None):
     return asyncio.run(go())
 
 
-def rerun(handler, f=None, settings=None):
+def run_fetch_keeping_db(handler, f=None, settings=None):
     """One fetch against whatever gateway_db already holds, like a restarted process."""
     return run_all(handler, f or make_fetch(), settings=settings)[0]
 
@@ -61,7 +63,7 @@ def rerun(handler, f=None, settings=None):
 def run_fetch(handler, f=None, settings=None):
     # Starts from an empty gateway_db, so serving a different body for the same Fetch never meets an old L1 row.
     (settings or gateway_settings()).gateway_db.unlink(missing_ok=True)
-    return rerun(handler, f, settings)
+    return run_fetch_keeping_db(handler, f, settings)
 
 
 def run_search(handler, f=None):
@@ -351,9 +353,9 @@ def test_a_different_fetch_is_a_different_row():
 
 def test_fresh_row_is_still_served_after_the_budget_has_run_out():
     settings = gateway_settings(adzuna_daily_limit=1)
-    rerun(serve(fixture_body("adzuna_search")), settings=settings)
+    run_fetch_keeping_db(serve(fixture_body("adzuna_search")), settings=settings)
     seen = []
-    out = rerun(serve({}, seen=seen), settings=settings)
+    out = run_fetch_keeping_db(serve({}, seen=seen), settings=settings)
     assert seen == [] and out.sources[Source.adzuna].cache == CacheStatus.hit
     assert out.sources[Source.adzuna].calls_left == 0
 
@@ -363,39 +365,60 @@ def backdate(hours):
 
 
 def test_row_past_the_ttl_misses_and_is_overwritten():
-    rerun(serve({"count": 0, "results": []}))
+    run_fetch_keeping_db(serve({"count": 0, "results": []}))
     backdate(25)
     seen = []
-    out = rerun(serve(fixture_body("adzuna_search"), seen=seen))
+    out = run_fetch_keeping_db(serve(fixture_body("adzuna_search"), seen=seen))
     assert len(seen) == 1 and out.sources[Source.adzuna].cache == CacheStatus.miss
     # Overwritten, so the next identical Fetch is served from the refreshed row.
-    assert rerun(serve({}, seen=seen)).sources[Source.adzuna].cache == CacheStatus.hit
+    assert run_fetch_keeping_db(serve({}, seen=seen)).sources[Source.adzuna].cache == CacheStatus.hit
     assert len(seen) == 1
 
 
 def test_row_just_inside_the_ttl_is_still_a_hit():
-    rerun(serve(fixture_body("adzuna_search")))
+    run_fetch_keeping_db(serve(fixture_body("adzuna_search")))
     backdate(23)
-    assert rerun(serve({})).sources[Source.adzuna].cache == CacheStatus.hit
+    assert run_fetch_keeping_db(serve({})).sources[Source.adzuna].cache == CacheStatus.hit
 
 
 def test_stale_row_is_not_served_when_the_budget_has_run_out():
     settings = gateway_settings(adzuna_daily_limit=1)
-    rerun(serve(fixture_body("adzuna_search")), settings=settings)
+    run_fetch_keeping_db(serve(fixture_body("adzuna_search")), settings=settings)
     backdate(25)
     seen = []
     # With no other source the refusal surfaces as GatewayError; failures[adzuna] carries the same text.
     with pytest.raises(GatewayError, match="adzuna.*limit"):
-        rerun(serve({}, seen=seen), settings=settings)
+        run_fetch_keeping_db(serve({}, seen=seen), settings=settings)
     assert seen == []
 
 
 def test_row_that_no_longer_validates_is_a_miss():
-    rerun(serve(fixture_body("adzuna_search")))
+    run_fetch_keeping_db(serve(fixture_body("adzuna_search")))
     db_exec("UPDATE l1 SET postings = ?", '[{"title": "old shape"}]')
     seen = []
-    out = rerun(serve(fixture_body("adzuna_search"), seen=seen))
+    out = run_fetch_keeping_db(serve(fixture_body("adzuna_search"), seen=seen))
     assert len(seen) == 1 and out.sources[Source.adzuna].cache == CacheStatus.miss
+
+
+@pytest.mark.parametrize("fetched_at", ["not a date", (datetime.now(UTC) + timedelta(days=1)).isoformat()])
+def test_corrupt_or_future_fetched_at_is_a_miss(fetched_at):
+    run_fetch(serve(fixture_body("adzuna_search")))
+    db_exec("UPDATE l1 SET fetched_at = ?", fetched_at)
+    seen = []
+    out = run_fetch_keeping_db(serve(fixture_body("adzuna_search"), seen=seen))
+    assert len(seen) == 1 and out.sources[Source.adzuna].cache == CacheStatus.miss
+
+
+def test_concurrent_identical_fetches_share_one_call():
+    seen = []
+
+    async def go():
+        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(serve(fixture_body("adzuna_search"), seen=seen))) as gw:
+            return await asyncio.gather(gw.fetch(make_fetch()), gw.fetch(make_fetch()))
+
+    a, b = asyncio.run(go())
+    assert len(seen) == 1
+    assert {a.sources[Source.adzuna].cache, b.sources[Source.adzuna].cache} == {CacheStatus.miss, CacheStatus.hit}
 
 
 def test_empty_result_list_is_cached_but_failures_and_bad_bodies_are_not():
@@ -407,7 +430,7 @@ def test_empty_result_list_is_cached_but_failures_and_bad_bodies_are_not():
     db_exec("DELETE FROM l1")
     for handler in (serve({}, status=500), serve({"count": 3}), serve({}, status=429)):
         with pytest.raises(GatewayError):
-            rerun(handler)
+            run_fetch_keeping_db(handler)
     assert db_exec("SELECT COUNT(*) FROM l1") == [(0,)]
 
 
@@ -445,7 +468,7 @@ def test_guard_refuses_at_the_limit_and_the_count_survives_reopening():
 
 def test_a_new_utc_day_starts_with_a_full_budget():
     settings = gateway_settings(adzuna_daily_limit=1)
-    rerun(serve(fixture_body("adzuna_search")), settings=settings)
+    run_fetch_keeping_db(serve(fixture_body("adzuna_search")), settings=settings)
     db_exec("UPDATE budget SET utc_day = ?", "2000-01-01")
     assert calls_left(settings) == 1
 
@@ -458,18 +481,18 @@ def test_retries_spend_one_budget_call_per_attempt():
         return httpx.Response(503, json={})
 
     with pytest.raises(GatewayError):
-        rerun(handler)
+        run_fetch_keeping_db(handler)
     assert len(calls) == 3 and calls_left() == 22
 
 
 def test_adzuna_429_locks_the_utc_day_across_a_reopen():
     seen = []
     with pytest.raises(GatewayError, match="adzuna.*limit"):
-        rerun(serve({}, status=429, seen=seen))
+        run_fetch_keeping_db(serve({}, status=429, seen=seen))
     assert len(seen) == 1 and calls_left() == 0
 
     with pytest.raises(GatewayError, match="adzuna.*limit"):
-        rerun(serve(fixture_body("adzuna_search"), seen=seen))  # a reopened gateway makes no call
+        run_fetch_keeping_db(serve(fixture_body("adzuna_search"), seen=seen))  # a reopened gateway makes no call
     assert len(seen) == 1
 
 
@@ -485,3 +508,93 @@ def test_fake_gateway_returns_canned_results_in_order():
             return await gw.fetch(make_fetch()), await gw.fetch(make_fetch(page=2))
 
     assert asyncio.run(go()) == (first, second)
+
+
+# --- replay ---
+
+def replay_settings(tmp_path):
+    return gateway_settings(replay_cache=tmp_path / "replay.sqlite")
+
+
+def replay_exec(tmp_path, sql, *args):
+    """Raw SQL on the replay file through a second connection."""
+    db = sqlite3.connect(tmp_path / "replay.sqlite")
+    try:
+        rows = db.execute(sql, args).fetchall()
+        db.commit()
+        return rows
+    finally:
+        db.close()
+
+
+def test_recorded_answer_replays_past_its_ttl_with_no_http_call(tmp_path):
+    s = replay_settings(tmp_path)
+    recorded = run_fetch(serve(fixture_body("adzuna_search")), settings=s)
+    replay_exec(tmp_path, "UPDATE jobs SET fetched_at = '2020-01-01T00:00:00+00:00'")
+    seen = []
+    out = run_fetch(serve({}, status=500, seen=seen), settings=s)  # a fresh gateway_db, so only the replay file can answer
+    outcome = out.sources[Source.adzuna]
+    assert seen == []
+    assert outcome.cache == CacheStatus.replay and outcome.fetched_at == datetime(2020, 1, 1, tzinfo=UTC)
+    assert out.postings == recorded.postings and outcome.total == 3200
+
+
+def test_replay_miss_goes_live_and_is_written_as_served(tmp_path):
+    s = replay_settings(tmp_path)
+    assert run_fetch(serve(fixture_body("adzuna_search")), settings=s).sources[Source.adzuna].cache == CacheStatus.miss
+    assert replay_exec(tmp_path, "SELECT source, total, dropped FROM jobs") == [("adzuna", 3200, 0)]
+
+
+def test_budget_counters_stay_in_gateway_db_whatever_the_replay_path(tmp_path):
+    s = replay_settings(tmp_path)
+    live = run_fetch(serve(fixture_body("adzuna_search")), settings=s)
+    assert live.sources[Source.adzuna].calls_left == s.adzuna_daily_limit - 1
+    # A replayed answer spends nothing and reports the counter from gateway_db, not from the recording.
+    replayed = run_fetch_keeping_db(serve({}, status=500), settings=s)
+    assert replayed.sources[Source.adzuna].cache == CacheStatus.replay
+    assert replayed.sources[Source.adzuna].calls_left == s.adzuna_daily_limit - 1
+    assert calls_left(s) == s.adzuna_daily_limit - 1
+    assert replay_exec(tmp_path, "SELECT name FROM sqlite_master WHERE name LIKE '%budget%'") == []
+
+
+def test_unset_replay_cache_creates_no_replay_file(tmp_path):
+    run_fetch(serve(fixture_body("adzuna_search")))
+    assert [p.name for p in tmp_path.iterdir()] == [".cache"]
+
+
+# --- tracing ---
+
+def traced_fetch(handler, *fetches):
+    """Fetches inside a parent run against a fake LangSmith client, returning the results and every call the client got."""
+    client = MagicMock()
+
+    async def go():
+        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(handler)) as gw:
+            with ls.trace("run", "chain"):
+                return [await gw.fetch(f) for f in fetches]
+
+    with ls.tracing_context(enabled=True, client=client):
+        out = asyncio.run(go())
+    return out, client.method_calls
+
+
+def gateway_updates(calls):
+    return [c.kwargs for c in calls if c.kwargs.get("name") == "gateway:adzuna" and c[0] == "update_run"]
+
+
+def test_each_source_call_is_a_child_run_with_summary_metadata():
+    (first, _), calls = traced_fetch(serve(fixture_body("adzuna_search")), make_fetch(page=2), make_fetch(page=2))
+    creates = [c.kwargs for c in calls if c.kwargs.get("name") == "gateway:adzuna" and c[0] == "create_run"]
+    miss, hit = gateway_updates(calls)
+    assert len(creates) == 2 and all(c["parent_run_id"] for c in creates)
+    meta = {k: v for k, v in miss["extra"]["metadata"].items() if k != "ls_method"}
+    assert meta == {"source": "adzuna", "page": 2, "cache": "miss", "calls_left": 24}
+    assert hit["extra"]["metadata"]["cache"] == "hit"
+    assert miss["outputs"] == {"count": 50, "dropped": 0, "total": 3200}
+
+
+def test_trace_never_carries_postings_a_url_or_a_key():
+    (out, _), calls = traced_fetch(serve(fixture_body("adzuna_search")), make_fetch(), make_fetch())
+    sent = repr(calls)
+    assert out.postings and "adzuna.com" not in sent and APP_KEY not in sent and APP_ID not in sent
+    assert all(p.title not in sent for p in out.postings)

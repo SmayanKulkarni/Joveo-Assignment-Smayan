@@ -38,7 +38,7 @@ class _LLMCache(BaseCache):
 
 
 class Replay:
-    """One SQLite file holding recorded LLM and Jev responses."""
+    """One SQLite file holding recorded LLM, Jev and jobs-data responses."""
 
     def __init__(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -46,6 +46,8 @@ class Replay:
         self._db.executescript(
             "CREATE TABLE IF NOT EXISTS llm (prompt TEXT, llm TEXT, response TEXT, PRIMARY KEY (prompt, llm));"
             "CREATE TABLE IF NOT EXISTS jev (chain TEXT, request_sha TEXT, response TEXT, PRIMARY KEY (chain, request_sha));"
+            "CREATE TABLE IF NOT EXISTS jobs (source TEXT, fetch TEXT, postings TEXT, total INT, dropped INT,"
+            " fetched_at TEXT, PRIMARY KEY (source, fetch));"
         )
         self.llm = _LLMCache(self._db)
 
@@ -55,6 +57,16 @@ class Replay:
 
     def put_jev(self, chain: str, request_json: str, response_json: str) -> None:
         self._db.execute("INSERT OR REPLACE INTO jev VALUES (?, ?, ?)", (chain, _sha(request_json), response_json))
+        self._db.commit()
+
+    # Plain strings and ints, because the Kernel can't import the Gateway's Page; the Gateway validates the Postings.
+    def get_jobs(self, source: str, fetch_json: str) -> tuple[str, int, int, str] | None:
+        return self._db.execute(
+            "SELECT postings, total, dropped, fetched_at FROM jobs WHERE source=? AND fetch=?", (source, fetch_json)
+        ).fetchone()
+
+    def put_jobs(self, source: str, fetch_json: str, postings: str, total: int, dropped: int, fetched_at: str) -> None:
+        self._db.execute("INSERT OR REPLACE INTO jobs VALUES (?, ?, ?, ?, ?, ?)", (source, fetch_json, postings, total, dropped, fetched_at))
         self._db.commit()
 
 

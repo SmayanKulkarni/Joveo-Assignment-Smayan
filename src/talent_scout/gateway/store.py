@@ -2,13 +2,13 @@ import sqlite3
 import sys
 from datetime import UTC, datetime, timedelta
 
-from pydantic import TypeAdapter, ValidationError
+from pydantic import TypeAdapter
 
 from talent_scout.gateway.types import BudgetExhausted, Page
 from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.types import Posting, Source
 
-_POSTINGS = TypeAdapter(list[Posting])
+POSTINGS = TypeAdapter(list[Posting])
 
 
 def _today() -> str:
@@ -41,12 +41,13 @@ class Store:
         if row is None:
             return None
         postings, total, dropped, fetched_at = row
-        fetched_at = datetime.fromisoformat(fetched_at)
-        if datetime.now(UTC) - fetched_at >= self._ttl:
-            return None
         try:
-            return Page(_POSTINGS.validate_json(postings), total, dropped), fetched_at
-        except ValidationError:  # a Posting change left an old shape behind; the live call overwrites it
+            fetched_at = datetime.fromisoformat(fetched_at)
+            # A fetched_at in the future (clock moved back) counts as stale too, or it would never expire.
+            if not timedelta(0) <= datetime.now(UTC) - fetched_at < self._ttl:
+                return None
+            return Page(POSTINGS.validate_json(postings), total, dropped), fetched_at
+        except (ValueError, TypeError):  # a corrupt row or an old Posting shape (pydantic's error is a ValueError); the live call overwrites it
             return None
 
     def put_l1(self, source: Source, fetch_json: str, page: Page, fetched_at: datetime) -> None:
@@ -55,7 +56,7 @@ class Store:
         expires_at = max(closes).isoformat() if closes and None not in closes else None
         self._db.execute(
             "INSERT OR REPLACE INTO l1 VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (source, fetch_json, _POSTINGS.dump_json(page.postings).decode(), page.total, page.dropped,
+            (source, fetch_json, POSTINGS.dump_json(page.postings).decode(), page.total, page.dropped,
              fetched_at.isoformat(), expires_at),
         )
 
@@ -73,9 +74,11 @@ class Store:
 
     def lock_day(self, source: Source) -> None:
         """Marks today's budget as spent, after the API itself said the quota is gone."""
+        if source not in self._limits:  # unmetered, so there is nothing to lock
+            return
         self._db.execute(
             "INSERT INTO budget VALUES (?, ?, ?) ON CONFLICT (source, utc_day) DO UPDATE SET used = MAX(used, excluded.used)",
-            (source, _today(), self._limits.get(source, sys.maxsize)),
+            (source, _today(), self._limits[source]),
         )
 
     def calls_left(self, source: Source) -> int | None:
