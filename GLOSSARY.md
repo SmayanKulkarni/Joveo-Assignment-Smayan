@@ -75,8 +75,12 @@ Exactly one of Favourable, Competitive or Hard to fill, with a one-line reason.
 _Avoid_: Difficulty, rating
 
 **Run Notes**:
-The record of Clarifying Questions and answers, the final Search Plan, Postings analysed and Assumptions made.
+The record of Clarifying Questions and answers, the final Search Plan, Postings analysed, Assumptions made and Caveats raised.
 _Avoid_: Log, metadata
+
+**Caveat**:
+A limitation found during a Run that affects how far the user can trust the Market Brief, such as Postings lost, too little or old data, or a judgement made without Jev's probabilities. Always shown in the Run Notes; backend errors are never Caveats.
+_Avoid_: Warning, error, disclaimer
 
 ### Process
 
