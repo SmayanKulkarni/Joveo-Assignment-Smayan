@@ -98,6 +98,11 @@ def build_graph(checkpointer):
 
 
 def test_send_fan_out_merges_and_round_trips_through_sqlite_checkpoint(tmp_path, caplog):
+    from langgraph.checkpoint.serde import _msgpack
+    from langgraph.checkpoint.serde import jsonplus
+
+    assert _msgpack.STRICT_MSGPACK_ENABLED
+    jsonplus._warned_unregistered_types.clear()  # the warning is deduped per process
     caplog.set_level(logging.WARNING)
     conn = sqlite3.connect(tmp_path / "cp.sqlite", check_same_thread=False)
     graph = build_graph(SqliteSaver(conn))
@@ -110,3 +115,17 @@ def test_send_fan_out_merges_and_round_trips_through_sqlite_checkpoint(tmp_path,
     assert sorted(restored.extractions) == ["adzuna:0", "adzuna:1", "adzuna:2"]
     assert restored.run_log[0].message == "begin"
     assert "unregistered" not in caplog.text
+
+
+def test_guard_rejects_returned_model_and_command_update():
+    from langgraph.types import Command
+
+    with pytest.raises(StateWriteError):
+        run(lambda s: s, State(request_text="r"))
+    with pytest.raises(StateWriteError):
+        run(lambda s: Command(update={"stats": None}), State(request_text="r"))
+
+
+def test_owned_rejects_unknown_owner():
+    with pytest.raises(ValueError):
+        owned("n", "colection")

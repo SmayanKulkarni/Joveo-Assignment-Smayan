@@ -4,7 +4,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-# Plain strings (not strict-mode LLM schema) so the stripped value is what gets stored.
+# Constraints live in the type so every model using them rejects the same bad values.
 NonBlank = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 CurrencyCode = Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
 
@@ -86,7 +86,7 @@ class HiringRequest(Model):
     seniority: str | None = Field(description="Seniority level, e.g. junior or senior; null if not stated.")
     employment_type: str | None = Field(description="e.g. full-time, contract; null if not stated.")
     work_mode: WorkMode | None = Field(description="onsite, hybrid or remote; null if not stated.")
-    currency: str | None = Field(description="ISO 4217 currency the user wants pay shown in; null if not stated.")
+    currency: CurrencyCode | None = Field(description="ISO 4217 currency the user wants pay shown in; null if not stated.")
     purpose: str | None = Field(description="Why the user wants this market view; null if not stated.")
 
 
@@ -129,6 +129,7 @@ class Evidence(Model):
     def _sort_dedupe(cls, keys: list[str]) -> list[str]:
         return sorted(set(keys))
 
+    # A property for the same reason as Posting.key: it stays out of model_dump.
     @property
     def count(self) -> int:
         return len(self.posting_keys)

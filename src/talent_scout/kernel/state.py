@@ -4,8 +4,8 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 from langchain_core.messages import AnyMessage
-from langgraph.types import Send
-from pydantic import Field, JsonValue, TypeAdapter, ValidationError
+from langgraph.types import Command, Send
+from pydantic import BaseModel, Field, JsonValue, TypeAdapter, ValidationError
 
 from talent_scout.analysis.types import Extraction
 from talent_scout.brief.types import MarketBrief
@@ -36,37 +36,46 @@ class RunLogEntry(Model):
     data: dict[str, JsonValue]
 
 
+class Owner(StrEnum):
+    input = "input"
+    request_plan = "request_plan"
+    collection = "collection"
+    analysis = "analysis"
+    brief = "brief"
+    kernel = "kernel"
+
+
 def merge(a: dict, b: dict) -> dict:
     # Parallel Send branches write this key in the same super-step, so they need a combiner.
     return {**a, **b}
 
 
-def _owned_by(owner: str, **kwargs: Any) -> Any:
+def _owned_by(owner: Owner, **kwargs: Any) -> Any:
     return Field(json_schema_extra={"owner": owner}, **kwargs)
 
 
 class State(Model):
     # input: written once by the Run Controller, never by a node
-    request_text: str = _owned_by("input")
-    focus: list[Dimension] = _owned_by("input", default_factory=list)
+    request_text: str = _owned_by(Owner.input)
+    focus: list[Dimension] = _owned_by(Owner.input, default_factory=list)
 
-    hiring_request: HiringRequest | None = _owned_by("request_plan", default=None)
-    questions: list[ClarifyingQuestion] = _owned_by("request_plan", default_factory=list)
-    assumptions: list[Assumption] = _owned_by("request_plan", default_factory=list)
-    search_plan: SearchPlan | None = _owned_by("request_plan", default=None)
+    hiring_request: HiringRequest | None = _owned_by(Owner.request_plan, default=None)
+    questions: list[ClarifyingQuestion] = _owned_by(Owner.request_plan, default_factory=list)
+    assumptions: list[Assumption] = _owned_by(Owner.request_plan, default_factory=list)
+    search_plan: SearchPlan | None = _owned_by(Owner.request_plan, default=None)
 
-    messages: list[AnyMessage] = _owned_by("collection", default_factory=list)
-    postings: dict[str, Posting] = _owned_by("collection", default_factory=dict)
-    sample: list[str] = _owned_by("collection", default_factory=list)
-    broadened_plans: list[SearchPlan] = _owned_by("collection", default_factory=list)
+    messages: list[AnyMessage] = _owned_by(Owner.collection, default_factory=list)
+    postings: dict[str, Posting] = _owned_by(Owner.collection, default_factory=dict)
+    sample: list[str] = _owned_by(Owner.collection, default_factory=list)
+    broadened_plans: list[SearchPlan] = _owned_by(Owner.collection, default_factory=list)
 
-    extractions: Annotated[dict[str, Extraction], merge] = _owned_by("analysis", default_factory=dict)
-    stats: MarketStats | None = _owned_by("analysis", default=None)
+    extractions: Annotated[dict[str, Extraction], merge] = _owned_by(Owner.analysis, default_factory=dict)
+    stats: MarketStats | None = _owned_by(Owner.analysis, default=None)
 
-    brief: MarketBrief | None = _owned_by("brief", default=None)
-    brief_markdown: str | None = _owned_by("brief", default=None)
+    brief: MarketBrief | None = _owned_by(Owner.brief, default=None)
+    brief_markdown: str | None = _owned_by(Owner.brief, default=None)
 
-    run_log: list[RunLogEntry] = _owned_by("kernel", default_factory=list)
+    run_log: list[RunLogEntry] = _owned_by(Owner.kernel, default_factory=list)
 
     @property
     def current_plan(self) -> SearchPlan | None:
@@ -77,7 +86,7 @@ class State(Model):
         return [self.postings[k] for k in self.sample]
 
 
-def log(state: State, node: str, kind: LogKind, message: str, **data: JsonValue) -> dict:
+def log(state: State, node: str, kind: LogKind, message: str, /, **data: JsonValue) -> dict:
     entry = RunLogEntry(node=node, kind=kind, message=message, data=data)
     return {"run_log": [*state.run_log, entry]}
 
@@ -102,7 +111,7 @@ def _check_update(node: str, owner: str, state: Any, update: dict) -> None:
         if key not in State.model_fields:
             raise StateWriteError(node, key, "not a State field")
         # run_log is open to every node; input fields to none.
-        if key != "run_log" and (_owner(key) == "input" or _owner(key) != owner):
+        if key != "run_log" and (_owner(key) == Owner.input or _owner(key) != owner):
             raise StateWriteError(node, key, f"belongs to '{_owner(key)}', not '{owner}'")
         try:
             # strict: values must already be model instances, as persistence requires.
@@ -126,7 +135,12 @@ def _check_sends(node: str, result: Any) -> None:
 
 
 def _check(node: str, owner: str, state: Any, result: Any) -> None:
-    if isinstance(result, dict):
+    if isinstance(result, BaseModel):
+        # Returning State rewrites every set field and skips the per-key checks.
+        raise StateWriteError(node, "*", "return a partial dict, not a model")
+    if isinstance(result, Command) and isinstance(result.update, dict):
+        _check_update(node, owner, state, result.update)
+    elif isinstance(result, dict):
         _check_update(node, owner, state, result)
     else:
         _check_sends(node, result)
@@ -134,6 +148,8 @@ def _check(node: str, owner: str, state: Any, result: Any) -> None:
 
 def owned(node: str, owner: str):
     """Wrap a node or router so a bad write fails here, not in the next node."""
+
+    owner = Owner(owner)  # a typo fails at wiring time, not on the first write
 
     def wrap(fn):
         if inspect.iscoroutinefunction(fn):
