@@ -29,6 +29,13 @@ def test_comma_list_parses_into_chain(monkeypatch):
     assert make().llm_cheap == ["a/x", "b/y"]
 
 
+def test_default_country_is_us_and_must_be_supported():
+    assert make().default_country == "us"
+    assert make(default_country="in").default_country == "in"
+    with pytest.raises(ValidationError):
+        make(default_country="jp")
+
+
 def test_adzuna_api_key_populates_app_key(monkeypatch):
     monkeypatch.setenv("ADZUNA_API_KEY", "from-env")
     s = Settings(_env_file=None, **{k: v for k, v in REQUIRED.items() if k != "ADZUNA_API_KEY"})

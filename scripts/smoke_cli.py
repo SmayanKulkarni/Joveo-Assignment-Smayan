@@ -12,8 +12,9 @@ def main():
         # A scratch Runs folder, so the smoke leaves nothing in .cache or runs/.
         settings = get_settings().model_copy(update={"runs_db": root / "runs.sqlite", "runs_dir": root / "runs"})
         cli.get_settings = lambda: settings
-        replies = iter(["1", "a", "c"])  # clarify option 1, approve the plan, continue on low data
-        cli.input = lambda _="": next(replies)
+        # The real clarify loop asks a variable number of questions, so answer by prompt:
+        # option 1 for a question, approve the plan, continue on low data.
+        cli.input = lambda prompt="": "1" if prompt.startswith("Answer") else "a" if "[a]" in prompt else "c"
         code = cli.main(["run", "Engineer, Texas", "--focus", "skills"])
         print("exit code:", code)
 

@@ -18,7 +18,7 @@ from talent_scout.runtime.deps import Deps, Node, Router
 from talent_scout.runtime.pause import ClarifyPause, LowDataPause, PlanReviewPause
 
 _REQUEST = HiringRequest(
-    role="Stub role", location="Stub city", seniority=None, employment_type=None,
+    role="Stub role", location="Stub city", country="us", seniority=None, employment_type=None,
     work_mode=None, currency=None, purpose=None,
 )
 _PLAN = SearchPlan(
@@ -91,6 +91,7 @@ def fake_deps(settings: Settings) -> Deps:
         jev=Jev(fake_classifier({}), CUTS),
         gateway=FakeGateway([]),
         settings=settings,
+        stub_stages=True,
     )
 
 

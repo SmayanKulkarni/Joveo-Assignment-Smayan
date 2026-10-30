@@ -19,6 +19,7 @@ from talent_scout.kernel.types import (
     Posting,
     SearchPlan,
 )
+from talent_scout.request_plan.types import PlanAction, RequestDraft
 
 
 class LogKind(StrEnum):
@@ -63,6 +64,9 @@ class State(Model):
     questions: list[ClarifyingQuestion] = _owned_by(Owner.request_plan, default_factory=list)
     assumptions: list[Assumption] = _owned_by(Owner.request_plan, default_factory=list)
     search_plan: SearchPlan | None = _owned_by(Owner.request_plan, default=None)
+    request_draft: RequestDraft | None = _owned_by(Owner.request_plan, default=None)
+    plan_decision: PlanAction | None = _owned_by(Owner.request_plan, default=None)
+    plan_feedback: str | None = _owned_by(Owner.request_plan, default=None)
 
     messages: list[AnyMessage] = _owned_by(Owner.collection, default_factory=list)
     postings: dict[str, Posting] = _owned_by(Owner.collection, default_factory=dict)

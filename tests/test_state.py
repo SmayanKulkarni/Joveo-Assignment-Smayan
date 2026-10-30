@@ -35,7 +35,7 @@ def test_run_log_data_is_plain_json_only():
 
 
 def test_current_plan_prefers_latest_broadened_plan():
-    base = SearchPlan(titles=["a"], country="us", location="x", radius_km=0, max_days_old=1, target_postings=1, category=None)
+    base = SearchPlan(titles=["a"], country="us", location="x", radius_km=0, max_days_old=1, target_postings=20, category=None)
     wider = base.model_copy(update={"radius_km": 50})
     assert State(request_text="r").current_plan is None
     assert State(request_text="r", search_plan=base).current_plan == base

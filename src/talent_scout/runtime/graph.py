@@ -3,6 +3,8 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 from talent_scout.kernel.state import State, owned
+from talent_scout.request_plan.nodes import ROUTERS as REQUEST_PLAN_ROUTERS
+from talent_scout.request_plan.nodes import make_nodes as request_plan_nodes
 from talent_scout.runtime.deps import Deps, Node, Router
 from talent_scout.runtime.testing import STUB_ROUTERS, stub_nodes
 
@@ -34,6 +36,9 @@ def build_graph(deps: Deps, saver: BaseCheckpointSaver | None) -> CompiledStateG
     # A landed stage's make_nodes(deps) and ROUTERS go here and override its stubs.
     real_nodes: dict[str, Node] = {}
     real_routers: dict[str, Router] = {}
+    if not deps.stub_stages:
+        real_nodes.update(request_plan_nodes(deps))
+        real_routers.update(REQUEST_PLAN_ROUTERS)
     nodes = {**stub_nodes(), **real_nodes}
     routers = {**STUB_ROUTERS, **real_routers}
 

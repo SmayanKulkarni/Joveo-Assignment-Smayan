@@ -16,6 +16,8 @@ class Deps:
     jev: Jev
     gateway: JobsGateway
     settings: Settings
+    # Tests set this to run every stage as its stub, even one that has landed.
+    stub_stages: bool = False
 
 
 Node = Callable[..., Awaitable[dict]]

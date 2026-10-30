@@ -4,13 +4,7 @@ from typing import NamedTuple
 
 from pydantic import Field, field_validator
 
-from talent_scout.kernel.types import Model, Posting, Source
-
-ADZUNA_CURRENCY = {
-    "gb": "GBP", "us": "USD", "ca": "CAD", "au": "AUD", "nz": "NZD", "in": "INR", "sg": "SGD",
-    "za": "ZAR", "br": "BRL", "mx": "MXN", "pl": "PLN", "ch": "CHF",
-    "at": "EUR", "be": "EUR", "de": "EUR", "es": "EUR", "fr": "EUR", "it": "EUR", "nl": "EUR",
-}
+from talent_scout.kernel.types import ADZUNA_CURRENCY, Model, Posting, Source
 
 ATTRIBUTION = {Source.adzuna: "The Adzuna API"}
 

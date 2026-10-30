@@ -3,13 +3,14 @@ from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from pydantic import TypeAdapter, ValidationError
 
 from talent_scout.collection.types import LowDataAnswer, LowDataPayload
-from talent_scout.kernel.types import ClarifyingQuestion, RequestField, SearchPlan
+from talent_scout.kernel.types import ClarifyingQuestion, RequestField, SearchPlan, WorkMode
 from talent_scout.request_plan.types import (
     ClarifyAnswer,
     ClarifyPayload,
     PlanAction,
     PlanReviewAnswer,
     PlanReviewPayload,
+    RequestDraft,
 )
 from talent_scout.runtime.pause import (
     ALLOWED_MSGPACK,
@@ -30,11 +31,16 @@ PAUSES = [
     PlanReviewPause(payload=PlanReviewPayload(plan=PLAN, assumptions=[])),
     LowDataPause(payload=LowDataPayload(count=3, target=50)),
 ]
+DRAFT = RequestDraft(
+    role="Engineer", location="Texas", country="us", seniority=None, employment_type=None,
+    work_mode=WorkMode.remote, currency="USD", purpose=None,
+)
 VALUES = [
     *PAUSES,
     ClarifyAnswer(answers=["Software"]),
     PlanReviewAnswer(action=PlanAction.edit, plan=PLAN, feedback=None),
     LowDataAnswer(action="continue"),
+    DRAFT,
 ]
 
 
@@ -55,6 +61,19 @@ def test_strict_mode_blocks_a_class_off_the_allowlist():
 def test_pause_union_picks_its_class_by_kind():
     pause = TypeAdapter(Pause).validate_python({"kind": "low_data_review", "payload": {"count": 1, "target": 2}})
     assert pause == LowDataPause(payload=LowDataPayload(count=1, target=2))
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"action": "edit", "plan": None, "feedback": None},
+        {"action": "reject", "plan": None, "feedback": None},
+        {"action": "reject", "plan": None, "feedback": "  "},
+    ],
+)
+def test_plan_review_answer_needs_its_payload(bad):
+    with pytest.raises(ValidationError):
+        PlanReviewAnswer.model_validate(bad)
 
 
 @pytest.mark.parametrize(

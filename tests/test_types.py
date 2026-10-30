@@ -3,7 +3,9 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from talent_scout.gateway.usajobs import DOMAINS
 from talent_scout.kernel.types import (
+    ADZUNA_CATEGORIES,
     Dimension,
     Evidence,
     HiringRequest,
@@ -28,13 +30,13 @@ def stat(id="comp.median"):
 def plan(**over):
     return SearchPlan(
         **{"titles": ["a"], "country": "us", "location": "x", "radius_km": 0, "max_days_old": 1,
-           "target_postings": 1, "category": None, **over}
+           "target_postings": 20, "category": None, **over}
     )
 
 
 def request(**over):
     return HiringRequest(
-        **{"role": "r", "location": "l", "seniority": None, "employment_type": None,
+        **{"role": "r", "location": "l", "country": "us", "seniority": None, "employment_type": None,
            "work_mode": None, "currency": None, "purpose": None, **over}
     )
 
@@ -69,14 +71,33 @@ def test_market_stats_reject_duplicate_ids():
 
 
 @pytest.mark.parametrize(
-    "bad", [{"titles": []}, {"country": "USA"}, {"country": "US"}, {"radius_km": -1}, {"max_days_old": 0}, {"target_postings": 0}]
+    "bad",
+    [
+        {"titles": []}, {"titles": list("abcde")},
+        {"country": "USA"}, {"country": "US"}, {"country": "jp"},
+        {"radius_km": -1}, {"radius_km": 101},
+        {"max_days_old": 0}, {"max_days_old": 61},
+        {"target_postings": 19}, {"target_postings": 201},
+        {"category": "basket-weaving-jobs"},
+    ],
 )
 def test_search_plan_rejects(bad):
     with pytest.raises(ValidationError):
         plan(**bad)
 
 
-@pytest.mark.parametrize("bad", [{"role": "  "}, {"location": ""}])
-def test_hiring_request_rejects_blank(bad):
+@pytest.mark.parametrize(
+    "edge", [{"titles": list("abcd")}, {"radius_km": 100}, {"max_days_old": 60}, {"target_postings": 200}, {"category": "it-jobs"}]
+)
+def test_search_plan_accepts_the_limits(edge):
+    plan(**edge)
+
+
+def test_adzuna_categories_match_the_usajobs_domains():
+    assert ADZUNA_CATEGORIES == {tag for tag in DOMAINS if tag}
+
+
+@pytest.mark.parametrize("bad", [{"role": "  "}, {"location": ""}, {"country": "jp"}, {"country": "US"}])
+def test_hiring_request_rejects(bad):
     with pytest.raises(ValidationError):
         request(**bad)

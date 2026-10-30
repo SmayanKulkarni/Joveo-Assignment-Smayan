@@ -6,6 +6,8 @@ from typing import Annotated
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+from talent_scout.kernel.types import check_country
+
 ROOT_ENV = Path(__file__).resolve().parents[3] / ".env"
 
 
@@ -47,6 +49,10 @@ class Settings(BaseSettings):
     l2_fresh_days: int = 7
     runs_db: Path = Path(".cache/runs.sqlite")
     runs_dir: Path = Path("runs")
+    # Used when the user gives no place, or none the clarify loop could pin down.
+    default_country: str = "us"
+
+    _known_country = field_validator("default_country")(check_country)
 
     @field_validator("llm_cheap", "llm_strong", mode="before")
     @classmethod
