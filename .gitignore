@@ -2,3 +2,6 @@
 __pycache__/
 *.sqlite
 *.db
+.venv/
+.cache/
+graphify-out/

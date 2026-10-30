@@ -130,7 +130,7 @@ class MarketStats(BaseModel):
 ```
 
 Key points:
-- **Posting identity** is `key` (`source:source_id`). The same key twice is the same Posting. Collapsing one job posted in several places is a Collection rule, not a field.
+- **Posting identity** is `key` (`source:source_id`). The same key twice is the same Posting. Collapsing Duplicates (one job posted in several places or by both sources) is one Gateway rule, `coalesce`, which Collection re-applies across Fetches; it isn't a field ([Gateway query interface](../../.scratch/gateway-lld/issues/02-gateway-query-interface.md)).
 - **The Gateway's mapper** turns raw API JSON into Postings and absorbs every source quirk: currency from country, `RateIntervalCode` to period, family to Domain, reversed salary ranges, the description cap. Postings that still fail validation are skipped and counted. Tools only ever see `list[Posting]`.
 - **LLM-schema policy:** a type is used directly as a structured-output schema only when the model fills every field. Otherwise the stage defines a narrower draft schema.
   - Every field has a `Field(description=...)` stating its meaning and units.
@@ -358,14 +358,17 @@ One `Settings(BaseSettings)` (`pydantic-settings`) read from the root `.env`. `g
 
 | Setting | Default |
 |---|---|
-| `openrouter_api_key`, `adzuna_app_id`, `adzuna_app_key`, `usajobs_api_key`, `usajobs_user_agent`, `langsmith_api_key` | required from `.env` |
-| `langsmith_project` | from `.env` |
+| `openrouter_api_key`, `adzuna_app_id`, `adzuna_app_key`, `usajobs_api_key`, `usajobs_user_agent`, `langsmith_api_key` | required from `.env` (`adzuna_app_key` is read from `ADZUNA_API_KEY`) |
+| `langsmith_tracing`, `langsmith_project` | from `.env`; exported with `langsmith_api_key` |
 | `llm_cheap`, `llm_strong` (comma list in `.env`) | `deepseek/deepseek-v4.1-flash,minimax/minimax-m3.1-flash` |
 | `reasoning_cheap`, `reasoning_strong` | `low`, `medium` |
 | `max_tokens_cheap`, `max_tokens_strong` (each ≥ 1,000) | 2,048, 8,192 |
 | `llm_concurrency`, `jev_concurrency` | 20, 8 |
 | `balance_floor_usd` | 0.25 |
 | `replay_cache` (path) | unset = off |
+| `gateway_db` (path) | `.cache/gateway.sqlite` |
+| `adzuna_daily_limit` | 25 |
+| `l1_ttl_hours` | 24 |
 
 ## 14. Replay cache (`kernel/replay.py`, pass 2)
 
