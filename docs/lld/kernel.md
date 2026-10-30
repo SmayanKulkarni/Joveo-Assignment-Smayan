@@ -82,9 +82,13 @@ class Posting(BaseModel):
 class WorkMode(StrEnum): onsite, hybrid, remote
 class RequestField(StrEnum): role, location, seniority, employment_type, work_mode, currency, purpose
 
+ADZUNA_CURRENCY: dict[str, str]          # country -> currency; the countries a Run can search
+ADZUNA_CATEGORIES: frozenset[str]        # known Adzuna category tags
+
 class HiringRequest(BaseModel):          # role and location non-blank
     role: str
     location: str
+    country: str                         # a key of ADZUNA_CURRENCY
     seniority: str | None
     employment_type: str | None
     work_mode: WorkMode | None
@@ -103,13 +107,13 @@ class Assumption(BaseModel):
     reason: str
 
 class SearchPlan(BaseModel):             # replaced whole, never patched
-    titles: list[str]                    # non-empty, primary first
-    country: str                         # ^[a-z]{2}$
-    location: str
-    radius_km: int                       # >= 0
-    max_days_old: int                    # >= 1; also the soft-expiry window
-    target_postings: int                 # >= 1; the Sufficiency target
-    category: str | None
+    titles: list[str]                    # 1-4, primary first
+    country: str                         # a key of ADZUNA_CURRENCY
+    location: str                        # blank = country-wide
+    radius_km: int                       # 0-100
+    max_days_old: int                    # 1-60; also the soft-expiry window
+    target_postings: int                 # 20-200; the Sufficiency target
+    category: str | None                 # in ADZUNA_CATEGORIES
 
 class Dimension(StrEnum): demand, compensation, skills, competition, titles_seniority
 
@@ -150,10 +154,13 @@ class State(BaseModel):                     # frozen, extra="forbid"
     focus: list[Dimension] = []             # [] = all
 
     # --- Request & Plan
-    hiring_request: HiringRequest | None = None
+    request_draft: RequestDraft | None = None
+    hiring_request: HiringRequest | None = None   # final; None until nothing is left to ask
     questions: list[ClarifyingQuestion] = []
     assumptions: list[Assumption] = []
     search_plan: SearchPlan | None = None   # the approved plan
+    plan_decision: PlanAction | None = None
+    plan_feedback: str | None = None
 
     # --- Collection
     messages: list[AnyMessage] = []
@@ -181,10 +188,12 @@ class State(BaseModel):                     # frozen, extra="forbid"
 | Key | Owner | Written by | On loops |
 |---|---|---|---|
 | `request_text`, `focus` | input | Run Controller | never change |
-| `hiring_request` | Request & Plan | `intake` (refined after answers) | |
+| `request_draft` | Request & Plan | `intake` | replaced after each round of answers |
+| `hiring_request` | Request & Plan | `clarity_check`, once nothing is left to ask | |
 | `questions` | Request & Plan | `clarity_check` adds, `clarify` fills answers | never cleared |
-| `assumptions` | Request & Plan | Request & Plan nodes | |
-| `search_plan` | Request & Plan | `plan` | replaced on `plan_review` reject |
+| `assumptions` | Request & Plan | `clarity_check` | |
+| `search_plan` | Request & Plan | `plan`; `plan_review` on an edit | replaced on `plan_review` reject |
+| `plan_decision`, `plan_feedback` | Request & Plan | `plan_review` | replaced at each review |
 | `messages` | Collection | `fetch_agent`, `tools` | `[]` on each `broaden` |
 | `postings` | Collection | `collect` | kept across attempts |
 | `sample` | Collection | `relevance` | recomputed each attempt |
@@ -199,8 +208,8 @@ Why it looks like this:
 - **Frozen.** In LangGraph, `state.postings["x"] = p` inside a node silently does nothing, because only *returned* updates are saved. Frozen turns that into an immediate error, so every change has to come back as `{"postings": ...}`.
 - **Search Plan split.** `broaden` belongs to Collection but revises the plan. Giving Collection its own `broadened_plans` keeps one writer per slice, and `current_plan` reads both. The attempt count is `len(broadened_plans)`: no counter to drift, and every revision shows up in Run Notes for free.
 - **`sample` holds keys, not Postings.** Analysis and Brief look Postings up in `postings`, so there's one copy of each.
-- **`focus` reuses `Dimension`,** so `--focus compensation` needs no new type. What each focus value changes is ⏳ the Request & Plan LLD; Clients only pass it through ([Runtime LLD](runtime.md) §12).
-- ⏳ Stage LLDs add their private fields here: the Brief draft, critic verdicts and revision state; `plan_review` feedback; and each stage's routing-decision fields.
+- **`focus` reuses `Dimension`,** so `--focus compensation` needs no new type. It changes nothing in the search ([Request & Plan LLD](request-plan.md) §8); ⏳ Brief uses it for emphasis.
+- ⏳ Stage LLDs add their private fields here: the Brief draft, critic verdicts and revision state; and each stage's routing-decision fields.
 - ⏳ The `preferences` slice is added by the Long-term memory LLD.
 
 ## 5. Reducers
@@ -223,7 +232,7 @@ Elsewhere a reducer would only be a convenience, and explicit writes read better
 
 | Loop | Changes | Kept |
 |---|---|---|
-| `clarify` → `clarity_check` | `questions` rewritten with answers; an Assumption is added if the re-ask cap is hit | earlier questions (re-asks are counted from them) |
+| `clarify` → `intake` → `clarity_check` | `questions` rewritten with answers; `request_draft` replaced; an Assumption is added if the re-ask cap is hit | earlier questions (re-asks are counted from them) |
 | `plan_review` reject → `plan` | `search_plan` replaced | everything else; nothing has been fetched yet |
 | → `broaden` | the new plan is appended to `broadened_plans`; `messages` = `[]`; `sample` is recomputed by the next `relevance` | `postings` |
 | `critic` → `write_brief` | ⏳ draft and verdicts replaced (Brief LLD) | `stats`, `sample` |
@@ -237,8 +246,8 @@ Elsewhere a reducer would only be a convenience, and explicit writes read better
 
 | After | Outcomes | Decided by / router reads |
 |---|---|---|
-| `clarity_check` | `clarify` · `plan` | The Jev clarity `Judgement` stored by `clarity_check`. A vague answer is re-asked at most once (HLD), counted from earlier `questions` with the same `about`; once the cap is hit, go to `plan` with an Assumption. |
-| `plan_review` ⏸ | `fetch_agent` · `plan` · END | The user's answer (approve / edit / reject + feedback / abort). The Pause node writes only the answer; an edit writes `search_plan`. |
+| `clarity_check` | `clarify` · `plan` · END | `questions` and `hiring_request`, with no decision field: an unanswered question goes to `clarify`, a set `hiring_request` to `plan`, neither to END. A vague answer is re-asked at most once (HLD), counted from earlier `questions` with the same `about`; once the cap is hit, the field settles with an Assumption, or the Run aborts ([Request & Plan LLD](request-plan.md) §5). |
+| `plan_review` ⏸ | `fetch_agent` · `plan` · END | `plan_decision`, the user's answer (approve / edit / reject + feedback / abort). The Pause node writes only the answer; an edit writes `search_plan`. |
 | `fetch_agent` | `tools` · `collect` | `messages[-1].tool_calls` |
 | `relevance` | `Send`×N → `batch_extract` · `broaden` · `low_data_review` | `relevance` writes `sample` and the Sufficiency verdict: `len(sample)` vs `current_plan.target_postings`. Attempts left = cap − `len(broadened_plans)`. |
 | `low_data_review` ⏸ | `broaden` · `Send`×N · `stats` · END | The user's answer. The `stats` edge exists because a fan-out with zero branches would stall the Run. |

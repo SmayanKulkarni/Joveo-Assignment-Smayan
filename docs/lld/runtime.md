@@ -22,7 +22,7 @@ Clients own the CLI and a thin Streamlit page. Neither owns any state.
 
 They do **not** own:
 - node bodies, or each Pause's payload and answer fields (stage LLDs)
-- what each `focus` value changes (⏳ Request & Plan). Clients only pass it through.
+- what each `focus` value changes ([Request & Plan LLD](request-plan.md) §8). Clients only pass it through.
 - `AsyncSqliteStore`: not opened until preferences land in pass 6 (⏳ Long-term memory)
 - infra shell internals. Its only seam is the Run Controller.
 
@@ -83,13 +83,13 @@ nodes = {**stub_nodes(), **real_nodes}
 routers = {**STUB_ROUTERS, **real_routers}
 
 EDGES = [
-    (START, "intake"), ("intake", "clarity_check"), ("clarify", "clarity_check"),
+    (START, "intake"), ("intake", "clarity_check"), ("clarify", "intake"),
     ("plan", "plan_review"), ("tools", "fetch_agent"), ("collect", "relevance"),
     ("broaden", "fetch_agent"), ("batch_extract", "stats"), ("stats", "write_brief"),
     ("write_brief", "critic"), ("render", END),
 ]
 CONDITIONAL = {
-    "clarity_check":   ["clarify", "plan"],
+    "clarity_check":   ["clarify", "plan", END],
     "plan_review":     ["fetch_agent", "plan", END],
     "fetch_agent":     ["tools", "collect"],
     "relevance":       ["batch_extract", "broaden", "low_data_review"],
@@ -128,8 +128,7 @@ ANSWERS = {"clarify": ClarifyAnswer, "plan_review": PlanReviewAnswer, "low_data_
 ```
 
 - **Payload and answer models live in the owning stage's `types.py`.** Runtime creates them as stubs at their final path, the way `analysis/types.py` and `brief/types.py` already work, because checkpoints store class paths. Stage LLDs own the fields. Stub shapes:
-  - `ClarifyPayload(questions: list[ClarifyingQuestion])`, `ClarifyAnswer(answers: list[str])`
-  - `PlanReviewPayload(plan: SearchPlan)`, `PlanReviewAnswer(action: approve | edit | reject | abort, plan: SearchPlan | None, feedback: str | None)`
+  - `ClarifyPayload`, `ClarifyAnswer`, `PlanReviewPayload`, `PlanReviewAnswer`: final, in [Request & Plan LLD](request-plan.md) §3
   - `LowDataPayload(count: int, target: int)`, `LowDataAnswer(action: broaden | continue | abort)`
 - **A concrete union, not `payload: dict`.** The serializer keeps only the outermost model's class, so an untyped payload comes back from a fresh process as a dict.
 - **Allowlist:** the three Pause classes and the three answer classes go in `JsonPlusSerializer(allowed_msgpack_modules=[...])`. Only the outermost classes need listing.
@@ -316,7 +315,7 @@ scout resume [thread_id]
 scout show <thread_id> [--log]
 ```
 
-Stdlib `argparse` with `[project.scripts] scout = "talent_scout.clients.cli:main"`. `--focus` uses `action="append"` and `choices=` the `Dimension` values, and goes straight into `start(focus=...)`. A blank request is an argparse error.
+Stdlib `argparse` with `[project.scripts] scout = "talent_scout.clients.cli:main"`. `--focus` uses `action="append"` and `choices=` the `Dimension` values plus `salary`, an alias for `compensation` taken from the spec's example, and goes straight into `start(focus=...)`. A blank request is an argparse error.
 
 **Prompts run outside the event loop.** `main` is a sync loop around `asyncio.run`, one per Controller:
 
@@ -336,8 +335,8 @@ while isinstance(outcome, Paused):
 
 | Pause | Shows | Takes |
 |---|---|---|
-| `clarify` | The questions | A typed answer to each, in turn |
-| `plan_review` | The Search Plan | One letter: approve / edit / reject (then asks for feedback) / abort |
+| `clarify` | The questions and their options | An answer to each, in turn: a number picks that option, anything else is free text, Enter skips |
+| `plan_review` | The Search Plan and Assumptions | One letter: approve / edit / reject (then asks for feedback) / abort |
 | `low_data_review` | The counts | One choice: broaden / continue / abort |
 
 - **Bad answers:** `InvalidAnswer` prints the errors and re-asks the same Pause, with no attempt cap.
@@ -438,7 +437,6 @@ Each step leaves one small `pytest` file behind. No test calls an LLM or a jobs 
 
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
-  - ⏳ **Request & Plan:** payload and answer fields for `clarify` and `plan_review`, what each `focus` value changes, and pass-through Pauses in its pass 1 export.
   - ⏳ **Collection:** payload and answer fields for `low_data_review`, tool event summaries, and its pass-through Pause.
   - ⏳ **Brief:** `critic` pass-through until pass 5. `done` depends on `render` writing `brief`.
   - ⏳ **Long-term memory:** opening the Store.

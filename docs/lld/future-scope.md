@@ -25,6 +25,14 @@ Work deliberately left out of an LLD, with why and what would bring it back. One
 | Serving a past-TTL L1 row when the budget is out | It would need its own status and Caveat, and L2's fallback covers that reuse | L2 not being built |
 | A reserve of Adzuna calls for walkthroughs | Lowering `adzuna_daily_limit` in `.env` does the job | Needing to hold calls back routinely |
 
+## Request & Plan
+
+| Item | Why it's left out | Brings it back |
+|---|---|---|
+| `focus` shaping the Search Plan | The same Postings answer every Dimension, so narrowing saves nothing | A focus needing Postings a general search misses |
+| Fetching Adzuna's per-country category list | A fixed list of known tags is enough, and the call would spend quota | A valid tag being rejected for some country |
+| Multi-country Runs | `SearchPlan` holds one country, and Stats would mix currencies | A client asking for regional comparisons |
+
 ## Runtime and Clients
 
 | Item | Why it's left out | Brings it back |

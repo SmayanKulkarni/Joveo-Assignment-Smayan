@@ -93,7 +93,8 @@ flowchart TD
   START --> intake --> clarity_check
   clarity_check -.->|"clear, or re-ask cap hit"| plan
   clarity_check -.->|"ambiguous"| clarify
-  clarify --> clarity_check
+  clarity_check -.->|"unusable at the cap"| END_
+  clarify --> intake
   plan --> plan_review
   plan_review -.->|"approve / edit"| fetch_agent
   plan_review -.->|"reject + feedback"| plan
@@ -126,7 +127,7 @@ flowchart TD
 ```
 
 - The `continue with 0 postings → stats` edge exists because a `Send` fan-out with zero branches never reaches `stats`. Without the edge, the Run would stall silently.
-- A vague answer to a Clarifying Question is re-asked at most once. After that, the Run proceeds and records an Assumption.
+- A vague answer to a Clarifying Question is re-asked at most once. After that, the Run proceeds and records an Assumption, unless there is no readable role or the country has no source, which ends the Run. ([Request & Plan LLD](lld/request-plan.md) §5)
 - **Tool execution** uses a custom executor node: it reads `tool_calls`, dispatches each by name and returns `ToolMessage`s. The prebuilt `ToolNode` is not used, to insulate the graph from churn in LangChain's internals. Research confirmed that churn: `create_react_agent` is deprecated and `langchain` no longer re-exports `ToolNode`. ([Jobs sources and tool execution](../.scratch/talent-scout-hld/issues/03-jobs-sources-and-tool-execution.md), [LangGraph persistence research](../.scratch/talent-scout-hld/issues/15-research-langgraph-persistence-and-resume.md))
 
 ## 5. LLM vs code
@@ -243,7 +244,6 @@ After that come the `samples/`, README and write-up, as a delivery task.
 |---|---|
 | Analysis | Currency and period normalisation, treatment of `salary_is_predicted`, USAJOBS vs Adzuna in compensation stats, batch sizing for large Samples |
 | Brief | Rules for the Confidence Tag and the Hiring Outlook |
-| Request & Plan | What each `--focus` flag changes |
 | Long-term memory | Which preferences are remembered, and whether they are learned or asked |
 | Infra shell | Everything listed in §10 |
 | Delivery | Choosing the three sample runs within the Adzuna budget |

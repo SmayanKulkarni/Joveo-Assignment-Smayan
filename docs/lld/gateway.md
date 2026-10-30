@@ -85,7 +85,7 @@ def make_gateway(settings: Settings, transport: httpx.AsyncBaseTransport | None 
 
 - **Plain typed Python, not GraphQL:** one in-process caller and no work removed.
 - **Named `Fetch`,** because the glossary avoids "query" and "search" for the Hiring Request.
-- **Validation:** a validator lowercases, strips and collapses whitespace in `title`, `location` and `category`, so equal Fetches are equal objects. Any `country` outside `ADZUNA_CURRENCY` is rejected: it's a planning bug, not a source failure. ⏳ The Planning LLD constrains the Search Plan to the same table.
+- **Validation:** a validator lowercases, strips and collapses whitespace in `title`, `location` and `category`, so equal Fetches are equal objects. Any `country` outside `ADZUNA_CURRENCY` is rejected: it's a planning bug, not a source failure. The [Request & Plan LLD](request-plan.md) §6 constrains the Search Plan to the same table, which moves to `kernel/types.py`.
 - **One title per Fetch.** Adzuna's `what_or` ORs single words, so title variants can't be combined. Each variant is its own Fetch and its own L1 key.
 - **One page per call.** A `Fetch` asks for page N of each source, so one call costs at most one logical API call per source. Page size is a client constant (50 for both). Collection decides whether another page is worth it, from `total` and `calls_left`.
 - **No `sources`, work mode or target count.** The source rule picks sources, `Posting` can't carry a work mode, and L2 doesn't need a target (§11).
