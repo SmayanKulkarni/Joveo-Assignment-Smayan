@@ -23,6 +23,7 @@ from openrouter.errors import (
 )
 from pydantic import BaseModel, ValidationError
 
+from talent_scout.kernel.replay import install_llm_cache
 from talent_scout.kernel.settings import Settings
 
 Tier = Literal["cheap", "strong"]
@@ -31,6 +32,10 @@ M = TypeVar("M", bound=BaseModel)
 MIN_MAX_TOKENS = 1000
 TIMEOUT_MS = 60_000
 KEY_URL = "https://openrouter.ai/api/v1/key"
+
+class _ProviderError(Exception):
+    """OpenRouter answered 200 with an error body (or no choices): the provider failed, not our request."""
+
 
 # Failures of the provider, not of our request: retry, then try the next model.
 _TRANSIENT = (
@@ -42,10 +47,13 @@ _TRANSIENT = (
     RequestTimeoutResponseError,
     ProviderOverloadedResponseError,
     NoResponseError,
+    _ProviderError,
     httpx.TransportError,
 )
 # 402 is usually in-flight spend that clears, so it is retried, but the next model shares the account.
 _RETRY_ON = _TRANSIENT + (PaymentRequiredResponseError,)
+
+RETRIES = 3
 
 # Tests switch this off so retries don't sleep.
 _BACKOFF = True
@@ -76,7 +84,10 @@ class _CostedOpenRouter(ChatOpenRouter):
     """ChatOpenRouter whose messages carry OpenRouter's cost in usage_metadata, where LangSmith reads it."""
 
     def _create_chat_result(self, response) -> ChatResult:
-        result = super()._create_chat_result(response)
+        try:
+            result = super()._create_chat_result(response)
+        except ValueError as err:
+            raise _ProviderError(str(err)) from err
         for gen in result.generations:
             msg = gen.message
             cost = msg.response_metadata.get("cost")
@@ -94,7 +105,8 @@ class Tiers:
     def __init__(self, chains: dict[Tier, list[BaseChatModel]], settings: Settings):
         self._chains = chains
         self._settings = settings
-        self._sem = asyncio.Semaphore(settings.llm_concurrency)
+        self._sem_loop: asyncio.AbstractEventLoop | None = None
+        self._sem: asyncio.Semaphore | None = None
 
     def structured(
         self, tier: Tier, schema: type[M], *, system: str, name: str, max_tokens: int | None = None
@@ -129,13 +141,7 @@ class Tiers:
         # Tools go on each model before the chain, since a fallback wrapper has no bind_tools.
         steps = self._steps(tier, max_tokens, tools=tools)
 
-        def per_model(call: Runnable):
-            async def run(messages: list[AnyMessage], config: RunnableConfig) -> AIMessage:
-                return await call.ainvoke(messages, config)
-
-            return run
-
-        return self._driver(tier, name, [per_model(s) for s in steps])
+        return self._driver(tier, name, [s.ainvoke for s in steps])
 
     def _steps(self, tier: Tier, max_tokens: int | None, *, tools=None, **bind) -> list[Runnable]:
         limit = getattr(self._settings, f"max_tokens_{tier}") if max_tokens is None else max_tokens
@@ -150,14 +156,21 @@ class Tiers:
             steps.append(self._guarded(bound))
         return steps
 
+    def _semaphore(self) -> asyncio.Semaphore:
+        # A semaphore is tied to the loop that first waits on it, so rebuild it when the loop changes.
+        loop = asyncio.get_running_loop()
+        if self._sem_loop is not loop:
+            self._sem_loop, self._sem = loop, asyncio.Semaphore(self._settings.llm_concurrency)
+        return self._sem
+
     def _guarded(self, model: Runnable) -> Runnable:
         async def call(messages, config: RunnableConfig):
             # The slot is held per attempt, not across backoff sleeps.
-            async with self._sem:
+            async with self._semaphore():
                 return await model.ainvoke(messages, config)
 
         return RunnableLambda(call).with_retry(
-            retry_if_exception_type=_RETRY_ON, wait_exponential_jitter=_BACKOFF, stop_after_attempt=3
+            retry_if_exception_type=_RETRY_ON, wait_exponential_jitter=_BACKOFF, stop_after_attempt=RETRIES
         )
 
     def _driver(self, tier: Tier, name: str, steps: list[Callable]) -> Runnable:
@@ -167,7 +180,7 @@ class Tiers:
                 try:
                     return await step(arg, config)
                 except _FALLBACK_ON as err:
-                    attempts += getattr(err, "attempts", 1)
+                    attempts += getattr(err, "attempts", RETRIES)
                     last = err
             raise LLMExhausted(tier, name, attempts) from last
 
@@ -177,6 +190,8 @@ class Tiers:
 
 
 def make_tiers(settings: Settings) -> Tiers:
+    install_llm_cache(settings)
+
     def build(ids: list[str], effort: str) -> list[BaseChatModel]:
         return [
             _CostedOpenRouter(
@@ -203,9 +218,9 @@ async def check_balance(settings: Settings) -> float:
     async with httpx.AsyncClient(timeout=TIMEOUT_MS / 1000) as client:
         r = await client.get(KEY_URL, headers={"Authorization": f"Bearer {settings.openrouter_api_key}"})
     r.raise_for_status()
-    left = r.json()["data"]["limit_remaining"]
-    # A key with no spend limit reports null; nothing on the key can run out.
-    balance = float("inf") if left is None else float(left)
+    # effective_budget is the tightest of the key limit and the guardrail budgets; null means uncapped.
+    budget = r.json()["data"].get("effective_budget")
+    balance = float("inf") if budget is None else float(budget["remaining_usd"])
     if balance < settings.balance_floor_usd:
         raise BalanceTooLow(f"OpenRouter balance ${balance:.2f} is below the ${settings.balance_floor_usd:.2f} floor")
     return balance
