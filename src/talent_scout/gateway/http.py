@@ -25,7 +25,9 @@ async def get_json(client: httpx.AsyncClient, source: Source, url: str, store: S
                     return resp.json()
                 except ValueError:
                     raise SourceUnavailable(f"{source} returned a body that is not JSON") from None
-            if resp.status_code == 429 and source == Source.adzuna:
+            if resp.status_code == 429:
+                if source != Source.adzuna:  # USAJOBS has no limit to protect, so there is no lockout
+                    raise SourceUnavailable(f"{source} is rate limiting") from None
                 # No retry: the quota is gone, so refuse everything until the next UTC day.
                 store.lock_day(source)
                 raise BudgetExhausted(f"{source} daily limit reached")

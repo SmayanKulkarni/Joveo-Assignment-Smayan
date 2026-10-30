@@ -1,6 +1,6 @@
 import sqlite3
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from pydantic import TypeAdapter
 
@@ -11,8 +11,18 @@ from talent_scout.kernel.types import Posting, Source
 POSTINGS = TypeAdapter(list[Posting])
 
 
+def today() -> date:
+    return datetime.now(UTC).date()
+
+
 def _today() -> str:
-    return datetime.now(UTC).date().isoformat()
+    return today().isoformat()
+
+
+def without_closed(page: Page) -> Page:
+    """Drops Postings past their close date. They are not counted as dropped, which is for mapper failures."""
+    now = today()
+    return page._replace(postings=[p for p in page.postings if p.closes_at is None or p.closes_at >= now])
 
 
 class Store:
@@ -59,6 +69,11 @@ class Store:
             (source, fetch_json, POSTINGS.dump_json(page.postings).decode(), page.total, page.dropped,
              fetched_at.isoformat(), expires_at),
         )
+        self._purge()
+
+    def _purge(self) -> None:
+        """Drops L1 rows whose Postings have all closed. Runs after each live write, the only moment the table grows."""
+        self._db.execute("DELETE FROM l1 WHERE expires_at < ?", (_today(),))
 
     def spend(self, source: Source) -> None:
         """Counts one HTTP attempt, or raises BudgetExhausted when today's limit is already used."""

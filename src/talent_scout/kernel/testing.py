@@ -3,6 +3,17 @@ from langchain_core.runnables import Runnable
 from langchain_typesafe import ClassifierResponse, NoulAnswer
 from pydantic import Field
 
+from talent_scout.kernel.settings import Settings
+
+
+def make_settings(**kw) -> Settings:
+    """Settings with dummy credentials and no .env; keyword args override any field."""
+    base = dict(
+        openrouter_api_key="k", adzuna_app_id="a", ADZUNA_API_KEY="b", usajobs_api_key="c",
+        usajobs_user_agent="d", langsmith_api_key="e", langsmith_tracing=False, langsmith_project="p",
+    )
+    return Settings(_env_file=None, **{**base, **kw})
+
 
 class FakeToolChatModel(GenericFakeChatModel):
     # Keeps the tools it was given so tests can check they survive a fallback.

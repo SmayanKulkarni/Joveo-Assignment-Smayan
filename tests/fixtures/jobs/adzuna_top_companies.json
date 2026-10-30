@@ -1,0 +1,54 @@
+{
+  "status": 200,
+  "latency_ms": 922,
+  "headers": {
+    "Date": "Fri, 30 Oct 2026 10:41:24 GMT",
+    "Content-Type": "application/json; charset=utf8",
+    "Content-Length": "644",
+    "Connection": "close",
+    "Server": "nginx/1.28.3",
+    "Vary": "Content-Type",
+    "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+    "Access-Control-Allow-Origin": "*",
+    "X-Catalyst": "5.90132"
+  },
+  "body": {
+    "leaderboard": [
+      {
+        "canonical_name": "Capital One",
+        "__CLASS__": "Adzuna::API::Response::Company",
+        "count": 180
+      },
+      {
+        "__CLASS__": "Adzuna::API::Response::Company",
+        "canonical_name": "JPMorgan Chase",
+        "count": 163
+      },
+      {
+        "count": 153,
+        "__CLASS__": "Adzuna::API::Response::Company",
+        "canonical_name": "Amazon"
+      },
+      {
+        "count": 128,
+        "__CLASS__": "Adzuna::API::Response::Company",
+        "canonical_name": "Deloitte"
+      },
+      {
+        "__CLASS__": "Adzuna::API::Response::Company",
+        "count": 74,
+        "canonical_name": "PwC"
+      }
+    ],
+    "__CLASS__": "Adzuna::API::Response::TopCompanies",
+    "location": {
+      "__CLASS__": "Adzuna::API::Response::Location",
+      "area": [
+        "US",
+        "New York",
+        "New York City"
+      ],
+      "display_name": "New York City, New York"
+    }
+  }
+}

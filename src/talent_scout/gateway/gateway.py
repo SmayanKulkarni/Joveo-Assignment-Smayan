@@ -8,8 +8,9 @@ import langsmith as ls
 from talent_scout.gateway.adzuna import AdzunaClient
 from talent_scout.gateway.coalesce import coalesce
 from talent_scout.gateway.http import TIMEOUT
-from talent_scout.gateway.store import POSTINGS, Store
+from talent_scout.gateway.store import POSTINGS, Store, without_closed
 from talent_scout.gateway.types import CacheStatus, Fetch, FetchResult, GatewayError, Page, SourceOutcome
+from talent_scout.gateway.usajobs import UsajobsClient
 from talent_scout.kernel.replay import Replay, open_replay
 from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.types import Posting, Source
@@ -21,7 +22,7 @@ class JobsGateway:
         self._http: httpx.AsyncClient | None = None
         self._store: Store | None = None
         self._replay: Replay | None = None
-        self._clients: dict[Source, AdzunaClient] = {}
+        self._clients: dict[Source, AdzunaClient | UsajobsClient] = {}
         # One lock per cache key, so concurrent identical Fetches share one call instead of each spending quota.
         self._locks: dict[tuple[Source, str], asyncio.Lock] = {}
 
@@ -36,7 +37,10 @@ class JobsGateway:
         # Opened with the store so a Gateway that is never entered creates no replay file.
         if self._settings.replay_cache:
             self._replay = open_replay(self._settings.replay_cache)
-        self._clients = {Source.adzuna: AdzunaClient(self._http, self._settings, self._store)}
+        self._clients = {
+            Source.adzuna: AdzunaClient(self._http, self._settings, self._store),
+            Source.usajobs: UsajobsClient(self._http, self._settings, self._store),
+        }
         return self
 
     async def __aexit__(self, *exc) -> None:
@@ -67,7 +71,9 @@ class JobsGateway:
             else:
                 page = await self._clients[source].search(f)
                 fetched_at, cache = datetime.now(UTC), CacheStatus.miss
+                # Stored unfiltered, so the row's expiry still sees every close date.
                 self._store.put_l1(source, key, page, fetched_at)
+            page = without_closed(page)
             if self._replay:
                 self._replay.put_jobs(
                     source, key, POSTINGS.dump_json(page.postings).decode(), page.total, page.dropped, fetched_at.isoformat()
@@ -89,7 +95,8 @@ class JobsGateway:
     async def fetch(self, f: Fetch) -> FetchResult:
         if not self._clients:
             raise RuntimeError("JobsGateway must be opened with `async with` before fetch")
-        names = list(self._clients)
+        # Adzuna always; USAJOBS only covers the US.
+        names = [s for s in self._clients if s == Source.adzuna or f.country == "us"]
         answers = await asyncio.gather(*(self._resolve(s, f) for s in names), return_exceptions=True)
 
         postings, sources, failures = [], {}, {}

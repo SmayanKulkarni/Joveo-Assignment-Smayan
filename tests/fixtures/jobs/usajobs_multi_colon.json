@@ -1,0 +1,26 @@
+{
+  "status": 200,
+  "latency_ms": 293,
+  "headers": {
+    "Content-Type": "application/hr+json; charset=utf-8",
+    "x-azure-ref": "20261030T104126Z-1648c766bf4c9mw8hC1EWRqy5400000005vg0000000018pt",
+    "Content-Length": "186",
+    "Date": "Fri, 30 Oct 2026 10:41:27 GMT",
+    "Connection": "close",
+    "Set-Cookie": "akavpau_DATA_USAJ=1793357187~id=bdc1364788b8664e4104c0edf7b6877f; Domain=data.usajobs.gov; Path=/; Secure; SameSite=None",
+    "Strict-Transport-Security": "max-age=31536000 ; includeSubDomains"
+  },
+  "body": {
+    "LanguageCode": "EN",
+    "SearchParameters": {},
+    "SearchResult": {
+      "SearchResultCount": 0,
+      "SearchResultCountAll": 0,
+      "SearchResultItems": [],
+      "UserArea": {
+        "NumberOfPages": "0",
+        "IsRadialSearch": false
+      }
+    }
+  }
+}

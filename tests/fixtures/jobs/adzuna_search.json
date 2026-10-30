@@ -1,0 +1,1703 @@
+{
+  "status": 200,
+  "latency_ms": 2489,
+  "headers": {
+    "Date": "Fri, 30 Oct 2026 10:41:18 GMT",
+    "Content-Type": "application/json; charset=utf8",
+    "Content-Length": "70501",
+    "Connection": "close",
+    "Server": "nginx/1.28.3",
+    "Vary": "Content-Type",
+    "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+    "Access-Control-Allow-Origin": "*",
+    "X-Catalyst": "5.90132"
+  },
+  "body": {
+    "results": [
+      {
+        "description": "RESPONSIBILITIES: Kforce's client in NYC is seeking a highly skilled Data Engineer with strong hands-on experience in Apache Spark/PySpark, AWS EMR, Databricks, and Snowflake. The Data Engineer will be responsible for designing and building scalable, high-volume data pipelines, optimizing distributed data processing workloads, implementing data quality and observability frameworks, and resolving complex performance and production challenges across cloud-based data platforms. REQUIREMENTS: * Str\u2026",
+        "salary_min": 181617.88,
+        "created": "2026-10-14T21:35:19Z",
+        "id": "5928261629",
+        "redirect_url": "https://www.adzuna.com/land/ad/5928261629?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=9FF91AB80A944DE62010DD8717D604889963113E",
+        "salary_max": 181617.88,
+        "latitude": 40.75284,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyODI2MTYyOSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.nyzqMWSmSuIU4rEQatdabo2gG-tWfnnGMyHmaf0lUJs",
+        "title": "Data Engineer",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "longitude": -73.97528,
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Kforce Technology Staffing",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        }
+      },
+      {
+        "title": "Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNjY4MTc2OCIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.v3HcnHhg_CGHWNlA9UHH-YzGHe5WNTlCoK_THI9n0RE",
+        "location": {
+          "area": [
+            "US",
+            "New Jersey",
+            "Bergen County",
+            "Park Ridge"
+          ],
+          "display_name": "Park Ridge, Bergen County",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "salary_max": 105355.63,
+        "latitude": 41.048538,
+        "redirect_url": "https://www.adzuna.com/land/ad/5936681768?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=7BA333E88B095A573860726EF4F0C2A2038DE467",
+        "created": "2026-10-21T08:30:52Z",
+        "salary_min": 105355.63,
+        "id": "5936681768",
+        "description": "Job Requirements .30354-1 Required Skillset: 5 years of experience in application support, technical leadership, or data-platform troubleshooting Hands-on Azure data engineering and Python experience Working knowledge of Databricks and PySpark, including notebooks, data transformations, and read/write operations Advanced T-SQL and data warehouse skills, including stored procedures, functions, execution plans, indexing, and query optimization Experience troubleshooting ETL pipelines, large datas\u2026",
+        "company": {
+          "display_name": "Xoriant Corporation",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -74.039964
+      },
+      {
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Accodian LLC",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "longitude": -73.97528,
+        "salary_max": 123462.63,
+        "latitude": 40.75284,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "title": "Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTI3OTY1MzA2In0.Er7qf0YRW3Ct1YTjN-OUxu_jGfz94Ih7cO2NGJxufoI",
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "description": "Key Responsibilities Design, develop, and maintain ETL packages using SQL Server Integration Services (SSIS). Develop and optimize complex SQL queries, stored procedures, functions, views, and indexes. Design, develop, and maintain reports and dashboards using SQL Server Reporting Services (SSRS). Develop and maintain analytical models, cubes, and measures using SQL Server Analysis Services (SSAS). Work with data warehouses, dimensional modeling, fact and dimension tables, and data marts. Perfo\u2026",
+        "salary_min": 123462.63,
+        "created": "2026-10-14T15:38:40Z",
+        "id": "5927965306",
+        "redirect_url": "https://www.adzuna.com/land/ad/5927965306?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=B1C7F0AB0D1A9C1D094F06964FA314850757E6BB"
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5934845065?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=D340BA1476AC647858832C2C3E2651AE91850A22",
+        "created": "2026-10-19T21:44:57Z",
+        "salary_min": 246841.34,
+        "id": "5934845065",
+        "description": "The Security Technology Engineering team is responsible for collaborating and partnering with various Business Units (BUs) and stakeholders across the organization to manage external and insider threat detection, mitigation, investigation and response efforts across the organization. The Lead Info Security Engineer will participate in the activities of a global, expert team that develops robust technical solutions and advanced AI/ML capability to enable preventive threat detection efforts. The \u2026",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "title": "Security Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTM0ODQ1MDY1In0.klFcMBQUQEdrqDOrdwR9GBRKOmIpQ5h8_ejZEIBIgAA",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "salary_max": 246841.34,
+        "latitude": 40.75284,
+        "longitude": -73.97528,
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "TIAA"
+        }
+      },
+      {
+        "title": "Data Engineer-DataBricks",
+        "location": {
+          "display_name": "Newark, Essex County",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New Jersey",
+            "Essex County",
+            "Newark"
+          ]
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyNjE5MzU1MSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.Gar6Fd8eDd66p42zvVeVB6710ngEofwH_6gS3np14sk",
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "salary_max": 153225.9,
+        "latitude": 40.735686,
+        "redirect_url": "https://www.adzuna.com/land/ad/5926193551?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=0C2F6981B6F26294653E71E2AABE2E263627BAEC",
+        "id": "5926193551",
+        "created": "2026-10-13T15:17:40Z",
+        "salary_min": 153225.9,
+        "description": "Data Engineer-DataBricks Introduction We are looking for a skilled and driven Data Engineer with 3-5 years of hands-on expertise in data engineering and cloud data warehousing. As a Data Engineer at ISG, you will be responsible for building, optimizing, and maintaining our enterprise Databricks Lakehouse platform. This platform serves as the foundational engine for our data and AI initiatives, and you will play a key role in translating technical requirements into robust data pipelines and impl\u2026",
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "International Solutions Group"
+        },
+        "longitude": -74.173124
+      },
+      {
+        "salary_max": 153715.78,
+        "latitude": 40.75284,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "title": "AI Data Engineer",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkxNzM3MDA3NSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.q0IYRch4VWP8cmDXFRYvWB0C_JIc3libBRAyk4Jw0vQ",
+        "description": "Senior AI Data Engineer Location: Princeton, NJ / NYC, NY \u2013 Hybrid Type: Full-Time We are looking for a Senior AI Data Engineer with strong expertise in Python, Databricks, Spark, AI/ML data pipelines, and ML lifecycle management . Must Have: 10 years of experience in Data Engineering , with strong AI/ML exposure. Advanced Python, SQL, Databricks & Apache Spark experience. Experience building ML/AI data pipelines, feature engineering, and data preprocessing . Hands-on experience with MLflow, mo\u2026",
+        "created": "2026-10-07T12:32:40Z",
+        "salary_min": 153715.78,
+        "id": "5917370075",
+        "redirect_url": "https://www.adzuna.com/land/ad/5917370075?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=CB8E7261D809F1DA6A6DC26BCA6E97B9D16A25E2",
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Pebal Bright Technologies LLC"
+        },
+        "longitude": -73.97528
+      },
+      {
+        "longitude": -73.97528,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "IMR Soft LLC"
+        },
+        "salary_is_predicted": "1",
+        "redirect_url": "https://www.adzuna.com/land/ad/5938362982?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=039DABEA5B1C94D66F0D64F01501D0DD8A2F7C63",
+        "description": "Position: Snowflake/Data Engineer role Location: NYC, NY 3days onsite Duration: 12 Months JD for Snowflake/Data Engineer role. Qualifications : Hands on experience 5 years in Snowflake and virtual data warehouse set up Snowflake data modeling Must have done projects where semi-structured and unstructured data is brought into Snowflake Deep understanding of using REST API Hands on experience in SQL and PL SQL Power BI Semantic model experience Knowledge of Azure",
+        "created": "2026-10-22T17:55:03Z",
+        "salary_min": 238782.52,
+        "id": "5938362982",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTM4MzYyOTgyIn0.OhQukaPauNXg1ZXHsDwc1-0hNVM0TlvxrYD-Suxa1jE",
+        "title": "Snowflake/Data Engineer",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan"
+        },
+        "salary_max": 238782.52,
+        "latitude": 40.75284
+      },
+      {
+        "longitude": -73.97528,
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Turing IT Labs"
+        },
+        "description": "Job Title: Senior Data Engineer Location: Manhattan, NYC (Hybrid \u2013 3 days onsite per week) Employment Type: Contract Required Skills: 15 years of overall IT experience. 10 years of Data Engineering experience. Strong Python and SQL skills. DBT, Snowflake, and financial domain experience. Hands-on experience with AWS Glue, S3, Athena, and Lambda. Experience with Apache Iceberg and SnapLogic. Knowledge of ETL/ELT pipelines and data lakes. Experience with Amazon QuickSight or other BI tools. Good \u2026",
+        "created": "2026-10-21T16:04:20Z",
+        "id": "5937003953",
+        "salary_min": 124090.5,
+        "redirect_url": "https://www.adzuna.com/land/ad/5937003953?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=62E5529B7111A574E86A23DEE5E119A15E14C2C8",
+        "salary_max": 124090.5,
+        "latitude": 40.75284,
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "title": "AWS Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNzAwMzk1MyIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.loTesdUsN5sX0xEcfm4UcZTVkTtY9kYUMpCgUn8HbrI",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan"
+        }
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5936950750?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=0AA404840342E0E861DE26CC840AD662BE456B69",
+        "description": "Senior Data Engineer NY (Hybrid) | Contract, C2C Open Role Summary Build and support data pipelines that power enterprise reporting across Finance, Technology, and Operations. Requirements 14 years of software development experience 7 years of data engineering experience Strong SQL and Python AWS: Glue, S3, Athena, Data Catalog Apache Iceberg and data lake experience SnapLogic or similar ETL tools BI tools: QuickSight, Tableau, or Power BI Nice to Have dbt and Snowflake Payments or banking doma\u2026",
+        "id": "5936950750",
+        "created": "2026-10-21T14:07:24Z",
+        "salary_min": 132258.16,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "title": "Senior Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNjk1MDc1MCIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.ctu6HaGZB5OeNgQvpLo8mI4onjGWzG-da8XfQzk8d8Q",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "salary_max": 132258.16,
+        "latitude": 40.75284,
+        "longitude": -73.97528,
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "KONNECTINGTREE INC"
+        }
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5943741523?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=64A1E9A20B9C50BB357459125BC9FC3A848CA1BE",
+        "created": "2026-10-27T17:08:00Z",
+        "salary_min": 193111.39,
+        "id": "5943741523",
+        "description": " Job Description: AWS Data & Solution Engineer Location: New York City, NY Work Mode: Hybrid 2 3 days onsite per week Experience: 10 Years  Job Summary We are seeking a Senior AWS Data & Solution Engineer with strong hands-on expertise in Python, PySpark, and AWS cloud services to design, develop, and optimize enterprise-scale data solutions for a Fortune 500 client. The role focuses on building an enterprise data lake on AWS, developing scalable data pipelines, implementing event-driven integr\u2026",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0Mzc0MTUyMyIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.J9PxSsDho6CzU1t6os3UQzcYDyLBtMNnjc5VFMU__Rc",
+        "title": "AWS Data Engineer",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan"
+        },
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "latitude": 40.75284,
+        "salary_max": 193111.39,
+        "longitude": -73.97528,
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Marici Solutions",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        }
+      },
+      {
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "title": "Data Engineer, Accounting",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNDU5OTkyMCIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.ClLWVBi8A_HsiLjxo1O7Gtfq3vQZqU9YmpjIIWZrgWc",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "salary_max": 159765.36,
+        "latitude": 40.75284,
+        "redirect_url": "https://www.adzuna.com/land/ad/5934599920?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=E285A461D32DEEAB4B663360571ECE8AB1D3F597",
+        "salary_min": 159765.36,
+        "created": "2026-10-19T17:36:26Z",
+        "id": "5934599920",
+        "description": "Title: Data Engineer, Accounting Location: New York, NY Employment Type: Full-Time Compensation: Pay Range: $100,000-$140,000 Per Year Job Summary: \u2022 Join our dynamic team in a full-time role based in New York, NY. \u2022 You will be responsible for developing data systems to support accounting and treasury operations. \u2022 Collaborate with stakeholders to deliver solutions using modern data technologies. Key Responsibilities: \u2022 Serve as the primary engineering resource for enhancements, integrations, \u2026",
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Mitchell Martin, Inc.",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "longitude": -73.97528
+      },
+      {
+        "longitude": -74.0784,
+        "company": {
+          "display_name": "Microgreen Technologies LLC",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "redirect_url": "https://www.adzuna.com/land/ad/5944834731?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=68D4AB64E1701AA5B5A795A48616FACCC2B1F58D",
+        "description": "Title: Data Engineer \u2013 Java Location: Jersey City, NJ Need EAD Interview Process: 2 to 3 rounds of interview (Inperson required for second round) Must Have: Java and Spring boot, public cloud (AWS), ECS, Lambda, Cassandra, Any OLAP Database. Nice to Have: Basic Terraform experience. Some knowledge of Spark. Glue is highly desired Job Description: Cloud backend engineer Roles and Responsibilities: Formal training or certification on software engineering concepts and 5 years of applied experience\u2026",
+        "salary_min": 157881.16,
+        "created": "2026-10-28T14:19:00Z",
+        "id": "5944834731",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "title": "Data Engineer - Java",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0NDgzNDczMSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.amWuLb8f3UXBlKDGo5KqbCdX7NcxTd4WVams0P05Mwo",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Five Corners, Hudson County",
+          "area": [
+            "US",
+            "New Jersey",
+            "Hudson County",
+            "Five Corners"
+          ]
+        },
+        "salary_max": 157881.16,
+        "latitude": 40.7282
+      },
+      {
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Talent Groups",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "longitude": -73.97528,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "title": "AI Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTI2MDc3ODkxIn0.9mueEo0JnrGGApwursbi0AfcGAYLjYDzM2sVirMOIx8",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "latitude": 40.75284,
+        "salary_max": 117005.39,
+        "redirect_url": "https://www.adzuna.com/land/ad/5926077891?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=917541B5950CD4BD9235735837551CA615A87A05",
+        "description": "Job Description: Primary: AI/agent engineering capability and skillset 2 years hands-on AI engineering experience Strong evidence in Agentic AI, LLMs, prompting, and RAG Production implementation evidence in Python, APIs, cloud, and security At least one complete solution covering retrieval, tool execution, evaluation, deployment, and monitoring Primary AI development experience and skillset of \u201c2 years\u201d applies to the AI discipline broadly\u2014not independently to every AI competency because Agent\u2026",
+        "created": "2026-10-13T13:27:08Z",
+        "salary_min": 117005.39,
+        "id": "5926077891"
+      },
+      {
+        "latitude": 40.735686,
+        "salary_max": 262660.78,
+        "title": "Senior Data Engineer",
+        "location": {
+          "display_name": "Newark, Essex County",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New Jersey",
+            "Essex County",
+            "Newark"
+          ]
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTQwNTQ2NzAyIn0.ZQPvjevYCfiPbudsWmkCDGGh5i04gf3zKAwb3zbAjxs",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "created": "2026-10-24T09:57:11Z",
+        "id": "5940546702",
+        "salary_min": 262660.78,
+        "description": "Title: Senior Data Engineer Location: Newark, NJ (Hybrid - 3 days per week in the office ) Duration: Full-time with ComTec Job Description: We are seeking an experienced Senior Data Engineer / Data Modeler to help drive data use cases from requirements through production delivery and to strengthen monitoring for existing data pipelines. This person will work with business and technical stakeholders to understand data needs, develop fit-for-purpose data models and pipelines, validate results, an\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5940546702?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=17DF6200676BAC4F4E28BA4A446D75919961B4D0",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "ComTec Information Systems"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -74.173124
+      },
+      {
+        "longitude": -74.0784,
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Tandym Tech",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "redirect_url": "https://www.adzuna.com/land/ad/5940546872?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=4B2C1A594E5D3EEF9C3D96C37A191C20A2C2069D",
+        "description": "A financial services organization in New Jersey is seeking an Azure Data Engineer to design and build data solutions using Microsoft Azure technologies at its Jersey City location. About the Opportunity: Schedule: Monday to Friday Setting: Hybrid (at least 3 days) Responsibilities: Design and build data solutions using Microsoft Azure technologies Develop and maintain data pipelines to support business data needs Implement and support data lake environments Work with Azure Data Factory and Azur\u2026",
+        "salary_min": 106017.32,
+        "created": "2026-10-24T09:57:24Z",
+        "id": "5940546872",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "title": "Azure Data Engineer",
+        "location": {
+          "area": [
+            "US",
+            "New Jersey",
+            "Hudson County",
+            "Five Corners"
+          ],
+          "display_name": "Five Corners, Hudson County",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTQwNTQ2ODcyIn0.fH8Uqi_wuyJ3NANOLdCEn5-DoVPUJcf-ng33Zr0oV9E",
+        "salary_max": 106017.32,
+        "latitude": 40.7282
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5938161286?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=F35509CF4786AE9969DE484A065530089C82A3F4",
+        "description": "Hi, Please find my direct client's job requirements for your consideration. Title: Databricks developer Location: Liberty Street, New York, NY Duration: 12 Months ( potential extensions. ) Client: Federal Reserve Bank of New York We need one Databricks Solutions Architect and two developers Responsibilitie Architect scalable data processing frameworks leveraging Databricks platform for analytical workloads Implement cost-optimization strategies balancing compute resources, storage tiering, and \u2026",
+        "created": "2026-10-22T12:13:12Z",
+        "id": "5938161286",
+        "salary_min": 228975.34,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "title": "Databricks Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzODE2MTI4NiIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.zTAtGMd8Ev-2vaTND5vVz294mG9tiNWPtYGID0o9_qU",
+        "latitude": 40.75284,
+        "salary_max": 228975.34,
+        "longitude": -73.97528,
+        "company": {
+          "display_name": "Serenity Info Tech, Inc.",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1"
+      },
+      {
+        "company": {
+          "display_name": "Montefiore Health System Inc",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -73.880073,
+        "latitude": 40.942896,
+        "salary_max": 110584.05,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "tag": "scientific-qa-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "Scientific & QA Jobs"
+        },
+        "title": "Data Engineer - Research Informatics",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Yonkers, Westchester County",
+          "area": [
+            "US",
+            "New York",
+            "Westchester County",
+            "Yonkers"
+          ]
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNDY1MjE0OCIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.jpw0N4DeFsT_it4wOQPLkVqQnuOU5IN_9tAqguC5HgE",
+        "description": "City/State: Yonkers, New York Grant Funded: No Department: IT - Data & Analytics Health Research Informatics Work Shift: Day Work Days: MON-FRI Scheduled Hours: 8:30 AM-5 PM Scheduled Daily Hours: 7.5 HOURS Pay Range: $128,000.00-$160,000.00 Montefiore Medical Center is nationally recognized for clinical excellence-breaking new ground in research, training the next generation of healthcare leaders, and delivering science-driven, patient-centered care. Montefiore is ranked among the top hospital\u2026",
+        "salary_min": 110584.05,
+        "created": "2026-10-19T19:48:54Z",
+        "id": "5934652148",
+        "redirect_url": "https://www.adzuna.com/land/ad/5934652148?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=5308898F61DE45285BD464C455870087CA3E7531"
+      },
+      {
+        "company": {
+          "display_name": "ManpowerGroup",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -74.039964,
+        "salary_max": 185757.5,
+        "latitude": 41.048538,
+        "title": "Data Engineer",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Park Ridge, Bergen County",
+          "area": [
+            "US",
+            "New Jersey",
+            "Bergen County",
+            "Park Ridge"
+          ]
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyODk0MjExNSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.8afimp3xR342ya3WBPoQeO6jSOqXJz5vbaFJdwkLgBc",
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "created": "2026-10-15T07:23:34Z",
+        "salary_min": 185757.5,
+        "id": "5928942115",
+        "description": "Our client is seeking a Data Engineer to join their team. As a Data Engineer, you will be part of the Data Support Department supporting Data Platform and Application Support teams. The ideal candidate will demonstrate strong problem-solving skills, effective communication, and a proactive approach to technical challenges, which will align successfully in the organization. Job Title: Data Engineer Location: Montvale, NJ Payrate: $76 hourly on w2 What's the Job?  Support and troubleshoot complex\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5928942115?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=5653E738978AB61B694A7731473F6086A1DF1A77"
+      },
+      {
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyMzI5ODU2MyIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.L4b7W62-p8TpqKRwoRuTOAOk5eSMcWepEjgdIz6YXKI",
+        "title": "Data Engineer",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "latitude": 40.755381,
+        "salary_max": 122483.5,
+        "redirect_url": "https://www.adzuna.com/land/ad/5923298563?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=B4A5C96BC255FAFFDBA6C3D7F4DDA72C9EFB1ACC",
+        "description": "Job Description The Data Engineering team at UJA-Federation of New York is seeking an experienced Data Engineer to join our team. The ideal candidate will bring strong expertise in Python development for data-intensive applications, including hands-on proficiency with SQL and PySpark. This role involves building scalable data pipelines, improving data quality and reliability, and collaborating with cross-functional teams to support analytics, reporting, and machine learning initiatives. - Desig\u2026",
+        "created": "2026-10-11T08:29:42Z",
+        "salary_min": 122483.5,
+        "id": "5923298563",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Insight Global"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -73.978504
+      },
+      {
+        "salary_max": 143601.97,
+        "latitude": 40.90243,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Saddle Brook, Bergen County",
+          "area": [
+            "US",
+            "New Jersey",
+            "Bergen County",
+            "Saddle Brook"
+          ]
+        },
+        "title": "Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0MTQxNjg4NyIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.wCoENNVsoiSGixAJnI_fly5OgyUlHpEX8qfSBzF_Gss",
+        "description": "Description We are looking for a Data Engineer to join a Chemicals Manufacturing organization in New Jersey in a contract-to-permanent capacity. This role focuses on creating reliable, secure, and scalable data solutions that connect operational and business systems to enterprise reporting, analytics, and advanced data use cases. The position will work across IT and operational environments to support trusted data delivery for functions such as finance, supply chain, operations, commercial team\u2026",
+        "created": "2026-10-25T07:34:14Z",
+        "salary_min": 143601.97,
+        "id": "5941416887",
+        "redirect_url": "https://www.adzuna.com/land/ad/5941416887?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=C4A597F5B915300268E641AA6DF9C666FFF4E92C",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Robert Half"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -74.097264
+      },
+      {
+        "latitude": 40.75286,
+        "salary_max": 363162.12,
+        "category": {
+          "label": "Engineering Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "engineering-jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "title": "Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTQ0NDI0NjA2In0.VRvVuWY-Mv_7HJ54cqRu4sYLxuLAjBPnk--Wr72Zn84",
+        "description": "Accenture Flex offers you the flexibility of local fixed-duration project-based work powered by Accenture, a leading global professional services company. Accenture is consistently recognized on FORTUNE's 100 Best Companies to Work For and Diversity Inc's Top 50 Companies For Diversity lists. As an Accenture Flex employee, you will apply your skills and experience to help drive business transformation for leading organizations and communities. In addition to delivering innovative solutions for \u2026",
+        "created": "2026-10-28T07:26:30Z",
+        "id": "5944424606",
+        "salary_min": 363162.12,
+        "redirect_url": "https://www.adzuna.com/land/ad/5944424606?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=0FACD8DC2516C11677E765BDB48BDA4E0CBA83FF",
+        "company": {
+          "display_name": "Accenture",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -73.97545
+      },
+      {
+        "longitude": -73.7232,
+        "company": {
+          "display_name": "Insight Global",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "redirect_url": "https://www.adzuna.com/land/ad/5933281875?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=42D442C5C90A3D83F742F4F390649210B37365C3",
+        "id": "5933281875",
+        "created": "2026-10-18T07:31:51Z",
+        "salary_min": 160494.86,
+        "description": "Job Description This is a highly hands-on engineering role focused on translating evolving R&D requirements into secure, reliable, scalable, and production-ready data platforms and pipelines. You will collaborate with AI Engineers, Data Scientists, Researchers, Software Engineers, and Product Managers to accelerate experimentation and production delivery. - Design and build scalable batch, streaming, and event-driven data pipelines and platforms. - Develop data ingestion, transformation, enrich\u2026",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "Westchester County",
+            "Harrison"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Harrison, Westchester County"
+        },
+        "title": "Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTMzMjgxODc1In0.gScft6gD4onzWfXVhsXJCXfgV4puj7uaMjKEti50808",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "latitude": 40.9805,
+        "salary_max": 160494.86
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5909924668?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=01EA1887E6C1F570A4E3BC3B3CC1EB242ADEEF2D",
+        "created": "2026-10-03T07:13:56Z",
+        "salary_min": 162949.08,
+        "id": "5909924668",
+        "description": "Data Engineer Choosing Capgemini means choosing a company where you will be empowered to shape your career in the way you'd like, where you'll be supported and inspired by a collaborative community of colleagues around the world, and where you'll be able to reimagine what's possible. Join us and help the world's leading organizations unlock the value of technology and build a more sustainable, more inclusive world. Job Description What You Will Own Medallion Architecture - Bronze through Gold -\u2026",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTA5OTI0NjY4In0.mv02C3Qx6NC3aXctKSUqhW9DJLCsSIaFWSHg-MKZ1lA",
+        "title": "Data Engineer",
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "latitude": 40.755381,
+        "salary_max": 162949.08,
+        "longitude": -73.978504,
+        "company": {
+          "display_name": "Capgemini",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1"
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5936582527?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=B9D3EC9E70A64748383EDDB5857C0D5BF918FF5F",
+        "created": "2026-10-21T07:12:51Z",
+        "id": "5936582527",
+        "salary_min": 150840.88,
+        "description": "Discover your future at Citi Working at Citi is far more than just a job. A career with us means joining a team of more than 230,000 dedicated people from around the globe. At Citi, you'll have the opportunity to grow your career, give back to your community and make a real impact. Job Overview About Citi: Citi, the leading global bank, has approximately 200 million customer accounts and does business in more than 160 countries and jurisdictions. Citi provides consumers, corporations, governmen\u2026",
+        "title": "Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTM2NTgyNTI3In0.I8LXFf2fP28B_ywY6O4biGBi8mz9rAeqB5AOi-93Hi8",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Tyler Park, Hudson County",
+          "area": [
+            "US",
+            "New Jersey",
+            "Hudson County",
+            "Tyler Park"
+          ]
+        },
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "salary_max": 150840.88,
+        "latitude": 40.73472,
+        "longitude": -74.05904,
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Citigroup",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        }
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5943784747?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=B62AE7FB0C594C2638F25F2CD61F6062E5B82EFA",
+        "created": "2026-10-27T18:24:08Z",
+        "id": "5943784747",
+        "salary_min": 138021.94,
+        "description": "Data Engineer Position Overview We are seeking a hands-on Data Engineer to help build and evolve a modern, centralized data platform. This role will work with large volumes of data coming from a variety of internal and external sources, transforming raw and sometimes inconsistent information into clean, structured, reliable datasets that can be used across the business. The ideal candidate is a strong data engineer at their core: someone who has personally built ETL/data pipelines, understands \u2026",
+        "title": "Data Engineer & Agentic AI Lead",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTQzNzg0NzQ3In0.8b2DlfnxGVoFgiDJ6ruTBo4M19qx_IrEkLDJJp1mw5E",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan"
+        },
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "salary_max": 138021.94,
+        "latitude": 40.75284,
+        "longitude": -73.97528,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Vaco by Highspring"
+        },
+        "salary_is_predicted": "1"
+      },
+      {
+        "latitude": 40.75284,
+        "salary_max": 145092.83,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "title": "Databricks Senior Data Engineer -Pyspark",
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTEyODM4MjgwIn0.x2qgETRGcwPIVJDWyt40Y0XQifssspeac6cI1-GWDng",
+        "description": "Hiring: Senior Data Engineer \u2013 Databricks/PySpark Location: New York, NY \u2013 Onsite Requirements: 7 years of Data Engineering experience 4 years hands-on with Databricks & Spark/PySpark Strong Python, SQL, Delta Lake Experience with AWS (S3, Glue) and Google Cloud Platform (BigQuery, GCS) Strong ETL/ELT, Spark optimization & data pipeline development Experience with CI/CD, Git, pytest Excellent communication and technical documentation skills Consulting/project delivery experience Nice to Have: K\u2026",
+        "salary_min": 145092.83,
+        "created": "2026-10-05T13:55:57Z",
+        "id": "5912838280",
+        "redirect_url": "https://www.adzuna.com/land/ad/5912838280?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=52243CA0FE352BF05F1FA8992E388C1701B15A8B",
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "SmartIT Frame",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "longitude": -73.97528
+      },
+      {
+        "latitude": 40.7282,
+        "salary_max": 139883.62,
+        "title": "Senior Data Engineer (Only W2)",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTM0NDQzMDk1In0.GolahBVLUiewvZ2UzZ48medEk60ld1b-c2SAmH0-3WI",
+        "location": {
+          "area": [
+            "US",
+            "New Jersey",
+            "Hudson County",
+            "Five Corners"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Five Corners, Hudson County"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "created": "2026-10-19T13:50:14Z",
+        "salary_min": 139883.62,
+        "id": "5934443095",
+        "description": "Role: Senior Data Engineer Location: Jersey City (Hybrid) Contract: 12 Months (In-person Interview is Must) // Only W2 Skills must have: 10 years' exp. *Python *Airflow/DBT *Kubernetes *Financial exp.",
+        "redirect_url": "https://www.adzuna.com/land/ad/5934443095?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=F2248AC06DBB60AE52271FB3778B87A4F84FD910",
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Softova Inc"
+        },
+        "longitude": -74.0784
+      },
+      {
+        "longitude": -74.0784,
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Citadel Information Services Inc"
+        },
+        "created": "2026-10-28T18:09:15Z",
+        "id": "5944923335",
+        "salary_min": 120524.09,
+        "description": "Responsible for building scalable ingestion, transformation, and storage pipelines across DataBricks Medallion Layers, Azure Data Factory, SQL Server, and staging/data layers, supporting Metrics Repository and onboarding of new datasets Summary: Builds systems that gather, store, and process large volumes of data for analysis. Responsibilities: Develop ETL pipelines, ensure data quality, optimize data storage solutions. Skills: Python, SQL, cloud data tools experience- Azure Data Factory) Finan\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5944923335?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=3B624B2F6A0FCFDB7173008D25C81674A6866B55",
+        "salary_max": 120524.09,
+        "latitude": 40.7282,
+        "title": "Azure Data Engineer (Financial domain)",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTQ0OTIzMzM1In0.CeY0DKqABSyKwOuz6P-3IyNDMfW2iFdxcLv5he8uH54",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Five Corners, Hudson County",
+          "area": [
+            "US",
+            "New Jersey",
+            "Hudson County",
+            "Five Corners"
+          ]
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        }
+      },
+      {
+        "longitude": -74.05904,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "ManpowerGroup"
+        },
+        "salary_is_predicted": "1",
+        "redirect_url": "https://www.adzuna.com/land/ad/5941406023?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=D845DF0119C6337FC84B9FF98A815B24E469F6AC",
+        "salary_min": 169930.08,
+        "created": "2026-10-25T07:31:00Z",
+        "id": "5941406023",
+        "description": "Our client is seeking an Azure Data Engineer to design and build reliable data solutions using Microsoft Azure technologies. From building data pipelines to implementing secure data lakes, you'll help turn complex data into dependable platforms that teams can trust. If you enjoy working with modern Azure data services and take pride in data security and compliance, this role is a great fit. Job Title: Azure Data Engineer Location: Jersey City, NJ What's the Job?  Design, develop, and maintain d\u2026",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0MTQwNjAyMyIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.sRoJaZBfrELfOjjnt0PQ_jQ2qH-wweiG-e8XWldWejA",
+        "title": "Azure Data Engineer",
+        "location": {
+          "area": [
+            "US",
+            "New Jersey",
+            "Hudson County",
+            "Tyler Park"
+          ],
+          "display_name": "Tyler Park, Hudson County",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "salary_max": 169930.08,
+        "latitude": 40.73472
+      },
+      {
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Insight Global"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -73.84998,
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "title": "Senior Data Engineer",
+        "location": {
+          "display_name": "Sleepy Hollow, Westchester County",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "Westchester County",
+            "Sleepy Hollow"
+          ]
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzOTIxMzU0MSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.Ih7pwzOKy6PlFQy9B8G6ydzsJ8MfUzpGWkvRYKCgq3I",
+        "salary_max": 108415.48,
+        "latitude": 41.08128,
+        "redirect_url": "https://www.adzuna.com/land/ad/5939213541?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=6F456F1575780473516F746DB3498FB72B39CCA6",
+        "description": "Job Description Insight Global is looking for a Senior Data Engineer that will join a large pharma client in Tarrytown, NY. This role will support the newly launched VI Train Command Center, an internal platform being built to create one shared, current view of antibody campaigns and improve visibility into priorities, capacity, readiness, and progress. This person will own a data engineering stream end-to-end, with approximately 80% of the role focused on backend development. They will design \u2026",
+        "created": "2026-10-23T07:34:25Z",
+        "salary_min": 108415.48,
+        "id": "5939213541"
+      },
+      {
+        "description": "Join Deloitte's Core AI & Data practice and help organizations modernize data platforms, strengthen enterprise data foundations, and scale analytics and artificial intelligence capabilities. As a Databricks Data Engineer, you will support the design, build, and optimization of cloud-based data engineering solutions that enable large-scale transformation. You will work with business and technology teams to modernize data environments, support analytics and artificial intelligence use cases, and \u2026",
+        "id": "5907948721",
+        "created": "2026-10-02T07:14:23Z",
+        "salary_min": 140173,
+        "redirect_url": "https://www.adzuna.com/land/ad/5907948721?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=7A1B48FCD4A2038DCA5162D520EB5E125150C532",
+        "latitude": 40.755381,
+        "salary_max": 140173,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkwNzk0ODcyMSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0._XQsqSn23c57AVYoU4F9nlUnw1GP8qsvujODkC-rwrg",
+        "title": "Databricks Data Engineer",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "longitude": -73.978504,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Deloitte"
+        },
+        "salary_is_predicted": "1"
+      },
+      {
+        "salary_max": 233700.44,
+        "latitude": 40.755381,
+        "title": "Data Engineer 5",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0MTQyNTgzMiIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.rFGFLagnPng-9qLHap65hFJtRJTqKzvIS_A2LpkptbM",
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "id": "5941425832",
+        "created": "2026-10-25T07:37:31Z",
+        "salary_min": 233700.44,
+        "description": "Data Engineer 5 Do you love building and pioneering in the technology space? Do you enjoy solving complex business problems in a fast-paced, collaborative, inclusive and iterative delivery environment? At Capital One, you'll be part of a big group of makers, breakers, doers and disruptors who solve real problems and meet real customer needs. We are seeking Data Engineers who are passionate about marrying data with emerging technologies. In this role, you'll be at the forefront of driving a majo\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5941425832?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=4D0B686C8303FDCFD28756AF64761E32319F0C79",
+        "company": {
+          "display_name": "Capital One",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -73.978504
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5918870312?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=13D7E449071CFB3AC87D585031D0F7F190575C1D",
+        "created": "2026-10-08T07:18:57Z",
+        "id": "5918870312",
+        "salary_min": 226821.95,
+        "description": "Data Engineer 5 Do you love building and pioneering in the technology space? Do you enjoy solving complex business problems in a fast-paced, collaborative, inclusive and iterative delivery environment? At Capital One, you'll be part of a big group of makers, breakers, doers and disruptors who solve real problems and meet real customer needs. We are seeking Data Engineers who are passionate about marrying data with emerging technologies. In this role, you'll be at the forefront of driving a majo\u2026",
+        "title": "Data Engineer 5",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTE4ODcwMzEyIn0.aLr9K4igqMOumnXHXMqJ1R_7actc_2k1fHNaLMnlqa4",
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "latitude": 40.755381,
+        "salary_max": 226821.95,
+        "longitude": -73.978504,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Capital One"
+        },
+        "salary_is_predicted": "1"
+      },
+      {
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Capital One"
+        },
+        "longitude": -73.978504,
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTA1NDg2NzUzIn0.x42jTgHRlLm62Eb2xGdjpDIFQHaqyI3y3swxFnzxQ2w",
+        "title": "Data Engineer 4",
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "latitude": 40.755381,
+        "salary_max": 220726.97,
+        "redirect_url": "https://www.adzuna.com/land/ad/5905486753?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=E10305EDC3410502F9F557E6EF80B7E2D56A6C48",
+        "description": "Data Engineer 4 Do you love building and pioneering in the technology space? Do you enjoy solving complex business problems in a fast-paced, collaborative, inclusive and iterative delivery environment? At Capital One, you'll be part of a big group of makers, breakers, doers and disruptors who solve real problems and meet real customer needs. We are seeking Data Engineers who are passionate about marrying data with emerging technologies. In this role, you'll be at the forefront of driving a majo\u2026",
+        "created": "2026-10-01T07:07:58Z",
+        "id": "5905486753",
+        "salary_min": 220726.97
+      },
+      {
+        "longitude": -73.978504,
+        "company": {
+          "display_name": "Capital One",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "redirect_url": "https://www.adzuna.com/land/ad/5909951202?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=19786E017B819964EB5F64B7B285B123EF772BD3",
+        "id": "5909951202",
+        "created": "2026-10-03T07:43:13Z",
+        "salary_min": 199547.17,
+        "description": "Data Engineer 4 Do you love building and pioneering in the technology space? Do you enjoy solving complex business problems in a fast-paced, collaborative, inclusive and iterative delivery environment? At Capital One, you'll be part of a big group of makers, breakers, doers and disruptors who solve real problems and meet real customer needs. We are seeking Data Engineers who are passionate about marrying data with emerging technologies. In this role, you'll be at the forefront of driving a majo\u2026",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTA5OTUxMjAyIn0.XqBTR8tO6RRRxvD_PUZEWAc3FPy9LkSDmxJ8E0c_2nI",
+        "title": "Data Engineer 4",
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "category": {
+          "label": "IT Jobs",
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "latitude": 40.755381,
+        "salary_max": 199547.17
+      },
+      {
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "JPMorgan Chase",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "longitude": -73.978504,
+        "latitude": 40.755381,
+        "salary_max": 257409.78,
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTA3OTYxODI1In0.-xJXB8Hp8bF9jZhIzkaD47YXV6zPDKf46CsI71Mnhcs",
+        "title": "Lead Data Engineer",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "salary_min": 257409.78,
+        "created": "2026-10-02T07:45:49Z",
+        "id": "5907961825",
+        "description": "Lead Data Engineer New York, NY, United States Job Information  Job Identification 210790524  Job Category Data Engineering  Business Unit Commercial & Investment Bank  Posting Date 10/05/2026, 01:11 PM  Locations 270 Park Ave, New York, NY, 10017, US  Job Schedule Full time  Base Pay/Salary New York,NY $147,250.00-$190,000.00 Job Description Join us as we embark on a journey of collaboration and innovation, where your unique skills and talents will be valued and celebrated. Together we will cr\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5907961825?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=2BB8371F2C6D7BCDEDD1793232B16E136408DDDF"
+      },
+      {
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Deloitte"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -73.978504,
+        "salary_max": 194469.02,
+        "latitude": 40.755381,
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTMyMTA4MzYwIn0.wwfRM2UsEoLZo35bCOGsosJdsaDodCOnV87RsPd4Nmw",
+        "title": "Data Engineer II",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "id": "5932108360",
+        "created": "2026-10-17T07:29:33Z",
+        "salary_min": 194469.02,
+        "description": "Our Human Capital practice is at the forefront of transforming the nature of work. As converging forces reshape industries, our team uniquely addresses the complexities of work, workforce, and workplace dynamics. We leverage sector-specific insights and cross-domain perspectives to help organizations tackle their most challenging workforce issues and align talent strategies with their strategic visions. Our practice is renowned for making work better for humans and humans better at work. Be par\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5932108360?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=000D6597467E787C20E3292D1104AF766292A40E"
+      },
+      {
+        "longitude": -73.978504,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Capital One"
+        },
+        "salary_is_predicted": "1",
+        "created": "2026-10-07T07:14:13Z",
+        "id": "5916901021",
+        "salary_min": 204416.88,
+        "description": "Data Engineer 4 Do you love building and pioneering in the technology space? Do you enjoy solving complex business problems in a fast-paced, collaborative, inclusive and iterative delivery environment? At Capital One, you'll be part of a big group of makers, breakers, doers and disruptors who solve real problems and meet real customer needs. We are seeking Data Engineers who are passionate about marrying data with emerging technologies. In this role, you'll be at the forefront of driving a majo\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5916901021?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=98DC6316E45E1E73DABC11DEAB7A9ACB9F16A53B",
+        "salary_max": 204416.88,
+        "latitude": 40.755381,
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTE2OTAxMDIxIn0.jM_8ytN73nEWWgJIzSseMq72cJz5Mhn9XF5c3VWZwjI",
+        "title": "Data Engineer 4",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        }
+      },
+      {
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNzg3NTIyOSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0._f4dtOGooG9ILW3EfAl6x6bRovvdD-t4FAYFr9hlmh8",
+        "title": "Principal Data Engineer",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan"
+        },
+        "latitude": 40.755381,
+        "salary_max": 220743.39,
+        "redirect_url": "https://www.adzuna.com/land/ad/5937875229?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=602D02DBFB356D48844284A0E6071EBA8A8304C9",
+        "description": "Job Requirements Technology is at the heart of Disney's past, present, and future. Disney Entertainment and ESPN Product & Technology is a global organization of engineers, product developers, designers, technologists, data scientists, and more - all working to build and advance the technological backbone for Disney's media business globally. The team marries technology with creativity to build world-class products, enhance storytelling, and drive velocity, innovation, and scalability for our b\u2026",
+        "id": "5937875229",
+        "created": "2026-10-22T07:40:46Z",
+        "salary_min": 220743.39,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Disney Entertainment"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -73.978504
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5920529706?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=C24D690916EA4CB84A86164377B3C1656A40DBB1",
+        "description": "Our Deloitte AI & Engineering team works to transform technology platforms, drive innovation, and help make a significant impact on our clients' success. You'll work alongside talented professionals reimagining and reengineering operations and processes that are critical to businesses. Your contributions can help clients improve financial performance, accelerate new digital ventures, and fuel growth through innovation. Work you'll do As a Data Engineer III on the AI & Data team, you will be res\u2026",
+        "salary_min": 139009.11,
+        "created": "2026-10-09T07:29:29Z",
+        "id": "5920529706",
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "title": "Data Engineer III",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTIwNTI5NzA2In0.PLamQPYYvSNMvYHRdoXg6gmWc7pb2eOf3RDqNhtgaR8",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "latitude": 40.755381,
+        "salary_max": 139009.11,
+        "longitude": -73.978504,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Deloitte"
+        },
+        "salary_is_predicted": "1"
+      },
+      {
+        "company": {
+          "display_name": "Deloitte",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -73.541863,
+        "salary_max": 99132,
+        "latitude": 40.7885,
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyMDUyOTcwNSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.qlYWcLKtwIKh0AFx_Ye5FCpontIHbfhtiRdmZtWVqEI",
+        "title": "Data Engineer III",
+        "location": {
+          "display_name": "Jericho, Nassau County",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "Nassau County",
+            "Jericho"
+          ]
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "tag": "it-jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "label": "IT Jobs"
+        },
+        "salary_min": 99132,
+        "created": "2026-10-09T07:29:29Z",
+        "id": "5920529705",
+        "description": "Our Deloitte AI & Engineering team works to transform technology platforms, drive innovation, and help make a significant impact on our clients' success. You'll work alongside talented professionals reimagining and reengineering operations and processes that are critical to businesses. Your contributions can help clients improve financial performance, accelerate new digital ventures, and fuel growth through innovation. Work you'll do As a Data Engineer III on the AI & Data team, you will be res\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5920529705?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=726E36B1523E4FB2BCB5F305E5ADA842E2C709CD"
+      },
+      {
+        "longitude": -74.05904,
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Deloitte"
+        },
+        "redirect_url": "https://www.adzuna.com/land/ad/5920497025?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=708B9CCE290FC13C222F68AB9B140359CA9E1604",
+        "description": "Our Deloitte AI & Engineering team works to transform technology platforms, drive innovation, and help make a significant impact on our clients' success. You'll work alongside talented professionals reimagining and reengineering operations and processes that are critical to businesses. Your contributions can help clients improve financial performance, accelerate new digital ventures, and fuel growth through innovation. Work you'll do As a Data Engineer III on the AI & Data team, you will be res\u2026",
+        "created": "2026-10-09T07:11:57Z",
+        "id": "5920497025",
+        "salary_min": 107389.64,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "title": "Data Engineer III",
+        "location": {
+          "area": [
+            "US",
+            "New Jersey",
+            "Hudson County",
+            "Tyler Park"
+          ],
+          "display_name": "Tyler Park, Hudson County",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyMDQ5NzAyNSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.DLPnEGXhU7pNCSmvcDZeSVD9InmKm97F255bOeoDqp8",
+        "latitude": 40.73472,
+        "salary_max": 107389.64
+      },
+      {
+        "redirect_url": "https://www.adzuna.com/land/ad/5922082964?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=B566F5CBAB9E0DC56D24F35F6BAB13DE0950E3B1",
+        "id": "5922082964",
+        "created": "2026-10-10T07:23:05Z",
+        "salary_min": 191014.89,
+        "description": "Deloitte is seeking a Lead Data Engineer- Databricks to support the design, build, and delivery of modern data and analytics solutions for clients across industries. In this role, you will help teams translate business needs into scalable data platform capabilities using Databricks and cloud-based technologies. The ideal candidate brings strong experience leading delivery teams, advising stakeholders, and driving solution execution across complex environments. Recruiting for this role ends on 0\u2026",
+        "title": "Lead Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTIyMDgyOTY0In0.d8uiJ0Ld0RjPteN69nQAGSerp0_iPQu6X8j6o7i5jw0",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "latitude": 40.755381,
+        "salary_max": 191014.89,
+        "longitude": -73.978504,
+        "company": {
+          "display_name": "Deloitte",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1"
+      },
+      {
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Capgemini",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "longitude": -73.978504,
+        "latitude": 40.755381,
+        "salary_max": 151615.05,
+        "title": "Senior Data Engineer",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTE4ODY5ODIwIn0.sSgA04QNH4t8umLXt002eoCkm_8W2mNtXzBABfHZaD8",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "created": "2026-10-08T07:18:43Z",
+        "salary_min": 151615.05,
+        "id": "5918869820",
+        "description": "Senior Data Engineer Choosing Capgemini means choosing a company where you will be empowered to shape your career in the way you'd like, where you'll be supported and inspired by a collaborative community of colleagues around the world, and where you'll be able to reimagine what's possible. Join us and help the world's leading organizations unlock the value of technology and build a more sustainable, more inclusive world. Job Location This is an onsite role based in NYC, NY. About the job you'r\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5918869820?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=84519DE5EBA81E74F35BF535236F90ACD2F3D3D2"
+      },
+      {
+        "longitude": -73.978504,
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "MSCI"
+        },
+        "salary_is_predicted": "1",
+        "redirect_url": "https://www.adzuna.com/land/ad/5912495511?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=67E406122BE3493B6F593AAD4ECDBFD0F1F7A818",
+        "description": "Your Team Responsibilities Team & Role Overview We are looking for a Senior Data Engineer to join our team. The successful candidate will be someone who deeply cares about the environment, loves information technology, and appreciates the importance of data for the success of the First Street mission. They will assist in the ingestion of climate risk and ancillary data from First Street modelers and data partners, develop data pipelines, query geospatial databases, calculate applicable statisti\u2026",
+        "salary_min": 178709.58,
+        "created": "2026-10-05T08:27:04Z",
+        "id": "5912495511",
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "scientific-qa-jobs",
+          "label": "Scientific & QA Jobs"
+        },
+        "title": "Senior Data Engineer",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "Grand Central, Manhattan",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTEyNDk1NTExIn0.NYJNacHH9DqNY0iuU2fC0Aj1QOWTc4ONPxBZrKq-Oc0",
+        "salary_max": 178709.58,
+        "latitude": 40.755381
+      },
+      {
+        "salary_min": 241756.23,
+        "created": "2026-10-25T07:42:13Z",
+        "id": "5941437396",
+        "description": "Our Mission As the world's number 1 job site*, our mission is to help people get jobs. We strive to cultivate an inclusive and accessible workplace where all people feel comfortable being themselves. We're looking to grow our teams with more people who share our enthusiasm for innovation and creating the best experience for job seekers. (*Comscore, Total Visits, March 2026) Day to Day The Data Engineer's role at Indeed is to integrate data from a variety of internal and external sources into co\u2026",
+        "redirect_url": "https://www.adzuna.com/land/ad/5941437396?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=90ED8BCDAF459FE67FA803D52E2B81C5EC08E615",
+        "salary_max": 241756.23,
+        "latitude": 40.755381,
+        "title": "Data Engineer II",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0MTQzNzM5NiIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.zixAne4uBzZnTyNGkDnIKT3RqmLTmHoCXj1zK4zKzAA",
+        "location": {
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ]
+        },
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "longitude": -73.978504,
+        "salary_is_predicted": "1",
+        "company": {
+          "display_name": "Indeed",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        }
+      },
+      {
+        "company": {
+          "display_name": "Indeed",
+          "__CLASS__": "Adzuna::API::Response::Company"
+        },
+        "salary_is_predicted": "1",
+        "longitude": -74.17421,
+        "latitude": 40.73111,
+        "salary_max": 186295.6,
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTQxMzk3MTQ2In0.4YAxghAso5S58lkxRG5mrDG7dsvNujiX22IdBflnqxM",
+        "title": "Data Engineer II",
+        "location": {
+          "area": [
+            "US",
+            "New Jersey",
+            "Essex County",
+            "Newark"
+          ],
+          "display_name": "Newark, Essex County",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "description": "Our Mission As the world's number 1 job site*, our mission is to help people get jobs. We strive to cultivate an inclusive and accessible workplace where all people feel comfortable being themselves. We're looking to grow our teams with more people who share our enthusiasm for innovation and creating the best experience for job seekers. (*Comscore, Total Visits, March 2026) Day to Day The Data Engineer's role at Indeed is to integrate data from a variety of internal and external sources into co\u2026",
+        "id": "5941397146",
+        "created": "2026-10-25T07:27:49Z",
+        "salary_min": 186295.6,
+        "redirect_url": "https://www.adzuna.com/land/ad/5941397146?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=D518791AA6D3F86C7B4E36975803B25CDD18FF80"
+      },
+      {
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Cisco"
+        },
+        "longitude": -73.978504,
+        "title": "Data Engineer Remote",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "New York City",
+            "Manhattan",
+            "Grand Central"
+          ],
+          "display_name": "Grand Central, Manhattan",
+          "__CLASS__": "Adzuna::API::Response::Location"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiM04zeGIwN1U4UkdrNHUzbWlJd3FyZyIsImkiOiI1OTQxNDI2NzUwIn0.IMvKLkGNziZK6Ogp_CMsXAjJCru9BF8I6SLWFeblc6A",
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "label": "IT Jobs",
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs"
+        },
+        "latitude": 40.755381,
+        "salary_max": 211295.73,
+        "redirect_url": "https://www.adzuna.com/land/ad/5941426750?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=B55231949C6CBD165E4736A0B063C6FA1CFEEEC2",
+        "created": "2026-10-25T07:37:45Z",
+        "salary_min": 211295.73,
+        "id": "5941426750",
+        "description": "The application window is expected to close on: 10/30/2026 This is a US remote role Meet the Team The Attack Surface Management team is mission-critical to our security infrastructure. We aggregate, normalize, and correlate security data from over 120 sources to provide a unified view of our environment. Our team focuses on data ingestion, service uptime, and providing the actionable intelligence required to maintain our security posture. We are currently evolving our capabilities to incorporat\u2026"
+      },
+      {
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Cardinal Integrated Technologies Inc"
+        },
+        "longitude": -73.687908,
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNjkwNTM5NCIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.isS7DGOjYUeVfc1jiVv56hzF-g4HfT54HV1fXmG_r5g",
+        "title": "Data Scientist / AI & Data Engineering Architect",
+        "location": {
+          "area": [
+            "US",
+            "New York",
+            "Nassau County",
+            "New Hyde Park"
+          ],
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "New Hyde Park, Nassau County"
+        },
+        "latitude": 40.735102,
+        "salary_max": 89378.95,
+        "redirect_url": "https://www.adzuna.com/land/ad/5936905394?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=113239F3749FC99006730A50AD1744E2EBCDB2E5",
+        "description": "We have an onsite contract job opportunity for a Data Scientist / AI & Data Engineering Architect with one of our clients. If interested, please respond to me with the below-required details, or I would appreciate it if you could refer an ex-colleague/team member/friend looking for similar roles. CardinalIT offers a referral bonus of $500 for each such referral, to show gratitude and appreciation for this gesture. Updated Resume: Expected rate range W2: Availability to start: I'm looking forwar\u2026",
+        "created": "2026-10-21T12:51:25Z",
+        "id": "5936905394",
+        "salary_min": 89378.95
+      },
+      {
+        "latitude": 40.743157,
+        "salary_max": 137927.6,
+        "category": {
+          "__CLASS__": "Adzuna::API::Response::Category",
+          "tag": "it-jobs",
+          "label": "IT Jobs"
+        },
+        "__CLASS__": "Adzuna::API::Response::Job",
+        "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNzA2MzA0OSIsInMiOiIzTjN4YjA3VThSR2s0dTNtaUl3cXJnIn0.2ty6qFVx3LLdnrIRlGM6fOSQnEl57YrTU-XpXU69fGU",
+        "title": "Data Scientist / AI & Data Engineering Architect",
+        "location": {
+          "__CLASS__": "Adzuna::API::Response::Location",
+          "display_name": "North New Hyde Park, Nassau County",
+          "area": [
+            "US",
+            "New York",
+            "Nassau County",
+            "North New Hyde Park"
+          ]
+        },
+        "description": "Job Title: Data Scientist / AI & Data Engineering Architect Location: New Hyde Park, NY 11042 (Onsite) Duration: 6 Months Job Summary: We are seeking a skilled Data Scientist / AI Engineer with strong experience in Machine Learning, Artificial Intelligence, Data Science, Azure, and Data Engineering . The ideal candidate will develop and deploy scalable AI/ML solutions, analyze large datasets, and drive business outcomes through data-driven insights. Key Requirements: Hands-on experience in Data\u2026",
+        "created": "2026-10-21T18:23:58Z",
+        "id": "5937063049",
+        "salary_min": 137927.6,
+        "redirect_url": "https://www.adzuna.com/land/ad/5937063049?se=3N3xb07U8RGk4u3miIwqrg&utm_medium=api&utm_source=REDACTED&v=A5A4E786EC1DA014258690C0EBEC31B9D55249EC",
+        "salary_is_predicted": "1",
+        "company": {
+          "__CLASS__": "Adzuna::API::Response::Company",
+          "display_name": "Cardinal Integrated Technologies Inc"
+        },
+        "longitude": -73.693186
+      }
+    ],
+    "__CLASS__": "Adzuna::API::Response::JobSearchResults",
+    "count": 3200,
+    "mean": 166878.54
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "status": 200,
+  "latency_ms": 421,
+  "headers": {
+    "Content-Type": "application/hr+json; charset=utf-8",
+    "x-azure-ref": "20261030T104127Z-1648c766bf4bf56vhC1EWRedbc00000002qg00000000440u",
+    "Content-Length": "7214",
+    "Date": "Fri, 30 Oct 2026 10:41:27 GMT",
+    "Connection": "close",
+    "Set-Cookie": "akavpau_DATA_USAJ=1793357187~id=bdc1364788b8664e4104c0edf7b6877f; Domain=data.usajobs.gov; Path=/; Secure; SameSite=None",
+    "Strict-Transport-Security": "max-age=31536000 ; includeSubDomains"
+  },
+  "body": {
+    "LanguageCode": "EN",
+    "SearchParameters": {},
+    "SearchResult": {
+      "SearchResultCount": 1,
+      "SearchResultCountAll": 385,
+      "SearchResultItems": [
+        {
+          "MatchedObjectId": "759326100",
+          "MatchedObjectDescriptor": {
+            "PositionID": "24-12198900-6898/DIHD",
+            "PositionTitle": "Data Engineer",
+            "PositionURI": "https://www.usajobs.gov:443/job/759326100",
+            "ApplyURI": [
+              "https://www.usajobs.gov:443/job/759326100"
+            ],
+            "PositionLocationDisplay": "Washington, District of Columbia",
+            "PositionLocation": [
+              {
+                "LocationName": "Washington, District of Columbia",
+                "CountryCode": "United States",
+                "CountrySubDivisionCode": "District of Columbia",
+                "CityName": "Washington, District of Columbia",
+                "Longitude": -77.03968,
+                "Latitude": 38.89702
+              }
+            ],
+            "OrganizationName": "Central Intelligence Agency",
+            "DepartmentName": "Other Agencies and Independent Organizations",
+            "JobCategory": [
+              {
+                "Name": "Information Technology Management",
+                "Code": "2210"
+              }
+            ],
+            "JobGrade": [
+              {
+                "Code": "GS"
+              }
+            ],
+            "PositionSchedule": [
+              {
+                "Name": "",
+                "Code": "1"
+              }
+            ],
+            "PositionOfferingType": [
+              {
+                "Name": "",
+                "Code": "15317"
+              }
+            ],
+            "QualificationSummary": "Minimum Qualifications Interested candidates should be passionate about the ideals of our American republic, committed to upholding the rule of law and the U.S. Constitution, and committed to improving the efficiency of the Federal government. Hiring decisions will not be based on race, sex, color, religion, or national origin. Proficiency with computer programming languages like Python, Java, Scala, or equivalent Object-Oriented Programming Language and knowledge of SQL Knowledge of data ingestion, transformation, modeling, and storage: Strong critical thinking and problem-solving skills Ability to work independently and in groups within a team environment. Curiosity, creativity, and initiative Ability to meet the minimum requirements for joining CIA, including U.S. citizenship and a background investigation Desired Qualifications Prior experience related to data engineering, data science, data architecture, database and search technologies Experience analyzing or processing bulk datasets Experience with signal/image processing, geospatial modeling or voice/data communications Prior application of serverless design patterns, such as serverless applications or websites Understanding of scaling and performance of distributed/cloud systems Understanding of data science concepts, AI/ML, automation, and scripting",
+            "PositionRemuneration": [
+              {
+                "MinimumRange": "74584",
+                "MaximumRange": "156755",
+                "RateIntervalCode": "PA",
+                "Description": "Per Year"
+              }
+            ],
+            "PositionStartDate": "2026-09-01T00:00:00.0000",
+            "PositionEndDate": "2027-01-31T23:59:59.9970",
+            "PublicationStartDate": "2026-09-01T00:00:00.0000",
+            "ApplicationCloseDate": "2027-01-31T23:59:59.9970",
+            "PositionFormattedDescription": [
+              {
+                "Label": "Dynamic Teaser",
+                "LabelDescription": "Hit highlighting for keyword searches."
+              }
+            ],
+            "UserArea": {
+              "Details": {
+                "JobSummary": "Data Engineers in the Directorate of Mission Systems (DMS) solve critical data challenges by building data pipelines, transforming data, and delivering data to systems to advance CIA's mission.",
+                "WhoMayApply": {
+                  "Name": "",
+                  "Code": ""
+                },
+                "LowGrade": "9",
+                "HighGrade": "13",
+                "PromotionPotential": "15",
+                "OrganizationCodes": "OT/CI00",
+                "Relocation": "True",
+                "HiringPath": [
+                  "fed-competitive",
+                  "fed-excepted",
+                  "public"
+                ],
+                "HiringPathDisplay": [
+                  "Competitive service",
+                  "Excepted service",
+                  "Open to the public"
+                ],
+                "MCOTags": [
+                  "07",
+                  "IC Intel",
+                  "NatSec",
+                  "AI"
+                ],
+                "TotalOpenings": "Many",
+                "AgencyMarketingStatement": "We are the Nation's first line of defense, and we have a mission for you. Join us as we leverage the power of information to keep our Nation safe by collecting foreign intelligence, producing objective all-source analysis, conducting covert action at the president's direction, and safeguarding secrets that protect the United States. Our workforce is our strength. CIA is a place that values people with different backgrounds and perspectives. The goal being to create a community that fosters a sense of belonging in a way that enriches officers and empowers them to advance CIA's mission. Read more about life at CIA here: https://www.cia.gov/careers/working-at-cia/",
+                "TravelCode": "1",
+                "MajorDuties": [
+                  "As a Directorate of Mission Systems (DMS) Data Engineer at CIA, you will transform and deliver high-priority datasets to enable exploitation and analysis for CIA's intelligence mission. Using computer programming and other capabilities, DMS Data Engineers develop processes to transform raw structured or unstructured data into useful, actionable information for critical mission systems. They design and build scalable data pipelines using commercial cloud, open source, and custom software solutions to process large datasets. DMS Data Engineers create automated data validation methods to load data into systems accurately and consistently. Through partnerships with collectors, data scientists, and software engineers, DMS Data Engineers design how data will be integrated and stored for optimal effectiveness. DMS Data Engineers are curious and use their skills to identify problems and build solutions, applying updated expertise in areas such as ETL, workflow and container orchestration, database and search technologies, distributed computing, serverless design, and cloud solutions. DMS encourages and supports continual learning. Opportunities exist for continued professional development, to include advanced technical training. Travel opportunities may be available."
+                ],
+                "Education": "Bachelor's degree in one of the following fields or related studies: Computer Science Computer/Electrical Engineering or related field Data Science or related quantitative field Information Science/Technology Forensics (Digital Forensics, Forensic Science, and Technology) Mathematics/Statistics At least a 3.0 GPA on a 4-point scale",
+                "Requirements": "",
+                "Evaluations": "For more information, please visit: Data Engineer.",
+                "HowToApply": "This post is for viewing purposes only. To get started, please visit https://www.cia.gov/careers/, where you can read more about this position and express your interest in up to four jobs. Upon expressing your interest, you will be taken to MyLINK, which allows you to submit your resume and job rankings and provide basic information about yourself.",
+                "WhatToExpectNext": "After you express interest for up to four positions on cia.gov/careers, a CIA recruiter may contact you for further discussion if your qualifications meet our needs. See the MyLINK FAQs on our website for more information.",
+                "RequiredDocuments": "For further information, please visit: Data Engineer.",
+                "Benefits": "",
+                "BenefitsUrl": "https://www.cia.gov/careers/working-at-cia/benefits/",
+                "BenefitsDisplayDefaultText": true,
+                "OtherInformation": "",
+                "KeyRequirements": [],
+                "WithinArea": "False",
+                "CommuteDistance": "0",
+                "ServiceType": "02",
+                "AnnouncementClosingType": "01",
+                "AgencyContactWebsite": "https://cia.gov/careers",
+                "SecurityClearance": "Sensitive Compartmented Information",
+                "DrugTestRequired": "True",
+                "PositionSensitivitiy": "Special-Sensitive (SS)/High Risk",
+                "AdjudicationType": [
+                  "National security"
+                ],
+                "TeleworkEligible": false,
+                "RemoteIndicator": false,
+                "FinancialDisclosure": true,
+                "BargainingUnitStatus": false
+              },
+              "IsRadialSearch": false
+            },
+            "AnnouncementClosingType": "01"
+          },
+          "RelevanceRank": 0
+        }
+      ],
+      "UserArea": {
+        "NumberOfPages": "385",
+        "IsRadialSearch": false
+      }
+    }
+  }
+}

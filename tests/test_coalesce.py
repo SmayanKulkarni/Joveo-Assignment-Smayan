@@ -42,6 +42,16 @@ def test_different_descriptions_stay_apart():
     assert len(kept) == 2 and merged == {}
 
 
+def test_blank_or_one_word_description_never_merges():
+    kept, _ = coalesce([posting("1"), posting("2", description=""), posting("3", description="Engineer")])
+    assert len(kept) == 3
+
+
+def test_postings_without_an_employer_never_merge():
+    kept, _ = coalesce([posting("1", company=None), posting("2", company=None)])
+    assert len(kept) == 2
+
+
 def test_different_title_or_employer_stays_apart():
     kept, _ = coalesce([posting("1"), posting("2", title="Data Engineer 4"), posting("3", company="Other")])
     assert len(kept) == 3

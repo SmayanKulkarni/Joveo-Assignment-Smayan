@@ -1,0 +1,1671 @@
+{
+ "status": 200,
+ "latency_ms": 2386,
+ "headers": {
+  "Date": "Fri, 30 Oct 2026 12:16:06 GMT",
+  "Content-Type": "application/json; charset=utf8",
+  "Content-Length": "70557",
+  "Connection": "close",
+  "Server": "nginx/1.28.3",
+  "Vary": "Content-Type",
+  "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+  "Access-Control-Allow-Origin": "*",
+  "X-Catalyst": "5.90132"
+ },
+ "body": {
+  "__CLASS__": "Adzuna::API::Response::JobSearchResults",
+  "count": 6680,
+  "mean": 144502.6,
+  "results": [
+   {
+    "created": "2026-09-18T12:52:55Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "location": {
+     "area": [
+      "US",
+      "Maryland",
+      "Anne Arundel County",
+      "Fort George G Meade"
+     ],
+     "display_name": "Fort George G Meade, Anne Arundel County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5889627303",
+    "latitude": 39.11376,
+    "salary_max": 137290.97,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTg4OTYyNzMwMyIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.RiK0ws2e87WU2ufHzo_yg-XERf6_G7I4m-U35v-3fso",
+    "salary_min": 137290.97,
+    "description": "Job Number: R0249429 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artifi cia l intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need an experience d data professional like you to help our clients find answers in their data to impact important missions, from fraud detection to \u2026",
+    "salary_is_predicted": "1",
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "longitude": -76.726777,
+    "redirect_url": "https://www.adzuna.com/land/ad/5889627303?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=E542698AC0275ED1781AFA2726165D2932CCB717",
+    "category": {
+     "label": "IT Jobs",
+     "tag": "it-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    }
+   },
+   {
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "Engineering Jobs",
+     "tag": "engineering-jobs"
+    },
+    "longitude": -77.097739,
+    "redirect_url": "https://www.adzuna.com/land/ad/5897401877?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=85A28A023639B8EF23486F0D1FA2523420C53A22",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "created": "2026-09-24T18:08:09Z",
+    "id": "5897401877",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ],
+     "display_name": "State Farm, Arlington County"
+    },
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1ODk3NDAxODc3In0.m-LCBXc1iUyg0Jl3BrTwwKTp6Jq6aofaJS3nD_yr9bs",
+    "salary_max": 131224.53,
+    "latitude": 38.886306,
+    "salary_is_predicted": "1",
+    "description": "Job Number: R0250260 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need a data professional like you to help our clients find answers in their data to impact important missions, from fraud detection to cancer research \u2026",
+    "salary_min": 131224.53
+   },
+   {
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ],
+     "display_name": "State Farm, Arlington County"
+    },
+    "id": "5913632367",
+    "created": "2026-10-06T06:12:08Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "description": "Job Number: R0251022 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need a data professional like you to help our clients find answers in their data to impact important missions, from fraud detection to cancer research \u2026",
+    "salary_min": 139440.62,
+    "salary_is_predicted": "1",
+    "latitude": 38.886306,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTEzNjMyMzY3In0.quLPKKYjgdxq0exbMMUjQmILbwL6bbpguBJNlugbYEo",
+    "salary_max": 139440.62,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "redirect_url": "https://www.adzuna.com/land/ad/5913632367?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=DDD4FC4B2FF0897D501D35EDB9D92963E0EF501D",
+    "longitude": -77.097739,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "engineering-jobs",
+     "label": "Engineering Jobs"
+    }
+   },
+   {
+    "salary_max": 121941.89,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTQ2MTU3ODY0In0.8ghLWL23BUSys1Wb-ag48hUhaAa-LkZenKF8szA5zKk",
+    "latitude": 38.886306,
+    "salary_is_predicted": "1",
+    "description": "Job Number: R0252565 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artifi cia l intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need a data professional like you to help our clients find answers in their data to impact important missions, from fraud detection to cancer researc\u2026",
+    "salary_min": 121941.89,
+    "company": {
+     "display_name": "Booz Allen Hamilton",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "created": "2026-10-29T19:02:09Z",
+    "id": "5946157864",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "State Farm, Arlington County",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ]
+    },
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "Engineering Jobs",
+     "tag": "engineering-jobs"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5946157864?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=BCB8F521BCE50A56C626E25103B18F1FADF5E929",
+    "longitude": -77.097739,
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   },
+   {
+    "latitude": 38.9351,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTg5NjYyNTU2NSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.JPtwo7Jmtlh_oGtQJP09Wt8JmnT-nwY4x3mjsv7tjxs",
+    "salary_max": 113328.1,
+    "description": "Job Number: R0250207 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need an experienced data engineer like you to help our clients find answers in their data to impact important missions, from fraud detection to cancer \u2026",
+    "salary_min": 113328.1,
+    "salary_is_predicted": "1",
+    "created": "2026-09-24T06:06:56Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "Pimmit, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ]
+    },
+    "id": "5896625565",
+    "redirect_url": "https://www.adzuna.com/land/ad/5896625565?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=54E75E8B6F5CD05DA7866956566BF33CBE0AF77E",
+    "longitude": -77.1786,
+    "category": {
+     "tag": "engineering-jobs",
+     "label": "Engineering Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   },
+   {
+    "latitude": 38.9351,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTM2NTMxMzA4In0.jSF9bB_FSgXL9nnIqf7dJf5R4vkZRnic1oJa5BpjkRs",
+    "salary_max": 130840.27,
+    "description": "Job Number: R0252020 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need an experienced data engineer like you to help our clients find answers in their data to impact important missions, from fraud detection to cancer \u2026",
+    "salary_min": 130840.27,
+    "salary_is_predicted": "1",
+    "created": "2026-10-21T05:54:03Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "location": {
+     "display_name": "Pimmit, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5936531308",
+    "longitude": -77.1786,
+    "redirect_url": "https://www.adzuna.com/land/ad/5936531308?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=9AF9B079F907A82EBB217E04CE98D2114447E58D",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "Engineering Jobs",
+     "tag": "engineering-jobs"
+    },
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   },
+   {
+    "longitude": -77.1786,
+    "redirect_url": "https://www.adzuna.com/land/ad/5889609819?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=309DDEFB382B938ED87B2439705ADA1A504B4F92",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "engineering-jobs",
+     "label": "Engineering Jobs"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "description": "Job Number: R0248642 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need an experienced data engineer like you to help our clients find answers in their data to impact important missions from fraud detection to cancer r\u2026",
+    "salary_min": 120683.16,
+    "salary_is_predicted": "1",
+    "latitude": 38.9351,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1ODg5NjA5ODE5In0.c-ZK1_x7yRceEretMRoQdBDwrPqmw_Ufc0LyfCQaSqw",
+    "salary_max": 120683.16,
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ],
+     "display_name": "Pimmit, Fairfax County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5889609819",
+    "created": "2026-09-18T12:38:05Z",
+    "company": {
+     "display_name": "Booz Allen Hamilton",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    }
+   },
+   {
+    "longitude": -77.097739,
+    "redirect_url": "https://www.adzuna.com/land/ad/5920617939?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=761926E5AC9ED0C51961E75F0D2DD3D6D55A3F09",
+    "category": {
+     "label": "IT Jobs",
+     "tag": "it-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "salary_min": 171398.47,
+    "description": "Job Title: Data Engineer Job Category: Information Technology Time Type: Full time Minimum Clearance Required to Start: Secret Employee Type: Regular Percentage of Travel Required: Up to 10% Type of Travel: Local * * * The Opportunity: CACI is seeking a Data Engineer with strong hands-on experience designing, developing, and supporting enterprise data platforms in Microsoft Azure. The ideal candidate combines deep data engineering and ETL/ELT expertise with broad knowledge of cloud-based data a\u2026",
+    "salary_is_predicted": "1",
+    "latitude": 38.886306,
+    "salary_max": 171398.47,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTIwNjE3OTM5In0.AhV1a106qjLAVOTXaLrY3ofH6IA_i4QoENOUXZmg3CI",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ],
+     "display_name": "State Farm, Arlington County"
+    },
+    "id": "5920617939",
+    "created": "2026-10-09T09:03:09Z",
+    "company": {
+     "display_name": "CACI International, Inc.",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    }
+   },
+   {
+    "longitude": -77.097739,
+    "redirect_url": "https://www.adzuna.com/land/ad/5927211596?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=1C22B2FB0F0202E818BF443C7DED47C289521EE1",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "engineering-jobs",
+     "label": "Engineering Jobs"
+    },
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "latitude": 38.886306,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyNzIxMTU5NiIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.vVRujn8PsMvHgn7gXl-aLr9DPjcwYUdTNbOsGJEKB2g",
+    "salary_max": 140094.55,
+    "salary_min": 140094.55,
+    "description": "Job Number: R0251586 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need a data professional like you to help our clients find answers in their data to impact important missions, from fraud detection to cancer research \u2026",
+    "salary_is_predicted": "1",
+    "created": "2026-10-14T05:23:36Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ],
+     "display_name": "State Farm, Arlington County"
+    },
+    "id": "5927211596"
+   },
+   {
+    "category": {
+     "label": "IT Jobs",
+     "tag": "it-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5934604126?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=D1D59A0E5D7A3B9EF478CF5E102903A0AC8D911F",
+    "longitude": -77.407966,
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "salary_max": 126357.09,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNDYwNDEyNiIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.RncBlB97P8vYqaXLh-OC5JTXKderiVwVcFJuHhSee5Q",
+    "latitude": 38.451302,
+    "salary_is_predicted": "1",
+    "salary_min": 126357.09,
+    "description": "Job Number: R0251866 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need a data professional like you to help our clients find answers in their data to impact important missions-from fraud detection to cancer research t\u2026",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "created": "2026-10-19T17:46:43Z",
+    "id": "5934604126",
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Stafford County",
+      "Stafford"
+     ],
+     "display_name": "Stafford, Stafford County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    }
+   },
+   {
+    "latitude": 38.886306,
+    "salary_max": 128779.73,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTE2NzIzNzkyIn0.YKa3JR1P9loyWRYRADdsWVLa2gpMd55EI_15TfoFu6o",
+    "description": "Job Number: R0251162 Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need a data professional like you to help our clients find answers in their data to impact important missions-from fraud detection to cancer research t\u2026",
+    "salary_min": 128779.73,
+    "salary_is_predicted": "1",
+    "created": "2026-10-07T05:58:54Z",
+    "company": {
+     "display_name": "Booz Allen Hamilton",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "location": {
+     "display_name": "State Farm, Arlington County",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5916723792",
+    "redirect_url": "https://www.adzuna.com/land/ad/5916723792?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=FB08864D4C9241E9C933893B8765CB0639463981",
+    "longitude": -77.097739,
+    "category": {
+     "label": "Engineering Jobs",
+     "tag": "engineering-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   },
+   {
+    "created": "2026-10-28T20:26:35Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Randstad Digital"
+    },
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "State Farm, Arlington County",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ]
+    },
+    "id": "5944968270",
+    "latitude": 38.886306,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTQ0OTY4MjcwIn0.ylw0PlVFNnH-VwNHJcpkEODnIPEtSP5YxuCsapYTD7U",
+    "salary_max": 109710.81,
+    "description": "job summary: Seeking an experienced Data Engineer to support enterprise data governance, integration, and analytics initiatives. This role combines hands-on pipeline engineering with metadata management, workflow automation, and stakeholder collaboration. In this role, you will design and maintain reliable data pipelines, support enterprise data cataloging and governance practices, build workflow automations, and partner directly with internal analytics, technical, and operational teams to deli\u2026",
+    "salary_min": 109710.81,
+    "salary_is_predicted": "1",
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "redirect_url": "https://www.adzuna.com/land/ad/5944968270?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=44B84B1BB0CED77F09E2FDAFE020CD565B524ADC",
+    "longitude": -77.097739,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    }
+   },
+   {
+    "redirect_url": "https://www.adzuna.com/land/ad/5889617847?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=97C90612BC06B5E1EE36E686E8DC85D862C55D99",
+    "longitude": -77.1786,
+    "category": {
+     "tag": "engineering-jobs",
+     "label": "Engineering Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "salary_min": 110686.39,
+    "description": "Job Number: R0249294 Data Engineer The Opportunity: Do you want to work at the forefront of advanced technology and solve complex data challenges? Data creates pivotal insights when it is collected from disparate sources and organized effectively. As a Mid-Level Data Engineer, you will design, build, and optimize the pipelines that turn raw data into meaningful outcomes for a high-impact Fortune 500 client program. In this role, you will leverage Databricks, PySpark, and SQL to scale our data p\u2026",
+    "salary_is_predicted": "1",
+    "latitude": 38.9351,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTg4OTYxNzg0NyIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.uDlZsHAlXG-K2TKwLFqcZhT7TVO7-fvdnh5YjdjOjTw",
+    "salary_max": 110686.39,
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "Pimmit, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ]
+    },
+    "id": "5889617847",
+    "created": "2026-09-18T12:46:00Z",
+    "company": {
+     "display_name": "Booz Allen Hamilton",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    }
+   },
+   {
+    "longitude": -77.435,
+    "redirect_url": "https://www.adzuna.com/land/ad/5889627353?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=28B11EFC35F73C8D22901070585664D693A98512",
+    "category": {
+     "tag": "engineering-jobs",
+     "label": "Engineering Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "description": "Job Number: R0249442 Data Engineer The Opportunity: Booz Allen is seeking a Data Engineer to architect, develop , and optimize scalable data pipelines and platforms that transform complex data into actionable insights. In this role, you will lead a team of data engineers to design modern, cloud-native solutions integrating structured and unstructured data across secure environments. You will serve as a technical and strategic leader, responsible for building and maintaining enterprise data infr\u2026",
+    "salary_min": 117222.06,
+    "salary_is_predicted": "1",
+    "latitude": 38.884,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTg4OTYyNzM1MyIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.P4IA_L9Qa0B1Rz62ZWP1jqgrocgoRlUSIn5-O3iNU3Q",
+    "salary_max": 117222.06,
+    "location": {
+     "display_name": "Chantilly, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Chantilly"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5889627353",
+    "created": "2026-09-18T12:52:55Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    }
+   },
+   {
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Chantilly"
+     ],
+     "display_name": "Chantilly, Fairfax County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5889617060",
+    "created": "2026-09-18T12:45:14Z",
+    "company": {
+     "display_name": "Booz Allen Hamilton",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "salary_min": 128907.63,
+    "description": "Job Number: R0248636 Data Engineer The Opportunity: Booz Allen is seeking a Data Engineer to architect, develop, and optimize scalable data pipelines and platforms that transform complex data into actionable insights. In this role, you will lead a team of data engineers to design modern, cloud-native solutions integrating structured and unstructured data across secure environments. You will serve as a technical and strategic leader, responsible for building and maintaining enterprise data infra\u2026",
+    "salary_is_predicted": "1",
+    "latitude": 38.884,
+    "salary_max": 128907.63,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1ODg5NjE3MDYwIn0.LR6oZpg6ZUnNkrDaF3NNYNFIkwupyMcjPiStpxiOHL4",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "redirect_url": "https://www.adzuna.com/land/ad/5889617060?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=6992A361D936526F1F3A981DF7EFC89E4E56C182",
+    "longitude": -77.435,
+    "category": {
+     "label": "Engineering Jobs",
+     "tag": "engineering-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    }
+   },
+   {
+    "location": {
+     "display_name": "Woodlawn, Baltimore County",
+     "area": [
+      "US",
+      "Maryland",
+      "Baltimore County",
+      "Woodlawn"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5943737069",
+    "created": "2026-10-27T16:57:38Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Kentro"
+    },
+    "salary_min": 104043.83,
+    "description": "Overview Thank you for considering IT Concepts dba Kentro, where innovation drives opportunity and collaboration leads to success. Our dynamic community of experts is fully committed to advancing our customers' missions, fostering professional growth, and making a positive impact on our communities. By joining our supportive community, you will find that Kentro is dedicated to your personal and professional development. Together, we can drive meaningful change, spark innovation, and achieve ext\u2026",
+    "salary_is_predicted": "1",
+    "latitude": 39.322884,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0MzczNzA2OSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.jgzhCh5l6f9s6XXtBXER-ETi-rhVeeGY_xE_TYToEV8",
+    "salary_max": 104043.83,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "redirect_url": "https://www.adzuna.com/land/ad/5943737069?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=2BDA9E73AE4F60CDD7E589B7E3246B17B7F8B5A4",
+    "longitude": -76.728028,
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    }
+   },
+   {
+    "redirect_url": "https://www.adzuna.com/land/ad/5920453991?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=0427B30C38549250E6BE0327E77ABDCD84B15994",
+    "longitude": -77.1786,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "it-jobs",
+     "label": "IT Jobs"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "salary_min": 101418.8,
+    "description": "Description: Hybrid in McLean, VA Tuesday-Thursday Our client seeks two Data Engineers to build and support batch-oriented data pipelines for AML and personal loans initiatives. The team operates in a micro-pod structure and requires hands-on engineering across Spark, Python, AWS Glue, Airflow, and SQL. Engineers will develop data integrations, perform data analysis and profiling, and provide production support to ensure timely delivery ahead of a hard deadline prior to May. Candidates must be \u2026",
+    "salary_is_predicted": "1",
+    "latitude": 38.9351,
+    "salary_max": 101418.8,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTIwNDUzOTkxIn0.PIO9rwrqs9tDbsKZOV3AnCjxjYFDNodGiIF2N-Qul5o",
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ],
+     "display_name": "Pimmit, Fairfax County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5920453991",
+    "created": "2026-10-09T07:04:37Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Eliassen Group"
+    }
+   },
+   {
+    "id": "5922984459",
+    "location": {
+     "display_name": "Mount Rainier, Prince George's County",
+     "area": [
+      "US",
+      "Maryland",
+      "Prince George's County",
+      "Mount Rainier"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "SAIC"
+    },
+    "created": "2026-10-11T03:06:53Z",
+    "salary_is_predicted": "1",
+    "description": "Job ID: 2617790 Location: Washington, DC, US Date Posted: 2026-10-09 Category: Information Technology Subcategory: Big Data Engineer Schedule: Full-Time Shift: Day Job Travel: No Minimum Clearance Required: None Clearance Level Must Be Able to Obtain: Public Trust Potential for Remote Work: ORA_HYBRID Description SAIC is seeking a hands-on Data Engineer with strong Azure experience to build and maintain reliable, scalable data pipelines and datasets that power analytics and operational insights\u2026",
+    "salary_min": 169665.16,
+    "salary_max": 169665.16,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyMjk4NDQ1OSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.VaduXfpT0C81v674VpzFGVW1-vlrj3zwdWyjF0U4gug",
+    "latitude": 38.903862,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "it-jobs",
+     "label": "IT Jobs"
+    },
+    "longitude": -76.990882,
+    "redirect_url": "https://www.adzuna.com/land/ad/5922984459?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=97A6683EB02E2136042D4DB27FF00DCA4B83F6CC"
+   },
+   {
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5930329490?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=E9C82CFCB2E5B2A0A4C517E08591187A89299E1A",
+    "longitude": -77.1786,
+    "company": {
+     "display_name": "Booz Allen Hamilton",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "created": "2026-10-16T05:46:21Z",
+    "id": "5930329490",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "Pimmit, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ]
+    },
+    "salary_max": 111784.98,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzMDMyOTQ5MCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.FgtYpoCQtCD2u-lCG4CMMLDsG6JwlSt3mbvU1ci9bb8",
+    "latitude": 38.9351,
+    "salary_is_predicted": "1",
+    "salary_min": 111784.98,
+    "description": "Job Number: R0251795 Data Engineer The Opportunity: Make enterprise data and knowledge usable, governed, and dependable for AI applications. You will design data architectures and build the pipelines, knowledge indexes, and retrieval services that ground agents in authorized enterprise information. You will work with source-system owners and engineering teams to define data contracts, integrate structured and unstructured sources, and maintain permissions, lineage, quality, and freshness. You w\u2026"
+   },
+   {
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "longitude": -77.435,
+    "redirect_url": "https://www.adzuna.com/land/ad/5917039560?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=7289D59CBC811396148C683623F6084D040D1580",
+    "category": {
+     "label": "IT Jobs",
+     "tag": "it-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "created": "2026-10-07T08:30:14Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "CACI International, Inc."
+    },
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Chantilly"
+     ],
+     "display_name": "Chantilly, Fairfax County"
+    },
+    "id": "5917039560",
+    "latitude": 38.884,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkxNzAzOTU2MCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.lidFXnY51OjtUjjqY4BIDQcIAfvnLXNN2jAuQkKdB9Y",
+    "salary_max": 211189.97,
+    "salary_min": 211189.97,
+    "description": "Job Title: Data Engineer Job Category: Information Technology Time Type: Full time Minimum Clearance Required to Start: TS/SCI with Polygraph Employee Type: Regular Percentage of Travel Required: None Type of Travel: None * * * CIT is searching for an Full Performance Software Developer to join our team in Chantilly, VA, supporting the design, development, and modernization of enterprise applications that power complex mission systems. Whether your expertise is in full-stack application develop\u2026",
+    "salary_is_predicted": "1"
+   },
+   {
+    "salary_max": 184591.1,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTIxOTIzMjIwIn0.Ozcc_AfvJ_PTm6IkiRV3oBRuWj_nYGqrbQ3FDIX5cCA",
+    "latitude": 38.70541,
+    "salary_is_predicted": "1",
+    "description": "Job Number: R0250764 Data Engineer The Opportunity: Are you looking for an opportunity to share your experience in system security engineering to help our country and assist our clients with critical missions? As a systems security and network security engineer, you can identify the information system security engineering needed to assess vulnerabilities and recommend the best solution and security strategy. We need your experience to lead the development and implementation of security solution\u2026",
+    "salary_min": 184591.1,
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "created": "2026-10-10T05:12:14Z",
+    "id": "5921923220",
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Fort Belvoir"
+     ],
+     "display_name": "Fort Belvoir, Fairfax County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "longitude": -77.145371,
+    "redirect_url": "https://www.adzuna.com/land/ad/5921923220?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=CDF671ED380CF139709E13E2AE2E4CA0AEA4E7D4",
+    "title": "Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   },
+   {
+    "category": {
+     "label": "IT Jobs",
+     "tag": "it-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "longitude": -77.1786,
+    "redirect_url": "https://www.adzuna.com/land/ad/5943741011?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=25CF612A0FAF568D1AFF4C7A24BC515FACFCCD8A",
+    "title": "Data engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0Mzc0MTAxMSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.rUAOA9plWILq5CzNiaxXQjmc02sA1QUX1zuVIeEIAR8",
+    "salary_max": 124731.08,
+    "latitude": 38.9351,
+    "salary_is_predicted": "1",
+    "salary_min": 124731.08,
+    "description": "Job Summary We are seeking a highly skilled Data Engineer to design, develop, and optimize scalable data pipelines that process large volumes of data. The ideal candidate will have deep expertise in Python, PySpark, AWS Glue, and Amazon EMR , along with experience implementing data quality and lineage frameworks to ensure data integrity across enterprise data platforms. Required Qualifications 5 years of Data Engineering experience. Expert-level proficiency in Python and PySpark . Strong hands-\u2026",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Unisys"
+    },
+    "created": "2026-10-27T17:07:04Z",
+    "id": "5943741011",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "Pimmit, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ]
+    }
+   },
+   {
+    "title": "DATA ENGINEER",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "longitude": -76.990882,
+    "redirect_url": "https://www.adzuna.com/land/ad/5943743061?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=0306C89A1741C6B90EBA0E44B2D174736E3B94D5",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    },
+    "created": "2026-10-27T17:11:53Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "AaraTechnologies Inc"
+    },
+    "location": {
+     "area": [
+      "US",
+      "Maryland",
+      "Prince George's County",
+      "Mount Rainier"
+     ],
+     "display_name": "Mount Rainier, Prince George's County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5943743061",
+    "latitude": 38.903862,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0Mzc0MzA2MSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.jmwEaU9xdjTqnV1AU73tsXNipvnriAH43quMeaSIn2k",
+    "salary_max": 125764.04,
+    "salary_min": 125764.04,
+    "description": "Data Engineer Healthcare (2-3 Years Experience) Company: AaraTech Inc About the Role AaraTech Inc is seeking a motivated Data Engineer Healthcare ( 2-3 years experience) to support healthcare data pipelines, data integration, and analytics platforms. Key Responsibilities Build and maintain ETL / ELT data pipelines Develop data solutions using SQL and Python Support healthcare data ingestion and transformation Assist in maintaining data warehouses and cloud platforms Perform data quality checks \u2026",
+    "salary_is_predicted": "1"
+   },
+   {
+    "salary_is_predicted": "1",
+    "description": "Title: Data Engineer Location: McLean, VA (3 Days Hybrid) Duration: 7 Months with possible extension Key Responsibilities Design, develop, and maintain scalable batch data pipelines for transaction data processing and integration. Build, enhance, and support data pipelines using Python, Spark, AWS Glue, and Databricks. Develop complex SQL queries to extract, transform, validate, and analyze data. Work with Snowflake for data storage, transformation, and analytical processing. Use Apache Airflow\u2026",
+    "salary_min": 95614.12,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTk0NDc0NjI5MiIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.lzAihd9oPv__nCpShARRw1xeTsZmCeghRGs8jhJG-F0",
+    "salary_max": 95614.12,
+    "latitude": 38.9351,
+    "id": "5944746292",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ],
+     "display_name": "Pimmit, Fairfax County"
+    },
+    "company": {
+     "display_name": "Merican Inc",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "created": "2026-10-28T12:34:56Z",
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5944746292?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=A3FB1393503251F2A2E46C50F60C730CDAE28D3F",
+    "longitude": -77.1786,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer"
+   },
+   {
+    "location": {
+     "display_name": "Pimmit, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5937131005",
+    "created": "2026-10-21T20:28:02Z",
+    "company": {
+     "display_name": "The MITRE Corporation",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "description": "At MITRE, your passion fuels work that impacts our nation and improves lives. This is where your skills strengthen national security, cybersecurity, health, transportation, and citizen services. We're a nonprofit engineering, applied research, and advanced technology organization working in the public interest. With objectivity and integrity at our core, we lead federally funded research and development centers for U.S. government agencies - collaborating with industry and academia to deliver i\u2026",
+    "salary_min": 151647.88,
+    "salary_is_predicted": "1",
+    "latitude": 38.9351,
+    "salary_max": 151647.88,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNzEzMTAwNSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.VxGDZKGNFw-SOnTTSwhJ5PUyEDJnqnXSMvI3qb62npI",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "IC Data Engineer",
+    "redirect_url": "https://www.adzuna.com/land/ad/5937131005?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=07E1F4EFD6B9E80A39C650B30FEF9526C7B3F9E6",
+    "longitude": -77.1786,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    }
+   },
+   {
+    "title": "Chief Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "redirect_url": "https://www.adzuna.com/land/ad/5917029652?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=3D1A16277288CF33A9BE7A10543C809DBF6FCE85",
+    "longitude": -77.019023,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    },
+    "created": "2026-10-07T08:25:45Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "CACI International, Inc."
+    },
+    "location": {
+     "display_name": "Washington, Washington, D.C.",
+     "area": [
+      "US",
+      "Washington, D.C.",
+      "Washington"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5917029652",
+    "latitude": 38.912068,
+    "salary_max": 202371.66,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTE3MDI5NjUyIn0.epjJSoSstefUPSfH8Yp9TAMgWJOoN2UnOZB4XjhHle4",
+    "salary_min": 202371.66,
+    "description": "Job Title: Chief Data Engineer Job Category: Information Technology Time Type: Full time Minimum Clearance Required to Start: None Employee Type: Regular Percentage of Travel Required: None Type of Travel: None * * * The Opportunity: CACI is seeking an accomplished Chief Data Engineer to support the Department of Homeland Security (DHS) Office of the Inspector General (OIG). This role offers a unique opportunity to lead the technical implementation of an enterprise data platform that centralize\u2026",
+    "salary_is_predicted": "1"
+   },
+   {
+    "id": "5903647124",
+    "location": {
+     "display_name": "Fort Belvoir, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Fort Belvoir"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "SAIC"
+    },
+    "created": "2026-09-30T04:36:31Z",
+    "salary_is_predicted": "1",
+    "salary_min": 171999.42,
+    "description": "Job ID: 2617371 Location: Fort Belvoir, VA, US Date Posted: 2026-09-29 Category: Information Technology Subcategory: Database Engr Schedule: Full-Time Shift: Day Job Travel: Yes - 10% of the time Minimum Clearance Required: TS.SCI Clearance Level Must Be Able to Obtain: TS/SCI with Poly Potential for Remote Work: ORA_ON_SITE Description SAIC is seeking an AI Data Engineer to join our team at Fort Belvoir, Virginia. The AI Data Engineer will design, develop, and maintain data pipelines and archi\u2026",
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTAzNjQ3MTI0In0.6K3X2zwKusp8JdM-5MZMqtkgPpxSwjcXk92zN1B5-Hw",
+    "salary_max": 171999.42,
+    "latitude": 38.70541,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "AI Data Engineer",
+    "category": {
+     "label": "IT Jobs",
+     "tag": "it-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "longitude": -77.145371,
+    "redirect_url": "https://www.adzuna.com/land/ad/5903647124?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=7B2B30B48EC12E779BCE22D6937B7076FBFCFE79"
+   },
+   {
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "SQL Data Engineer",
+    "redirect_url": "https://www.adzuna.com/land/ad/5928020450?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=9AA1AD103CC6E83258560968A6B21B465DF514EB",
+    "longitude": -77.1,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "it-jobs",
+     "label": "IT Jobs"
+    },
+    "location": {
+     "display_name": "West Bethesda, Montgomery County",
+     "area": [
+      "US",
+      "Maryland",
+      "Montgomery County",
+      "West Bethesda"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5928020450",
+    "created": "2026-10-14T17:25:48Z",
+    "company": {
+     "display_name": "Booz Allen Hamilton",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "description": "Job Number: R0251527 SQL Data Engineer The Opportunity: As organizations collect increasing volumes of data from various sources, effective data engineering is essential to producing reliable insights and supporting mission-critical decisions. As a SQL developer and data engineer, you will help design, develop, and optimize data solutions that support federal health programs, regulatory science, and other high-impact missions. You will apply advanced SQL skills and hands-on Databricks experienc\u2026",
+    "salary_min": 135836.36,
+    "salary_is_predicted": "1",
+    "latitude": 38.98,
+    "salary_max": 135836.36,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyODAyMDQ1MCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0._ppMiUVjGd1T-BEV-vxHiA8O9nUGZG9zFZZjzi0Uoao"
+   },
+   {
+    "category": {
+     "tag": "engineering-jobs",
+     "label": "Engineering Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "longitude": -76.929652,
+    "redirect_url": "https://www.adzuna.com/land/ad/5889577137?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=BD13230E4CBB8DE132B999841AA54FC94A9C5B7F",
+    "title": "Senior Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "salary_max": 124943.83,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTg4OTU3NzEzNyIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.g_5V0K0RfAKII4AQM4HmQHM_fIbbawDeh2kk6jEoMKs",
+    "latitude": 38.96151,
+    "salary_is_predicted": "1",
+    "salary_min": 124943.83,
+    "description": "Job Number: R0249526 Data Engineer, Senior The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need an experienced data engineer like you to help our clients find answers in their data to impact important missions, from fraud detection to\u2026",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "created": "2026-09-18T12:28:49Z",
+    "id": "5889577137",
+    "location": {
+     "display_name": "Riverdale Park, Prince George's County",
+     "area": [
+      "US",
+      "Maryland",
+      "Prince George's County",
+      "Riverdale Park"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    }
+   },
+   {
+    "latitude": 38.96151,
+    "salary_max": 128549.77,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1ODg5NjI3MzA0In0.59vxZNjZiZgxzql55E8rtiv_0tdLv5lz2FdNbUM2IMU",
+    "description": "Job Number: R0249525 Data Engineer, Senior The Opportunity: Ever-expanding technology like IoT, machine learning, and artifi cia l intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need an experience d data engineer like you to help our clients find answers in their data to impact important missions, from fraud detection\u2026",
+    "salary_min": 128549.77,
+    "salary_is_predicted": "1",
+    "created": "2026-09-18T12:52:55Z",
+    "company": {
+     "display_name": "Booz Allen Hamilton",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "location": {
+     "area": [
+      "US",
+      "Maryland",
+      "Prince George's County",
+      "Riverdale Park"
+     ],
+     "display_name": "Riverdale Park, Prince George's County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5889627304",
+    "redirect_url": "https://www.adzuna.com/land/ad/5889627304?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=EB7B03E8AC7D2BA36B942B66D1D09ECEF5262B81",
+    "longitude": -76.929652,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "Engineering Jobs",
+     "tag": "engineering-jobs"
+    },
+    "title": "Senior Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   },
+   {
+    "redirect_url": "https://www.adzuna.com/land/ad/5934845046?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=707698AE972CB6B95E2771196E3430269818533D",
+    "longitude": -77.097739,
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Databricks Data Engineer",
+    "salary_min": 181731.36,
+    "description": "Location: Arlington, VA Salary: $55.00 USD Hourly - $65.00 USD Hourly Description: The Judge Group is currently seeking a Databricks Data Engineer to support a newly awarded contact with a large federal agency. This is a hybrid position. It is a w2 only opportunity, no third parties. What You Will Do Build and maintain Databricks ingestion, transformation, orchestration, migration, and data-processing pipelines. Develop scalable ETL/ELT solutions using Databricks, Apache Spark, PySpark, Python,\u2026",
+    "salary_is_predicted": "1",
+    "latitude": 38.886306,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTM0ODQ1MDQ2In0.r82b_dXyGrs9_SL665yCR9vYx17GY-YCnoW6oxDqDOU",
+    "salary_max": 181731.36,
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ],
+     "display_name": "State Farm, Arlington County"
+    },
+    "id": "5934845046",
+    "created": "2026-10-19T21:44:57Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Judge Group, Inc."
+    }
+   },
+   {
+    "salary_is_predicted": "1",
+    "salary_min": 111307.02,
+    "description": "Job Number: R0249404 BigID Data Engineer The Opportunity: Ever-expanding technology like IoT, machine learning, and artifi cia l intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need an experience d data engineer like you to help our clients find answers in their data to impact important missions-from fraud detection to\u2026",
+    "salary_max": 111307.02,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTg4OTYyNzIyOSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.1alty08W1OL9yAi9cE6Kr32tRb5OmXHdG2pFsYL1lsY",
+    "latitude": 38.9351,
+    "id": "5889627229",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "Pimmit, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ]
+    },
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "created": "2026-09-18T12:52:54Z",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "it-jobs",
+     "label": "IT Jobs"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5889627229?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=EDD257331BD38BBA5C8F6673EC1A8722E4B37DD7",
+    "longitude": -77.1786,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "BigID Data Engineer"
+   },
+   {
+    "salary_min": 107885.23,
+    "description": "Software Guidance & Assistance, Inc., (SGA), is searching for a Senior Data Engineer for a CONTRACT assignment with one of our premier Regulatory clients in Tysons, VA or Rockville, MD. We are looking for a hands-on Senior Data Engineer to develop and maintain an engineering metrics and analytics platform. The platform integrates data from multiple engineering systems, including Jira, Bitbucket, GitLab, Jenkins, deployment systems, and Splunk. The candidate must be capable of independently unde\u2026",
+    "salary_is_predicted": "1",
+    "latitude": 39.084,
+    "salary_max": 107885.23,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNzI0NjUyMCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.qHc-vweKKOJfOjYAni5vfk4HjAsEW2CW4sKLgkFuZ-o",
+    "location": {
+     "area": [
+      "US",
+      "Maryland",
+      "Montgomery County",
+      "Derwood"
+     ],
+     "display_name": "Derwood, Montgomery County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5937246520",
+    "created": "2026-10-21T21:56:09Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Software Guidance & Assistance"
+    },
+    "longitude": -77.1537,
+    "redirect_url": "https://www.adzuna.com/land/ad/5937246520?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=3B6948083D6569330DF14B890830D8691874F455",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Senior Data Engineer"
+   },
+   {
+    "created": "2026-10-07T19:25:10Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "Trade, Alexandria City",
+     "area": [
+      "US",
+      "Virginia",
+      "Alexandria City",
+      "Trade"
+     ]
+    },
+    "id": "5917728255",
+    "latitude": 38.804722,
+    "salary_max": 113921.48,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkxNzcyODI1NSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.IZAQzIdbL388CXnYfa1wE-ur8noZc005zdDShe_F3G0",
+    "description": "Job Number: R0251125 Data Engineer, Mid The Opportunity: Ever-expanding technology like IoT, machine learning, and artificial intelligence means that there's more structured and unstructured data available today than ever before. As a data engineer, you know that organizing data can yield pivotal insights when it's gathered from disparate sources. We need a data professional like you to help our clients find answers in their data to impact important missions-from fraud detection to cancer resea\u2026",
+    "salary_min": 113921.48,
+    "salary_is_predicted": "1",
+    "title": "Mid Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "redirect_url": "https://www.adzuna.com/land/ad/5917728255?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=769BC431A5191295C99065EEE9ED844607250CB0",
+    "longitude": -77.047222,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "engineering-jobs",
+     "label": "Engineering Jobs"
+    }
+   },
+   {
+    "title": "Senior Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5937144044?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=6C7D01FF5CC8D98A5D1E73007A3D628DADF8709C",
+    "longitude": -77.1786,
+    "company": {
+     "display_name": "The MITRE Corporation",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "created": "2026-10-21T20:37:11Z",
+    "id": "5937144044",
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ],
+     "display_name": "Pimmit, Fairfax County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "salary_max": 159649.45,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTM3MTQ0MDQ0In0.sXicedobMGKP78gL4zoRz7_pUTfJrDM8nFp2gNG6p_8",
+    "latitude": 38.9351,
+    "salary_is_predicted": "1",
+    "description": "At MITRE, your passion fuels work that impacts our nation and improves lives. This is where your skills strengthen national security, cybersecurity, health, transportation, and citizen services. We're a nonprofit engineering, applied research, and advanced technology organization working in the public interest. With objectivity and integrity at our core, we lead federally funded research and development centers for U.S. government agencies - collaborating with industry and academia to deliver i\u2026",
+    "salary_min": 159649.45
+   },
+   {
+    "title": "Senior Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "longitude": -77.097739,
+    "redirect_url": "https://www.adzuna.com/land/ad/5920617934?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=B6C5EBD04A3119634033B81F4A2DE4AA75F6AE47",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "CACI International, Inc."
+    },
+    "created": "2026-10-09T09:03:09Z",
+    "id": "5920617934",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "State Farm, Arlington County",
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ]
+    },
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyMDYxNzkzNCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.sxeliJpjQrRPHCCOSPtrRgJUxDx0qYE7ZJhYxIMpbJg",
+    "salary_max": 184708.02,
+    "latitude": 38.886306,
+    "salary_is_predicted": "1",
+    "description": "Job Title: Senior Data Engineer Job Category: Information Technology Time Type: Full time Minimum Clearance Required to Start: Secret Employee Type: Regular Percentage of Travel Required: None Type of Travel: None * * * The Opportunity: CACI is seeking a talented Sr. Data Engineer to join our dynamic team. The ideal candidate will have a strong background in data engineering and experience in designing, implementing, and maintaining robust pipelines. This role requires deep understanding of dat\u2026",
+    "salary_min": 184708.02
+   },
+   {
+    "category": {
+     "label": "IT Jobs",
+     "tag": "it-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5917046788?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=BC3C9208FE6C0483C5096AB9C2B2070CE7502255",
+    "longitude": -77.047222,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer/Analyst",
+    "salary_is_predicted": "1",
+    "salary_min": 194337.02,
+    "description": "Job Title: Data Engineer/Analyst Job Category: Information Technology Time Type: Full time Minimum Clearance Required to Start: TS/SCI Employee Type: Regular Percentage of Travel Required: Up to 50% Type of Travel: Continental US * * * The Opportunity: CACI is seeking a Data Engineer/Analyst to support Joint Interagency Task Force 401 (JIATF 401). The Data Engineer will design, develop, and maintain data architectures, analytical pipelines, and AI-enabled solutions that transform large volumes \u2026",
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkxNzA0Njc4OCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.XfMQh2-mzj6JGO55-yiCrKT7hCnMIswPxGrVeN_7SAY",
+    "salary_max": 194337.02,
+    "latitude": 38.804722,
+    "id": "5917046788",
+    "location": {
+     "display_name": "Trade, Alexandria City",
+     "area": [
+      "US",
+      "Virginia",
+      "Alexandria City",
+      "Trade"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "company": {
+     "display_name": "CACI International, Inc.",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "created": "2026-10-07T08:33:45Z"
+   },
+   {
+    "id": "5937131000",
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ],
+     "display_name": "Pimmit, Fairfax County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "The MITRE Corporation"
+    },
+    "created": "2026-10-21T20:28:02Z",
+    "salary_is_predicted": "1",
+    "description": "At MITRE, your passion fuels work that impacts our nation and improves lives. This is where your skills strengthen national security, cybersecurity, health, transportation, and citizen services. We're a nonprofit engineering, applied research, and advanced technology organization working in the public interest. With objectivity and integrity at our core, we lead federally funded research and development centers for U.S. government agencies - collaborating with industry and academia to deliver i\u2026",
+    "salary_min": 177845.55,
+    "salary_max": 177845.55,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNzEzMTAwMCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.ZQdKWS1YGF4CRwDqUtd_oNhMfW5VZSRq-KFTSmmaJnM",
+    "latitude": 38.9351,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Lead Data Engineer",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5937131000?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=7FE10F9EBDC67F50E25366C7A467424C95128C1A",
+    "longitude": -77.1786
+   },
+   {
+    "id": "5889609718",
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Chantilly"
+     ],
+     "display_name": "Chantilly, Fairfax County"
+    },
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "created": "2026-09-18T12:38:03Z",
+    "salary_is_predicted": "1",
+    "description": "Job Number: R0248640 Data Engineer, Senior The Opportunity: Booz Allen is seeking a Data Engineer to help troubleshoot and resolve complex data engineering and sof tware development problems. You'll be responsible for ensuring the reliability, performance, scalability, and security of critical production systems and platforms. As a Data Engineer on our team, you'll be working with a collaborative Kanban data team to manage Tier 3 requests and help build and maintain Cloud sof tware and infrastr\u2026",
+    "salary_min": 141279.12,
+    "salary_max": 141279.12,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1ODg5NjA5NzE4In0.gEffEbwVlXDUu_BieexHxALbT42GtS7V-ggp5BAtnhA",
+    "latitude": 38.884,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Senior Data Engineer",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    },
+    "longitude": -77.435,
+    "redirect_url": "https://www.adzuna.com/land/ad/5889609718?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=0C536077AB2149674DEF172B18D6B9D18B9F966A"
+   },
+   {
+    "redirect_url": "https://www.adzuna.com/land/ad/5934845047?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=0B3D772F604564CC1C6414BE0FD43D2F9A2AB37B",
+    "longitude": -77.097739,
+    "category": {
+     "label": "IT Jobs",
+     "tag": "it-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Databricks Data Engineer",
+    "description": "Location: Arlington, VA Salary: $100,000.00 USD Annually - $160,000.00 USD Annually Description: Company: Supporting the Federal Gov Positions: Mid, senior and lead Databricks openings REMOTE MUST BE PROCESSED FOR E PUBLIC TRUST CLEARANCE Benefits: Healthcare and 401k NOTE; FOR A QUICKER RESPONSE, PLEASE APPLY DIRECT TO and put \"Databricks\" on the subject line. Thank you! Job Description Summary Builds and tests Databricks pipelines, transformations, migration workflows, quality controls, APIs,\u2026",
+    "salary_min": 215047.27,
+    "salary_is_predicted": "1",
+    "latitude": 38.886306,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTM0ODQ1MDQ3In0.liem-TSo7OTjdTyAy9ddyVX4OatCKcFpxZQbynwMNh4",
+    "salary_max": 215047.27,
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Arlington County",
+      "State Farm"
+     ],
+     "display_name": "State Farm, Arlington County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5934845047",
+    "created": "2026-10-19T21:44:57Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Judge Group, Inc."
+    }
+   },
+   {
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "it-jobs",
+     "label": "IT Jobs"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5914450401?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=C2395A1EB5C2EFB17D6A3BFC8A5D07220C57D133",
+    "longitude": -77.338,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Data Engineer - Senior",
+    "salary_is_predicted": "1",
+    "description": "Job Description Data Engineer - Senior Reston, VA, United States (On-site) Job Title: Data Engineer - Senior Job Code: ITS954 Location: Reston, VA Reports to: Program Manager FLSA Status: Exempt Supervisory: No supervisory/management authority Prepared Date: 10/5/2026 A government contract requires that this position be restricted to provide documentation that you are a U.S. citizen or legal permanent resident to qualify. This position requires an active Top Secret/SCI clearance with a polygrap\u2026",
+    "salary_min": 256839.66,
+    "salary_max": 256839.66,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkxNDQ1MDQwMSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.vY3JbxDrOdawwkmWl3Tv6dWLCXmVo_wfpZFuEvrw9YU",
+    "latitude": 38.964,
+    "id": "5914450401",
+    "location": {
+     "display_name": "Reston, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Reston"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "company": {
+     "display_name": "Cherokee Federal",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "created": "2026-10-06T20:11:27Z"
+   },
+   {
+    "created": "2026-10-16T21:39:13Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Software Guidance & Assistance"
+    },
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "area": [
+      "US",
+      "Maryland",
+      "Montgomery County",
+      "Derwood"
+     ],
+     "display_name": "Derwood, Montgomery County"
+    },
+    "id": "5931418191",
+    "latitude": 39.084,
+    "salary_max": 91282.88,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzMTQxODE5MSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.4unmr85nF7GMGkFm7xcV_tRgBp0wZB7lrybSBRnjV9k",
+    "salary_min": 91282.88,
+    "description": "Software Guidance & Assistance, Inc., (SGA), is searching for a Big Data Engineer for a CONTRACT assignment with one of our premier Regulatory clients in the DMV or NY/NJ area. Responsibilities : As a Data Engineer on our team, you'll design, develop, and maintain large-scale data processing pipelines using Big Data technologies. In this role, you will: Collaborate with cross-functional teams to understand business requirements and translate them into technical solutions. Optimize and enhance e\u2026",
+    "salary_is_predicted": "1",
+    "title": "Big Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "longitude": -77.1537,
+    "redirect_url": "https://www.adzuna.com/land/ad/5931418191?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=556E8490E3F987D6A08331F7ED94A45069D01BFD",
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    }
+   },
+   {
+    "created": "2026-10-24T10:01:18Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Software Guidance & Assistance"
+    },
+    "location": {
+     "display_name": "Derwood, Montgomery County",
+     "area": [
+      "US",
+      "Maryland",
+      "Montgomery County",
+      "Derwood"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5940548727",
+    "latitude": 39.084,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTQwNTQ4NzI3In0.85N7m8q9aMMlogJI4A040_u0mUZ74R0uNoNR0tBF0ww",
+    "salary_max": 97186.99,
+    "description": "Software Guidance & Assistance, Inc., (SGA), is searching for a Senior Data Engineer for a CONTRACT assignment with one of our premier Regulatory clients in Rockville, MD or Tysons, VA. Responsibilities : As a Data Engineer on our team, you'll design, develop, and maintain large-scale data processing pipelines using Big Data technologies. In this role, you will: Collaborate with cross-functional teams to understand business requirements and translate them into technical solutions. Optimize and \u2026",
+    "salary_min": 97186.99,
+    "salary_is_predicted": "1",
+    "title": "Senior Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "redirect_url": "https://www.adzuna.com/land/ad/5940548727?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=0A19426BC1219FECA991850703470B071D88BCFD",
+    "longitude": -77.1537,
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    }
+   },
+   {
+    "latitude": 39.084,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkzNzcyODQwOSIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.fz6PS1lYHR4792BlnXcXomd0A7khi1J7mXziiNg65_M",
+    "salary_max": 103103.88,
+    "salary_min": 103103.88,
+    "description": "Description: Hybrid 3 days onsite / 2 days remote in Rockville, MD Our client seeks a hands-on Senior Data Engineer to design, build, and maintain an engineering metrics and analytics platform that integrates data from Jira, Bitbucket, GitLab, Jenkins, deployment systems, and Splunk. The role requires independent analysis of complex datasets, reliable data pipeline development, data quality remediation, analytics, and delivery of dashboards or lightweight applications that provide actionable en\u2026",
+    "salary_is_predicted": "1",
+    "created": "2026-10-22T06:13:27Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Eliassen Group"
+    },
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "Derwood, Montgomery County",
+     "area": [
+      "US",
+      "Maryland",
+      "Montgomery County",
+      "Derwood"
+     ]
+    },
+    "id": "5937728409",
+    "redirect_url": "https://www.adzuna.com/land/ad/5937728409?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=113B773EB285261813A3E4C595E90559AB1257E2",
+    "longitude": -77.1537,
+    "category": {
+     "label": "Engineering Jobs",
+     "tag": "engineering-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "title": "Senior Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   },
+   {
+    "title": "Sr. Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "redirect_url": "https://www.adzuna.com/land/ad/5903777723?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=1E609037C0DC47EC3DFBC437E0837EA44A28A808",
+    "longitude": -77.1786,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    },
+    "created": "2026-09-30T06:45:49Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Eliassen Group"
+    },
+    "location": {
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ],
+     "display_name": "Pimmit, Fairfax County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5903777723",
+    "latitude": 38.9351,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTAzNzc3NzIzIn0.EoMIeRlMnbRuvECW9KXxlOgkQU1Pgr1lhjjD2rA9SRo",
+    "salary_max": 124011,
+    "salary_min": 124011,
+    "description": "Description: May sit hybrid onsite in Wilmington, DE, McLean, VA, Richmond, VA or NYC Our client seeks a Data Engineer professional with strong ability to support a large-scale customer migration and data load initiative. The role will build and optimize AWS-based data pipelines using Java, Scala, and Spark, with PySpark and AWS Glue across multi-stage workflows. The engagement will emphasize event-driven patterns, data quality, and operational resilience. Due to client requirements, applicants\u2026",
+    "salary_is_predicted": "1"
+   },
+   {
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5870632070?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=06BA150CDF441222B81616D38B173458D5C24CF4",
+    "longitude": -77.29209,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Senior Data Engineer",
+    "salary_is_predicted": "1",
+    "description": "GovCIO is currently hiring for a Senior Data Engineer with an active Secret clearance to serve as an on-site technical resource, responsible for developing, maintaining, and modernizing data systems across low-side and high-side enclaves. This position will be located in Merrifield, VA and will be a hybrid position. Responsibilities This role focuses on improving performance, reliability, and scalability for data-centric applications. The engineer will design and optimize data pipelines, manage\u2026",
+    "salary_min": 154725.16,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTg3MDYzMjA3MCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.-kXDw6l2txDjYoIYPnHKm8ZdnOj600LuTtyNivyTLDY",
+    "salary_max": 154725.16,
+    "latitude": 38.81851,
+    "id": "5870632070",
+    "location": {
+     "display_name": "Burke, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Burke"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "company": {
+     "display_name": "GovCIO",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "created": "2026-09-04T09:19:32Z"
+   },
+   {
+    "salary_min": 117941.07,
+    "description": "Job Number: R0248747 Palantir Data Engineer The Opportunity: As an analytics professional, you're excited at the prospect of unlocking the secrets held by a data set, and you're fascinated by the possibilities presented by IoT, machine learning, and artifi cia l intelligence. If you care about leading a mission forward as much as advancing the field of data science, this is the opportunity for you. Your deep analytics expertise, coupled with an original approach to your work, will guide clients\u2026",
+    "salary_is_predicted": "1",
+    "latitude": 38.7891,
+    "salary_max": 117941.07,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1ODg5NTc3MTcyIn0.SdkYNB-zcJnDI3bpZvW6RTby_yS14sccN1A4j47ybcw",
+    "location": {
+     "display_name": "North Springfield, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "North Springfield"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "id": "5889577172",
+    "created": "2026-09-18T12:28:50Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "redirect_url": "https://www.adzuna.com/land/ad/5889577172?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=A4FE17518521A981E3B32E1DF644AD6222C2296C",
+    "longitude": -77.18748,
+    "category": {
+     "label": "Engineering Jobs",
+     "tag": "engineering-jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "Palantir Data Engineer"
+   },
+   {
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJpIjoiNTkyODI2MzU2OCIsInMiOiJTZ0pMcmx2VThSR1JIWi01U3pHX29BIn0.eEym2ekqai9e07D8-DZeCoBYIq-Blmx2Pt9fnjjfzRA",
+    "salary_max": 103448.9,
+    "latitude": 39.084,
+    "salary_is_predicted": "1",
+    "description": "Software Guidance & Assistance, Inc., (SGA), is searching for a Big Data Engineer for a CONTRACT assignment with one of our premier Regulatory clients in Rockville, MD or Tysons, VA. We are seeking a highly skilled and experienced Big Data Engineer to design, develop, and optimize large-scale data processing systems. In this role, you will work closely with cross-functional teams to architect data pipelines, implement data integration solutions, and ensure the performance, scalability, and reli\u2026",
+    "salary_min": 103448.9,
+    "company": {
+     "display_name": "Software Guidance & Assistance",
+     "__CLASS__": "Adzuna::API::Response::Company"
+    },
+    "created": "2026-10-14T21:35:40Z",
+    "id": "5928263568",
+    "location": {
+     "area": [
+      "US",
+      "Maryland",
+      "Montgomery County",
+      "Derwood"
+     ],
+     "display_name": "Derwood, Montgomery County",
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "label": "IT Jobs",
+     "tag": "it-jobs"
+    },
+    "longitude": -77.1537,
+    "redirect_url": "https://www.adzuna.com/land/ad/5928263568?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=99BCC25B5343374F8E459456F4FF879C2B27D602",
+    "title": "Big Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   },
+   {
+    "id": "5925149544",
+    "location": {
+     "display_name": "Derwood, Montgomery County",
+     "area": [
+      "US",
+      "Maryland",
+      "Montgomery County",
+      "Derwood"
+     ],
+     "__CLASS__": "Adzuna::API::Response::Location"
+    },
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Software Guidance & Assistance"
+    },
+    "created": "2026-10-12T21:27:30Z",
+    "salary_is_predicted": "1",
+    "description": "Software Guidance & Assistance, Inc., (SGA), is searching for an Data Scientist for a contract assignment with one of our premier Regulatory clients. Must sit in one of these office locations: Rockville MD or Tysons VA. The Data Scientist (Conversational AI Analytics) develops analytics and derives insights from conversational data generated by AI-powered platforms. This role is responsible for designing clustering pipelines, building facet extraction workflows, and producing actionable intelli\u2026",
+    "salary_min": 96986.26,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTI1MTQ5NTQ0In0.4F72_wUeo4-RPrxJnPVt6zWwmeLvBeuFifNUG8Nq3YY",
+    "salary_max": 96986.26,
+    "latitude": 39.084,
+    "__CLASS__": "Adzuna::API::Response::Job",
+    "title": "AI Data Engineer",
+    "category": {
+     "tag": "it-jobs",
+     "label": "IT Jobs",
+     "__CLASS__": "Adzuna::API::Response::Category"
+    },
+    "longitude": -77.1537,
+    "redirect_url": "https://www.adzuna.com/land/ad/5925149544?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=C440C78846BD8CEF5F72CFDF1885F33C9B0D461E"
+   },
+   {
+    "latitude": 38.9351,
+    "salary_max": 115798.28,
+    "adref": "eyJhbGciOiJIUzI1NiJ9.eyJzIjoiU2dKTHJsdlU4UkdSSFotNVN6R19vQSIsImkiOiI1OTMwMzExMjg1In0.q8gaOFeGGVUo_cqX0lADNEtJ9i2-d6EdWfKX-kYEV4E",
+    "salary_min": 115798.28,
+    "description": "Job Number: R0251792 Data Engineer, Lead The Opportunity: Make enterprise data and knowledge usable, governed, and dependable for AI applications. You will design data architectures and build the pipelines, knowledge indexes, and retrieval services that ground agents in authorized enterprise information. You will work with source-system owners and engineering teams to define data contracts, integrate structured and unstructured sources, and maintain permissions, lineage, quality, and freshness.\u2026",
+    "salary_is_predicted": "1",
+    "created": "2026-10-16T05:24:03Z",
+    "company": {
+     "__CLASS__": "Adzuna::API::Response::Company",
+     "display_name": "Booz Allen Hamilton"
+    },
+    "location": {
+     "__CLASS__": "Adzuna::API::Response::Location",
+     "display_name": "Pimmit, Fairfax County",
+     "area": [
+      "US",
+      "Virginia",
+      "Fairfax County",
+      "Pimmit"
+     ]
+    },
+    "id": "5930311285",
+    "redirect_url": "https://www.adzuna.com/land/ad/5930311285?se=SgJLrlvU8RGRHZ-5SzG_oA&utm_medium=api&utm_source=REDACTED&v=16A8BE5D6D1CC5A496D26B78BEFF66B0D3289A63",
+    "longitude": -77.1786,
+    "category": {
+     "__CLASS__": "Adzuna::API::Response::Category",
+     "tag": "it-jobs",
+     "label": "IT Jobs"
+    },
+    "title": "Lead Data Engineer",
+    "__CLASS__": "Adzuna::API::Response::Job"
+   }
+  ]
+ }
+}

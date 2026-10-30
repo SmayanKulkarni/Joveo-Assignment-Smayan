@@ -19,7 +19,7 @@ NOT_DOMAINS = {"graduate-jobs", "part-time-jobs", "other-general-jobs", "unknown
 TRACKING = {"utm_source", "utm_medium"}
 
 
-def _text(s: str) -> str:
+def collapse(s: str) -> str:
     return " ".join(s.split())
 
 
@@ -50,15 +50,15 @@ def _map(raw: dict, country: str) -> Posting:
     return Posting(
         source=Source.adzuna,
         source_id=str(raw["id"]),
-        title=_text(raw["title"]),
-        company=_text(company) if company else None,
+        title=collapse(raw["title"]),
+        company=collapse(company) if company else None,
         location=location["display_name"],
         region=tuple(location.get("area") or (country.upper(),)),
         domain=None if tag in NOT_DOMAINS else tag,
         # A timestamp with no zone is taken as UTC; astimezone alone would read it as local time.
         posted_at=created.replace(tzinfo=created.tzinfo or UTC).astimezone(UTC).date(),
         closes_at=None,
-        description=_text(raw["description"]),
+        description=collapse(raw["description"]),
         url=_url(raw["redirect_url"]),
         salary=_salary(raw, country),
     )

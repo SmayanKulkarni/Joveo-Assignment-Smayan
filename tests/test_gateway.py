@@ -4,6 +4,7 @@ import json
 import logging
 import sqlite3
 from datetime import UTC, date, datetime, timedelta
+from math import ceil
 from pathlib import Path
 
 import httpx
@@ -12,16 +13,21 @@ import pytest
 from unittest.mock import MagicMock
 
 from talent_scout.gateway import http
+from talent_scout.gateway import store as store_module
+from talent_scout.gateway import usajobs
 from talent_scout.gateway.adzuna import AdzunaClient
 from talent_scout.gateway.gateway import make_gateway
 from talent_scout.gateway.store import Store
 from talent_scout.gateway.testing import FakeGateway
 from talent_scout.gateway.types import BudgetExhausted, CacheStatus, Fetch, FetchResult, GatewayError, SourceOutcome, SourceRejected, SourceUnavailable
+from talent_scout.gateway.usajobs import UsajobsClient
 from talent_scout.kernel.testing import make_settings
-from talent_scout.kernel.types import Source
+from talent_scout.kernel.types import Salary, Source
 
 FIXTURES = Path(__file__).parent / "fixtures" / "jobs"
 APP_ID, APP_KEY = "test-app-id", "test-secret-key"
+USAJOBS_HOST = "data.usajobs.gov"
+TODAY = date(2026, 10, 30)  # the day the fixtures were recorded
 
 
 def fixture_body(name):
@@ -46,33 +52,39 @@ def serve(body, status=200, seen=None):
     return handler
 
 
-def run_all(handler, *fetches, settings=None):
+def route(adzuna, usajobs=None):
+    """Sends USAJOBS requests to `usajobs` and the rest to `adzuna`. USAJOBS defaults to down, so Adzuna tests see only Adzuna answer."""
+    usajobs = usajobs or serve({}, status=503)
+    return lambda request: (usajobs if request.url.host == USAJOBS_HOST else adzuna)(request)
+
+
+def run_all(handler, *fetches, settings=None, usajobs=None):
     """Fetches in order through one open gateway."""
     async def go():
-        async with make_gateway(settings or gateway_settings(), transport=httpx.MockTransport(handler)) as gw:
+        async with make_gateway(settings or gateway_settings(), transport=httpx.MockTransport(route(handler, usajobs))) as gw:
             return [await gw.fetch(f) for f in fetches]
 
     return asyncio.run(go())
 
 
-def run_fetch_keeping_db(handler, f=None, settings=None):
+def run_fetch_keeping_db(handler, f=None, settings=None, usajobs=None):
     """One fetch against whatever gateway_db already holds, like a restarted process."""
-    return run_all(handler, f or make_fetch(), settings=settings)[0]
+    return run_all(handler, f or make_fetch(), settings=settings, usajobs=usajobs)[0]
 
 
-def run_fetch(handler, f=None, settings=None):
+def run_fetch(handler, f=None, settings=None, usajobs=None):
     # Starts from an empty gateway_db, so serving a different body for the same Fetch never meets an old L1 row.
     (settings or gateway_settings()).gateway_db.unlink(missing_ok=True)
-    return run_fetch_keeping_db(handler, f, settings)
+    return run_fetch_keeping_db(handler, f, settings, usajobs)
 
 
-def run_search(handler, f=None):
+def run_search(handler, f=None, client_cls=AdzunaClient):
     async def go():
         settings = gateway_settings()
         store = Store(settings)
         try:
             async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-                return await AdzunaClient(client, settings, store).search(f or make_fetch())
+                return await client_cls(client, settings, store).search(f or make_fetch())
         finally:
             store.close()
 
@@ -113,6 +125,16 @@ def map_one(**over):
 @pytest.fixture(autouse=True)
 def no_backoff(monkeypatch):
     monkeypatch.setattr(http, "_DELAYS", (0, 0))
+
+
+@pytest.fixture(autouse=True)
+def set_today(monkeypatch):
+    """Pins the Gateway's clock, since USAJOBS close dates in the fixtures are real. Call the returned setter to move the day."""
+    def setter(day=TODAY):
+        monkeypatch.setattr(store_module, "today", lambda: day)
+
+    setter()
+    return setter
 
 
 @pytest.fixture(autouse=True)
@@ -413,7 +435,7 @@ def test_concurrent_identical_fetches_share_one_call():
     seen = []
 
     async def go():
-        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(serve(fixture_body("adzuna_search"), seen=seen))) as gw:
+        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(route(serve(fixture_body("adzuna_search"), seen=seen)))) as gw:
             return await asyncio.gather(gw.fetch(make_fetch()), gw.fetch(make_fetch()))
 
     a, b = asyncio.run(go())
@@ -436,7 +458,7 @@ def test_empty_result_list_is_cached_but_failures_and_bad_bodies_are_not():
 
 def test_rows_are_committed_before_fetch_returns_and_hold_no_credentials():
     async def go():
-        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(serve(fixture_body("adzuna_search")))) as gw:
+        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(route(serve(fixture_body("adzuna_search"))))) as gw:
             await gw.fetch(make_fetch())
             return db_exec("SELECT source, fetch, postings, expires_at FROM l1")  # a second connection, gateway still open
 
@@ -569,7 +591,7 @@ def traced_fetch(handler, *fetches):
     client = MagicMock()
 
     async def go():
-        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(handler)) as gw:
+        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(route(handler))) as gw:
             with ls.trace("run", "chain"):
                 return [await gw.fetch(f) for f in fetches]
 
@@ -598,3 +620,287 @@ def test_trace_never_carries_postings_a_url_or_a_key():
     sent = repr(calls)
     assert out.postings and "adzuna.com" not in sent and APP_KEY not in sent and APP_ID not in sent
     assert all(p.title not in sent for p in out.postings)
+
+
+# --- USAJOBS mapping ---
+
+def usajobs_items():
+    return copy.deepcopy(fixture_body("usajobs_search")["SearchResult"]["SearchResultItems"])
+
+
+def usajobs_page(items):
+    return {"SearchResult": {"SearchResultCountAll": len(items), "SearchResultItems": items}}
+
+
+def usajobs_item(item_id="759326100", details=None, **over):
+    """One raw fixture item (the CIA Data Engineer unless told otherwise), with descriptor fields overridden."""
+    item = next(i for i in usajobs_items() if i["MatchedObjectId"] == item_id)
+    item["MatchedObjectDescriptor"].update(over)
+    item["MatchedObjectDescriptor"]["UserArea"]["Details"].update(details or {})
+    return item
+
+
+def map_usajobs(*items, f=None):
+    return run_search(serve(usajobs_page(list(items))), f, UsajobsClient)
+
+
+def pay(code="PA", lo="100", hi="200"):
+    return {"PositionRemuneration": [{"MinimumRange": lo, "MaximumRange": hi, "RateIntervalCode": code}]}
+
+
+def test_usajobs_fixture_maps_description_url_and_pay():
+    page = run_search(serve(fixture_body("usajobs_search")), client_cls=UsajobsClient)
+    assert (len(page.postings), page.total, page.dropped) == (25, 65, 0)
+    cia = page.postings[0]
+    summary = usajobs_item()["MatchedObjectDescriptor"]["UserArea"]["Details"]["JobSummary"]
+    assert cia.description.startswith(summary) and len(cia.description) <= 4000
+    assert cia.url == "https://www.usajobs.gov/job/759326100"
+    assert all(":443" not in p.url for p in page.postings)
+    assert (cia.source, cia.source_id, cia.title, cia.company) == (Source.usajobs, "759326100", "Data Engineer", "Central Intelligence Agency")
+    assert cia.salary == Salary(min=74584, max=156755, currency="USD", period="annual", predicted=False)
+    assert (cia.posted_at, cia.closes_at, cia.domain) == (date(2026, 9, 1), date(2027, 1, 31), "it-jobs")
+    assert cia.region == ("US", "District of Columbia", "Washington")
+
+
+@pytest.mark.parametrize("code, period", [("PA", "annual"), ("PH", "hourly"), ("PD", "daily"), ("BW", "biweekly"), ("PM", "monthly")])
+def test_usajobs_pay_codes_map_to_periods(code, period):
+    assert map_usajobs(usajobs_item(**pay(code))).postings[0].salary.period == period
+
+
+@pytest.mark.parametrize("code", ["SY", "PW", "FB", "ST", "WC"])
+def test_usajobs_incomparable_pay_codes_give_no_salary(code):
+    assert map_usajobs(usajobs_item(**pay(code))).postings[0].salary is None
+
+
+@pytest.mark.parametrize("lo, hi, expected", [("200", "100", (100, 200)), ("0", "150", (None, 150)), ("100", "0", (100, None)), ("0", "0", None)])
+def test_usajobs_salary_bounds(lo, hi, expected):
+    salary = map_usajobs(usajobs_item(**pay("PA", lo, hi))).postings[0].salary
+    assert (salary and (salary.min, salary.max)) == expected
+    assert salary is None or salary.predicted is False
+
+
+def test_usajobs_region_is_the_common_prefix_of_the_locations():
+    page = map_usajobs(usajobs_item("852270300"), usajobs_item("890415500"), usajobs_item("889388600"))
+    faa, virginia, mixed_states = (p.region for p in page.postings)
+    assert faa == ("US",)  # 1,176 locations across the country
+    assert virginia == ("US", "Virginia")  # Dahlgren and Fort Belvoir
+    assert mixed_states == ("US",)  # Missouri and Virginia
+
+
+def test_usajobs_region_for_no_locations_mixed_countries_and_overseas():
+    cia = usajobs_item()["MatchedObjectDescriptor"]["PositionLocation"][0]
+    berlin = {**cia, "CountryCode": "Germany", "CountrySubDivisionCode": "Berlin", "CityName": "Berlin"}
+    page = map_usajobs(
+        usajobs_item(PositionLocation=[]),
+        usajobs_item(PositionLocation=[cia, berlin]),
+        usajobs_item(PositionLocation=[berlin]),
+    )
+    assert [p.region for p in page.postings] == [("US",), ("US",), ("Germany", "Berlin", "Berlin")]
+
+
+def test_usajobs_blank_description_and_bad_posted_at_are_drops_but_bad_closes_at_is_not():
+    blank = usajobs_item("759326100", details={"JobSummary": "", "MajorDuties": []}, QualificationSummary="")
+    bad_posted = usajobs_item("889388600", PublicationStartDate="soon")
+    missing_posted = usajobs_item("888547100")
+    del missing_posted["MatchedObjectDescriptor"]["PublicationStartDate"]
+    bad_closes = usajobs_item("889350600", ApplicationCloseDate="whenever")
+    page = map_usajobs(blank, bad_posted, missing_posted, bad_closes)
+    assert page.dropped == 3
+    assert [(p.source_id, p.closes_at) for p in page.postings] == [("889350600", None)]
+
+
+@pytest.mark.parametrize(
+    "series, domain",
+    [
+        ("2210", "it-jobs"),  # family 2200
+        ("0801", "engineering-jobs"),  # family 0800
+        ("0391", "it-jobs"),  # series override over the 0300 family
+        ("0028", "scientific-qa-jobs"),  # override over a family that has no tag
+        ("1102", None),  # override to no Domain over the 1100 family
+        ("8999", "maintenance-jobs"),  # the one series whose family is not its first two digits
+        ("7777", None),  # unknown series
+    ],
+)
+def test_usajobs_domain_table(series, domain):
+    assert map_usajobs(usajobs_item(JobCategory=[{"Name": "x", "Code": series}])).postings[0].domain == domain
+
+
+def test_unknown_usajobs_series_is_logged_once(caplog):
+    usajobs._domain.cache_clear()  # an earlier test may have logged this series already
+    item = usajobs_item(JobCategory=[{"Name": "x", "Code": "7777"}])
+    with caplog.at_level(logging.WARNING):
+        map_usajobs(item, item)
+    assert sum("7777" in r.getMessage() for r in caplog.records) == 1
+
+
+# --- USAJOBS request and errors ---
+
+def test_usajobs_request_for_a_located_search():
+    seen = []
+    f = make_fetch(location="Washington", radius_km=50, max_days_old=90, category="it-jobs", page=3)
+    run_search(serve(fixture_body("usajobs_search"), seen=seen), f, UsajobsClient)
+    req = seen[0]
+    assert req.url.host == USAJOBS_HOST and req.url.path == "/api/Search"
+    # DatePosted is capped at 60, Radius is miles rounded up, and the category is never sent.
+    assert dict(req.url.params) == {
+        "PositionTitle": "data engineer", "ResultsPerPage": "50", "Page": "3", "DatePosted": "60",
+        "LocationName": "washington", "Radius": str(ceil(50 / 1.609)),
+    }
+    assert req.headers["Host"] == USAJOBS_HOST
+    assert req.headers["User-Agent"] == "d" and req.headers["Authorization-Key"] == "c"
+
+
+def test_usajobs_blank_location_omits_location_and_radius_and_short_windows_pass_through():
+    seen = []
+    run_search(serve(fixture_body("usajobs_search"), seen=seen), make_fetch(radius_km=25, max_days_old=10), UsajobsClient)
+    q = dict(seen[0].url.params)
+    assert q["DatePosted"] == "10" and "LocationName" not in q and "Radius" not in q
+
+
+def test_usajobs_429_is_source_unavailable_with_no_lockout():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(429, json={})
+
+    with pytest.raises(SourceUnavailable) as e:
+        run_search(handler, client_cls=UsajobsClient)
+    assert type(e.value) is SourceUnavailable and len(calls) == 1
+    assert len(map_usajobs(usajobs_item()).postings) == 1  # the next call still goes out
+
+
+def test_usajobs_body_without_search_result_is_source_unavailable():
+    for body in ({}, {"SearchResult": {"SearchResultCountAll": 3}}, ["x"]):
+        with pytest.raises(SourceUnavailable):
+            run_search(serve(body), client_cls=UsajobsClient)
+
+
+def test_usajobs_reports_no_calls_left():
+    out = run_fetch(serve({"count": 0, "results": []}), usajobs=serve(fixture_body("usajobs_search")))
+    assert out.sources[Source.usajobs].calls_left is None
+    assert out.sources[Source.usajobs].total == 65
+
+
+# --- fan-out ---
+
+def empty_adzuna():
+    return serve({"count": 0, "results": []})
+
+
+def test_us_calls_both_sources_and_other_countries_call_adzuna_only():
+    adzuna_seen, usajobs_seen = [], []
+    us = run_fetch(
+        serve(fixture_body("adzuna_search"), seen=adzuna_seen), usajobs=serve(fixture_body("usajobs_search"), seen=usajobs_seen)
+    )
+    assert set(us.sources) == {Source.adzuna, Source.usajobs} and us.failures == {}
+    assert {p.source for p in us.postings} == {Source.adzuna, Source.usajobs}
+
+    adzuna_seen.clear(), usajobs_seen.clear()
+    gb = run_fetch(serve(fixture_body("adzuna_search"), seen=adzuna_seen), make_fetch(country="gb"), usajobs=serve({}, seen=usajobs_seen))
+    assert set(gb.sources) == {Source.adzuna} and len(adzuna_seen) == 1 and usajobs_seen == []
+
+
+def test_both_sources_are_in_flight_at_once():
+    arrived, both = set(), asyncio.Event()
+
+    def rendezvous(body):
+        async def handler(request):
+            arrived.add(request.url.host)
+            if len(arrived) == 2:
+                both.set()
+            await asyncio.wait_for(both.wait(), 1)  # a sequential fan-out would time out here
+            return httpx.Response(200, json=body)
+
+        return handler
+
+    out = run_fetch(rendezvous({"count": 0, "results": []}), usajobs=rendezvous(usajobs_page([])))
+    assert set(out.sources) == {Source.adzuna, Source.usajobs}
+
+
+def test_one_source_failing_still_returns_the_other():
+    out = run_fetch(serve(fixture_body("adzuna_search")), usajobs=serve({}, status=500))
+    assert set(out.sources) == {Source.adzuna} and set(out.failures) == {Source.usajobs} and out.postings
+
+    out = run_fetch(serve({}, status=500), usajobs=serve(fixture_body("usajobs_search")))
+    assert set(out.sources) == {Source.usajobs} and set(out.failures) == {Source.adzuna} and out.postings
+
+
+def test_source_rejected_from_one_source_wins_over_a_result_from_the_other():
+    with pytest.raises(SourceRejected) as e:
+        run_fetch(serve(fixture_body("adzuna_search")), usajobs=serve({}, status=401))
+    assert e.value.source == Source.usajobs
+
+    with pytest.raises(SourceRejected) as e:
+        run_fetch(serve({}, status=401), usajobs=serve(fixture_body("usajobs_search")))
+    assert e.value.source == Source.adzuna
+
+
+def test_navsea_offices_stay_apart_a_re_announced_ad_collapses_and_faa_pay_plans_stay_apart():
+    out = run_fetch(empty_adzuna(), usajobs=serve(fixture_body("usajobs_search")))
+    ids = {p.source_id for p in out.postings}
+    # Same title, employer and pay, but each office writes its own duties, so these are different jobs.
+    assert {"889483500", "889352000"} <= ids
+    # The FAA pairs differ in pay.
+    assert {"852270300", "852270000"} <= ids
+
+    # A second hiring path for the same ad carries the same text, so it collapses.
+    ad = usajobs_item("889483500")["MatchedObjectDescriptor"]
+    twin = usajobs_item(
+        "889352000", details={"MajorDuties": ad["UserArea"]["Details"]["MajorDuties"]}, QualificationSummary=ad["QualificationSummary"]
+    )
+    out = run_fetch(empty_adzuna(), usajobs=serve(usajobs_page([usajobs_item("889483500"), twin])))
+    (kept,) = out.postings
+    assert sorted([kept.source_id, *(k.split(":")[1] for k in out.merged[kept.key])]) == ["889352000", "889483500"]
+
+
+# --- close dates and the L1 purge ---
+
+OPEN_AFTER_NOV_3 = [i for i in usajobs_items() if i["MatchedObjectDescriptor"]["ApplicationCloseDate"][:10] >= "2026-11-03"]
+
+
+def usajobs_rows():
+    return db_exec("SELECT fetch FROM l1 WHERE source = 'usajobs' ORDER BY fetch")
+
+
+def test_expired_postings_are_filtered_on_hits_and_fresh_responses_and_not_counted_as_dropped(set_today):
+    handler, usajobs = empty_adzuna(), serve(fixture_body("usajobs_search"))
+    first = run_fetch(handler, usajobs=usajobs)
+    assert len(first.postings) + sum(len(v) for v in first.merged.values()) == 25  # nothing has closed on the recording day
+
+    set_today(date(2026, 11, 3))
+    hit = run_fetch_keeping_db(handler, usajobs=usajobs)
+    fresh = run_fetch(handler, usajobs=usajobs)
+    for out, cache in ((hit, CacheStatus.hit), (fresh, CacheStatus.miss)):
+        outcome = out.sources[Source.usajobs]
+        assert outcome.cache == cache and outcome.dropped == 0
+        assert all(p.closes_at >= date(2026, 11, 3) for p in out.postings)
+        assert len(out.postings) + sum(len(v) for v in out.merged.values()) == len(OPEN_AFTER_NOV_3) < 25
+
+
+def test_purge_after_a_live_write_deletes_only_rows_whose_postings_have_all_closed(set_today):
+    handler = empty_adzuna()
+    closing = usajobs_item("889350600", ApplicationCloseDate="2026-10-31T23:59:59.9970")
+    later = usajobs_item("889536100", ApplicationCloseDate="2027-01-01T23:59:59.9970")
+    all_closed, mixed, all_open = (make_fetch(page=n) for n in (1, 2, 3))
+
+    run_fetch(handler, all_closed, usajobs=serve(usajobs_page([closing])))
+    run_fetch_keeping_db(handler, mixed, usajobs=serve(usajobs_page([closing, later])))
+    assert len(usajobs_rows()) == 2  # still open on the day they were written
+
+    set_today(date(2026, 11, 1))
+    run_fetch_keeping_db(handler, all_open, usajobs=serve(usajobs_page([later])))
+    assert usajobs_rows() == [(mixed.model_dump_json(),), (all_open.model_dump_json(),)]
+
+
+def test_replay_row_skips_the_close_date_filter_and_the_purge(set_today, tmp_path):
+    s = replay_settings(tmp_path)
+    usajobs = serve(fixture_body("usajobs_search"))
+    run_fetch(empty_adzuna(), settings=s, usajobs=usajobs)
+    db_exec("UPDATE l1 SET expires_at = '2026-10-01'")  # a row that a purge would delete
+
+    set_today(date(2026, 11, 3))
+    out = run_fetch_keeping_db(empty_adzuna(), settings=s, usajobs=serve({}, status=500))
+    assert out.sources[Source.usajobs].cache == CacheStatus.replay
+    assert len(out.postings) + sum(len(v) for v in out.merged.values()) == 25  # closed Postings included
+    assert len(usajobs_rows()) == 1

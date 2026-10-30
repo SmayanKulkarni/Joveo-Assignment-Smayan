@@ -17,8 +17,7 @@ from pydantic import BaseModel, Field
 
 from talent_scout.kernel import llm
 from talent_scout.kernel.llm import LLMExhausted, Tiers, check_balance
-from talent_scout.kernel.settings import Settings
-from talent_scout.kernel.testing import FakeToolChatModel
+from talent_scout.kernel.testing import FakeToolChatModel, make_settings
 
 GOOD = '{"n": 3}'
 
@@ -61,14 +60,6 @@ def http_error(cls, status):
     err = cls.__new__(cls)
     err.message, err.status_code = "boom", status
     return err
-
-
-def make_settings(**kw):
-    base = dict(
-        openrouter_api_key="k", adzuna_app_id="a", ADZUNA_API_KEY="b", usajobs_api_key="c",
-        usajobs_user_agent="d", langsmith_api_key="e", langsmith_tracing=False, langsmith_project="p",
-    )
-    return Settings(_env_file=None, **base, **kw)
 
 
 def tiers(*models, **kw):
@@ -209,7 +200,7 @@ def test_chat_fallback_keeps_tools_bound():
 def test_check_balance(monkeypatch):
     def fake_get(url, **kw):
         assert url.endswith("/api/v1/key")
-        return httpx.Response(200, json={"data": {"limit_remaining": FAKE["left"]}}, request=httpx.Request("GET", url))
+        return httpx.Response(200, json={"data": {"effective_budget": {"remaining_usd": FAKE["left"]}}}, request=httpx.Request("GET", url))
 
     class FakeClient:
         def __init__(self, **kw): pass
