@@ -95,6 +95,31 @@ class _CostedOpenRouter(ChatOpenRouter):
                 msg.usage_metadata = {**msg.usage_metadata, "total_cost": cost}
         return result
 
+    # LangGraph's "messages" stream mode routes every call here instead of _create_chat_result.
+    async def _astream(self, *args, **kwargs):
+        empty = True
+        try:
+            async for chunk in super()._astream(*args, **kwargs):
+                # OpenRouter's mid-stream failure arrives as a 200 frame the base class doesn't check for.
+                if chunk.message.response_metadata.get("finish_reason") == "error":
+                    raise _ProviderError("error frame mid-stream")
+                empty = False
+                yield chunk
+        except ValueError as err:
+            raise _ProviderError(str(err)) from err
+        if empty:
+            raise _ProviderError("empty stream")
+
+    # Cost is set after the merge, because adding AIMessageChunks rejects a float in usage_metadata.
+    async def _agenerate_with_cache(self, *args, **kwargs) -> ChatResult:
+        result = await super()._agenerate_with_cache(*args, **kwargs)
+        for gen in result.generations:
+            msg = gen.message
+            cost = msg.response_metadata.get("cost")
+            if isinstance(msg, AIMessage) and msg.usage_metadata and cost is not None:
+                msg.usage_metadata = {**msg.usage_metadata, "total_cost": cost}
+        return result
+
 
 def _response_format(schema: type[BaseModel]) -> dict:
     fn = convert_to_openai_tool(schema, strict=True)["function"]

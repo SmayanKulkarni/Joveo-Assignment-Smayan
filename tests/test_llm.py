@@ -1,9 +1,11 @@
 import asyncio
+from types import SimpleNamespace
 
 import httpx
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.tools import tool
+from langgraph.graph import START, MessagesState, StateGraph
 from openrouter.errors import (
     BadRequestResponseError,
     InternalServerResponseError,
@@ -195,6 +197,95 @@ def test_chat_fallback_keeps_tools_bound():
     first.script *= 3
     out = run_chat(tiers(first, second))
     assert out.tool_calls and second.bound_tools == [ping]
+
+
+class FakeFrame:
+    def __init__(self, data):
+        self.data = data
+
+    def model_dump(self, **kw):
+        return self.data
+
+
+def delta(text, finish=None, **top):
+    choice = {"index": 0, "delta": {"role": "assistant", "content": text}, "finish_reason": finish}
+    return FakeFrame({"id": "g", "model": "m", "choices": [choice], **top})
+
+
+USAGE = FakeFrame(
+    {"id": "g", "model": "m", "choices": [], "usage": {"prompt_tokens": 5, "completion_tokens": 2, "total_tokens": 7, "cost": 0.0123}}
+)
+TOP_ERROR = FakeFrame({"id": "g", "choices": [], "error": {"code": 502, "message": "upstream died"}})
+MID_ERROR = delta("", finish="error", error={"code": 502, "message": "upstream died"})
+
+
+def streaming_model(*scripts):
+    """The real _CostedOpenRouter on a fake SDK client, since the bugs live on its streaming path."""
+    m = llm._CostedOpenRouter(model="fake/m", api_key="x", max_retries=0)
+    calls = {"n": 0}
+    remaining = list(scripts)
+
+    async def send_async(messages, **params):
+        calls["n"] += 1
+        frames = remaining.pop(0)
+
+        async def stream():
+            for f in frames:
+                yield f
+
+        return stream()
+
+    object.__setattr__(m, "client", SimpleNamespace(chat=SimpleNamespace(send_async=send_async)))
+    return m, calls
+
+
+def run_streamed(t):
+    # Only "messages" mode sends ainvoke down _astream, so a plain ainvoke wouldn't test this path.
+    seen = {}
+
+    async def node(state):
+        seen["reply"] = await t.chat("cheap", tools=[], name="fetch").ainvoke([HumanMessage("go")])
+        return {}
+
+    g = StateGraph(MessagesState)
+    g.add_node("n", node)
+    g.add_edge(START, "n")
+
+    async def drive():
+        chunks = [c async for c in g.compile().astream({"messages": []}, stream_mode="messages")]
+        return chunks
+
+    seen["chunks"] = asyncio.run(drive())
+    return seen
+
+
+STREAM_OK = [delta("he"), delta("llo", finish="stop"), USAGE]
+
+
+@pytest.mark.parametrize("bad", [[delta("par"), MID_ERROR], [TOP_ERROR], []])
+def test_stream_failure_retries_instead_of_returning_it(bad):
+    m, calls = streaming_model(bad, STREAM_OK)
+    out = run_streamed(tiers(m))
+    assert out["reply"].text == "hello" and calls["n"] == 2
+
+
+@pytest.mark.parametrize("bad", [[delta("par"), MID_ERROR], [TOP_ERROR], []])
+def test_stream_failure_falls_back_then_exhausts(bad):
+    first, first_calls = streaming_model(bad, bad, bad)
+    second, _ = streaming_model(STREAM_OK)
+    assert run_streamed(tiers(first, second))["reply"].text == "hello"
+    assert first_calls["n"] == 3
+
+    only, _ = streaming_model(bad, bad, bad)
+    with pytest.raises(LLMExhausted):
+        run_streamed(tiers(only))
+
+
+def test_stream_keeps_tokens_and_cost():
+    m, _ = streaming_model(STREAM_OK)
+    out = run_streamed(tiers(m))
+    assert "".join(c.text for c, _ in out["chunks"]) == "hello"
+    assert out["reply"].usage_metadata["total_cost"] == 0.0123
 
 
 def test_check_balance(monkeypatch):
