@@ -16,6 +16,9 @@ dependencies = [
     "aiosqlite==0.22.1",
 ]
 
+[project.scripts]
+scout = "talent_scout.clients.cli:main"
+
 [dependency-groups]
 dev = ["pytest"]
 
