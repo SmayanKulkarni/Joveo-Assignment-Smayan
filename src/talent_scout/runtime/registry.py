@@ -26,6 +26,9 @@ class RunStatus(StrEnum):
     failed = "failed"
 
 
+RESUMABLE = (RunStatus.paused, RunStatus.failed)
+
+
 class RunRecord(Model):
     thread_id: str
     summary: str
@@ -78,7 +81,20 @@ class Registry:
         )
         await self._conn.commit()
 
+    async def reconcile(self, thread_id: str, status: RunStatus, error: str | None) -> None:
+        # Only a still-running row: another process may have moved it since the lock probe.
+        await self._conn.execute(
+            "UPDATE runs SET status = ?, error = ?, updated_at = ? WHERE thread_id = ? AND status = ?",
+            (status, error, _now(), thread_id, RunStatus.running),
+        )
+        await self._conn.commit()
+
     async def get(self, thread_id: str) -> RunRecord | None:
         async with self._conn.execute("SELECT * FROM runs WHERE thread_id = ?", (thread_id,)) as cursor:
             row = await cursor.fetchone()
         return RunRecord.model_validate(dict(row)) if row else None
+
+    async def list_all(self) -> list[RunRecord]:
+        async with self._conn.execute("SELECT * FROM runs ORDER BY rowid DESC") as cursor:
+            rows = await cursor.fetchall()
+        return [RunRecord.model_validate(dict(row)) for row in rows]

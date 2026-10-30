@@ -13,13 +13,7 @@ from talent_scout.kernel.types import ClarifyingQuestion, RequestField
 from talent_scout.runtime.graph import OWNERS, build_graph
 from talent_scout.runtime.pause import ALLOWED_MSGPACK, ANSWERS, ClarifyPause, LowDataPause, PlanReviewPause
 from talent_scout.runtime.registry import RunStatus, derive_status
-from talent_scout.runtime.testing import fake_deps
-
-ANSWER_FOR = {
-    "clarify": {"answers": ["Software"]},
-    "plan_review": {"action": "approve", "plan": None, "feedback": None},
-    "low_data_review": {"action": "continue"},
-}
+from talent_scout.runtime.testing import ANSWER_FOR, fake_deps
 
 
 def test_full_graph_compiles_with_every_owned_node():

@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from langgraph.types import interrupt
 
 from talent_scout.analysis.types import Extraction
@@ -90,3 +92,20 @@ def fake_deps(settings: Settings) -> Deps:
         gateway=FakeGateway([]),
         settings=settings,
     )
+
+
+@asynccontextmanager
+async def open_fake_deps(settings: Settings):
+    yield fake_deps(settings)
+
+
+async def pass_balance(settings: Settings) -> float:
+    return float("inf")
+
+
+# One valid answer per Pause, enough to walk the stub path.
+ANSWER_FOR = {
+    "clarify": {"answers": ["Software"]},
+    "plan_review": {"action": "approve", "plan": None, "feedback": None},
+    "low_data_review": {"action": "continue"},
+}
