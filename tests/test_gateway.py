@@ -2,7 +2,8 @@ import asyncio
 import copy
 import json
 import logging
-from datetime import date
+import sqlite3
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -11,9 +12,10 @@ import pytest
 from talent_scout.gateway import http
 from talent_scout.gateway.adzuna import AdzunaClient
 from talent_scout.gateway.gateway import make_gateway
+from talent_scout.gateway.store import Store
 from talent_scout.gateway.testing import FakeGateway
-from talent_scout.gateway.types import CacheStatus, Fetch, FetchResult, GatewayError, SourceOutcome, SourceRejected, SourceUnavailable
-from talent_scout.kernel.settings import Settings
+from talent_scout.gateway.types import BudgetExhausted, CacheStatus, Fetch, FetchResult, GatewayError, SourceOutcome, SourceRejected, SourceUnavailable
+from talent_scout.kernel.testing import make_settings
 from talent_scout.kernel.types import Source
 
 FIXTURES = Path(__file__).parent / "fixtures" / "jobs"
@@ -24,11 +26,8 @@ def fixture_body(name):
     return json.loads((FIXTURES / f"{name}.json").read_text(encoding="utf-8"))["body"]
 
 
-def make_settings():
-    return Settings(
-        _env_file=None, openrouter_api_key="k", adzuna_app_id=APP_ID, ADZUNA_API_KEY=APP_KEY, usajobs_api_key="c",
-        usajobs_user_agent="d", langsmith_api_key="e", langsmith_tracing=False, langsmith_project="p",
-    )
+def gateway_settings(**kw):
+    return make_settings(adzuna_app_id=APP_ID, ADZUNA_API_KEY=APP_KEY, **kw)
 
 
 def make_fetch(**kw):
@@ -45,20 +44,56 @@ def serve(body, status=200, seen=None):
     return handler
 
 
-def run_fetch(handler, f=None):
+def run_all(handler, *fetches, settings=None):
+    """Fetches in order through one open gateway."""
     async def go():
-        async with make_gateway(make_settings(), transport=httpx.MockTransport(handler)) as gw:
-            return await gw.fetch(f or make_fetch())
+        async with make_gateway(settings or gateway_settings(), transport=httpx.MockTransport(handler)) as gw:
+            return [await gw.fetch(f) for f in fetches]
 
     return asyncio.run(go())
+
+
+def rerun(handler, f=None, settings=None):
+    """One fetch against whatever gateway_db already holds, like a restarted process."""
+    return run_all(handler, f or make_fetch(), settings=settings)[0]
+
+
+def run_fetch(handler, f=None, settings=None):
+    # Starts from an empty gateway_db, so serving a different body for the same Fetch never meets an old L1 row.
+    (settings or gateway_settings()).gateway_db.unlink(missing_ok=True)
+    return rerun(handler, f, settings)
 
 
 def run_search(handler, f=None):
     async def go():
-        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-            return await AdzunaClient(client, make_settings()).search(f or make_fetch())
+        settings = gateway_settings()
+        store = Store(settings)
+        try:
+            async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+                return await AdzunaClient(client, settings, store).search(f or make_fetch())
+        finally:
+            store.close()
 
     return asyncio.run(go())
+
+
+def calls_left(settings=None):
+    store = Store(settings or gateway_settings())
+    try:
+        return store.calls_left(Source.adzuna)
+    finally:
+        store.close()
+
+
+def db_exec(sql, *args, settings=None):
+    """Runs raw SQL on gateway_db through a second connection, as a killed-and-restarted process would."""
+    db = sqlite3.connect((settings or gateway_settings()).gateway_db)
+    try:
+        rows = db.execute(sql, args).fetchall()
+        db.commit()
+        return rows
+    finally:
+        db.close()
 
 
 def raw_result(**over):
@@ -76,6 +111,12 @@ def map_one(**over):
 @pytest.fixture(autouse=True)
 def no_backoff(monkeypatch):
     monkeypatch.setattr(http, "_DELAYS", (0, 0))
+
+
+@pytest.fixture(autouse=True)
+def isolated_db(tmp_path, monkeypatch):
+    # The default gateway_db is relative, so every test gets its own file without touching the repo's .cache.
+    monkeypatch.chdir(tmp_path)
 
 
 # --- mapping ---
@@ -153,6 +194,16 @@ def test_bad_result_is_counted_in_dropped_and_the_rest_return():
     assert out.sources[Source.adzuna].dropped == 1
 
 
+def test_created_without_a_zone_is_read_as_utc():
+    assert map_one(created="2026-10-14T21:35:19").posted_at == date(2026, 10, 14)
+    assert map_one(created="2026-10-14T21:35:19-05:00").posted_at == date(2026, 10, 15)
+
+
+def test_redirect_url_keeps_other_params_byte_exact():
+    url = "https://www.adzuna.com/land/ad/1?se=a%2Fb+c&utm_medium=api&utm_source=X&v=9F"
+    assert map_one(redirect_url=url).url == "https://www.adzuna.com/land/ad/1?se=a%2Fb+c&v=9F"
+
+
 def test_text_is_trimmed_and_collapsed():
     p = map_one(title="  Data \n Engineer ", description=" a   b…")
     assert (p.title, p.description) == ("Data Engineer", "a b…")
@@ -206,7 +257,10 @@ def test_timeout_connect_error_and_5xx_retry_twice_then_fail():
     def refused(request):
         raise httpx.ConnectError("no route", request=request)
 
-    for fail in (timeout, refused, serve({}, status=503)):
+    def dropped(request):
+        raise httpx.ReadError("connection cut", request=request)
+
+    for fail in (timeout, refused, dropped, serve({}, status=503)):
         calls = []
 
         def handler(request, fail=fail):
@@ -221,6 +275,23 @@ def test_timeout_connect_error_and_5xx_retry_twice_then_fail():
 def test_no_source_answering_raises_gateway_error():
     with pytest.raises(GatewayError, match="adzuna"):
         run_fetch(serve({}, status=500))
+
+
+def test_adzuna_429_is_budget_exhausted_with_no_retry():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(429, json={})
+
+    with pytest.raises(BudgetExhausted):
+        run_search(handler)
+    assert len(calls) == 1
+
+
+def test_fetch_outside_async_with_is_a_usage_error():
+    with pytest.raises(RuntimeError, match="async with"):
+        asyncio.run(make_gateway(gateway_settings()).fetch(make_fetch()))
 
 
 def test_body_without_results_is_source_unavailable():
@@ -255,8 +326,151 @@ def test_raise_for_status_is_never_called():
 
 def test_make_gateway_quiets_the_httpx_logger():
     logging.getLogger("httpx").setLevel(logging.INFO)
-    make_gateway(make_settings())
+    make_gateway(gateway_settings())
     assert logging.getLogger("httpx").level == logging.WARNING
+
+
+# --- L1 cache and budget guard ---
+
+def test_repeat_fetch_is_a_hit_with_no_http_call_and_no_spend():
+    seen = []
+    first, second = run_all(serve(fixture_body("adzuna_search"), seen=seen), make_fetch(), make_fetch())
+    assert len(seen) == 1
+    a, b = first.sources[Source.adzuna], second.sources[Source.adzuna]
+    assert (a.cache, b.cache) == (CacheStatus.miss, CacheStatus.hit)
+    assert (a.calls_left, b.calls_left) == (24, 24)
+    assert (a.total, a.dropped, a.fetched_at) == (b.total, b.dropped, b.fetched_at)
+    assert second.postings == first.postings and second.merged == first.merged
+
+
+def test_a_different_fetch_is_a_different_row():
+    seen = []
+    run_all(serve(fixture_body("adzuna_search"), seen=seen), make_fetch(), make_fetch(page=2))
+    assert len(seen) == 2
+
+
+def test_fresh_row_is_still_served_after_the_budget_has_run_out():
+    settings = gateway_settings(adzuna_daily_limit=1)
+    rerun(serve(fixture_body("adzuna_search")), settings=settings)
+    seen = []
+    out = rerun(serve({}, seen=seen), settings=settings)
+    assert seen == [] and out.sources[Source.adzuna].cache == CacheStatus.hit
+    assert out.sources[Source.adzuna].calls_left == 0
+
+
+def backdate(hours):
+    db_exec("UPDATE l1 SET fetched_at = ?", (datetime.now(UTC) - timedelta(hours=hours)).isoformat())
+
+
+def test_row_past_the_ttl_misses_and_is_overwritten():
+    rerun(serve({"count": 0, "results": []}))
+    backdate(25)
+    seen = []
+    out = rerun(serve(fixture_body("adzuna_search"), seen=seen))
+    assert len(seen) == 1 and out.sources[Source.adzuna].cache == CacheStatus.miss
+    # Overwritten, so the next identical Fetch is served from the refreshed row.
+    assert rerun(serve({}, seen=seen)).sources[Source.adzuna].cache == CacheStatus.hit
+    assert len(seen) == 1
+
+
+def test_row_just_inside_the_ttl_is_still_a_hit():
+    rerun(serve(fixture_body("adzuna_search")))
+    backdate(23)
+    assert rerun(serve({})).sources[Source.adzuna].cache == CacheStatus.hit
+
+
+def test_stale_row_is_not_served_when_the_budget_has_run_out():
+    settings = gateway_settings(adzuna_daily_limit=1)
+    rerun(serve(fixture_body("adzuna_search")), settings=settings)
+    backdate(25)
+    seen = []
+    # With no other source the refusal surfaces as GatewayError; failures[adzuna] carries the same text.
+    with pytest.raises(GatewayError, match="adzuna.*limit"):
+        rerun(serve({}, seen=seen), settings=settings)
+    assert seen == []
+
+
+def test_row_that_no_longer_validates_is_a_miss():
+    rerun(serve(fixture_body("adzuna_search")))
+    db_exec("UPDATE l1 SET postings = ?", '[{"title": "old shape"}]')
+    seen = []
+    out = rerun(serve(fixture_body("adzuna_search"), seen=seen))
+    assert len(seen) == 1 and out.sources[Source.adzuna].cache == CacheStatus.miss
+
+
+def test_empty_result_list_is_cached_but_failures_and_bad_bodies_are_not():
+    seen = []
+    first, second = run_all(serve({"count": 0, "results": []}, seen=seen), make_fetch(), make_fetch())
+    assert second.sources[Source.adzuna].cache == CacheStatus.hit and len(seen) == 1
+    assert second.postings == []
+
+    db_exec("DELETE FROM l1")
+    for handler in (serve({}, status=500), serve({"count": 3}), serve({}, status=429)):
+        with pytest.raises(GatewayError):
+            rerun(handler)
+    assert db_exec("SELECT COUNT(*) FROM l1") == [(0,)]
+
+
+def test_rows_are_committed_before_fetch_returns_and_hold_no_credentials():
+    async def go():
+        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(serve(fixture_body("adzuna_search")))) as gw:
+            await gw.fetch(make_fetch())
+            return db_exec("SELECT source, fetch, postings, expires_at FROM l1")  # a second connection, gateway still open
+
+    ((source, key, postings, expires_at),) = asyncio.run(go())
+    assert (source, expires_at) == ("adzuna", None)  # Adzuna has no close dates, so the row is never purged
+    assert key == make_fetch().model_dump_json()
+    for secret in (APP_ID, APP_KEY):
+        assert secret not in key and secret not in postings
+
+
+def test_guard_refuses_at_the_limit_and_the_count_survives_reopening():
+    settings = gateway_settings(adzuna_daily_limit=2)
+    store = Store(settings)
+    store.spend(Source.adzuna)
+    store.spend(Source.adzuna)
+    with pytest.raises(BudgetExhausted):
+        store.spend(Source.adzuna)
+    store.close()
+
+    reopened = Store(settings)
+    with pytest.raises(BudgetExhausted):
+        reopened.spend(Source.adzuna)
+    assert reopened.calls_left(Source.adzuna) == 0
+    # USAJOBS is counted but has no limit, so it reports unmetered.
+    reopened.spend(Source.usajobs)
+    assert reopened.calls_left(Source.usajobs) is None
+    reopened.close()
+
+
+def test_a_new_utc_day_starts_with_a_full_budget():
+    settings = gateway_settings(adzuna_daily_limit=1)
+    rerun(serve(fixture_body("adzuna_search")), settings=settings)
+    db_exec("UPDATE budget SET utc_day = ?", "2000-01-01")
+    assert calls_left(settings) == 1
+
+
+def test_retries_spend_one_budget_call_per_attempt():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(503, json={})
+
+    with pytest.raises(GatewayError):
+        rerun(handler)
+    assert len(calls) == 3 and calls_left() == 22
+
+
+def test_adzuna_429_locks_the_utc_day_across_a_reopen():
+    seen = []
+    with pytest.raises(GatewayError, match="adzuna.*limit"):
+        rerun(serve({}, status=429, seen=seen))
+    assert len(seen) == 1 and calls_left() == 0
+
+    with pytest.raises(GatewayError, match="adzuna.*limit"):
+        rerun(serve(fixture_body("adzuna_search"), seen=seen))  # a reopened gateway makes no call
+    assert len(seen) == 1
 
 
 # --- test fake ---
