@@ -24,8 +24,8 @@ It owns:
 - jobs-data replay, and the test fake
 
 It does **not** own:
-- the LLM-facing `search_jobs` schema, tool args → `Fetch`, or when to page (⏳ Collection)
-- when to raise a Caveat and its wording (⏳ Collection). The Gateway only supplies the data.
+- the LLM-facing `search_jobs` schema, tool args → `Fetch`, or when to page ([Collection LLD](collection.md) §5)
+- when to raise a Caveat and its wording ([Collection LLD](collection.md) §11). The Gateway only supplies the data.
 - rendering "The Adzuna API" attribution (⏳ Brief)
 - keeping federal pay apart from Adzuna salary Stats (⏳ Analysis)
 - a daily budget shared across concurrent Runs (⏳ Infra shell)
@@ -45,7 +45,7 @@ src/talent_scout/gateway/
 ```
 
 - Kernel conventions apply: `uv`, Python 3.12, `pytest`, Pydantic v2 with `ConfigDict(frozen=True, extra="forbid")`, `StrEnum`, `date` for dates.
-- **Imports:** `gateway/` imports `kernel.types` and `kernel.settings`. Nothing in the Kernel imports the Gateway.
+- **Imports:** `gateway/` imports `kernel.types` and `kernel.settings`. In the Kernel, only `kernel/state.py` imports from here: `gateway/types.py`, through Collection's `FetchRecord`. That module imports only `kernel.types`, so nothing loops.
 - `ADZUNA_CURRENCY` sits in `types.py` because the `Fetch` validator needs it, and `adzuna.py` already imports `Fetch`.
 - `httpx` is a transitive dependency today. Pin it directly (`httpx==0.28.1`, the installed version).
 
@@ -78,6 +78,7 @@ class FetchResult(BaseModel):
 
 class JobsGateway:
     async def fetch(self, f: Fetch) -> FetchResult: ...
+    def calls_left(self, source: Source) -> int | None: ...   # the store's count; None = unmetered
     # used as `async with`, which opens and closes one httpx.AsyncClient per source
 
 def make_gateway(settings: Settings, transport: httpx.AsyncBaseTransport | None = None) -> JobsGateway: ...
@@ -91,6 +92,7 @@ def make_gateway(settings: Settings, transport: httpx.AsyncBaseTransport | None 
 - **No `sources`, work mode or target count.** The source rule picks sources, `Posting` can't carry a work mode, and L2 doesn't need a target (§11).
 - **`total` is disclosure only.** It may appear in Run Notes or a Caveat, labelled as the source's own match count ("Analysed 50 of about 3,200 Adzuna matches"), and is never a Stat, Evidence or a demand figure ([Adzuna aggregate endpoints](../../.scratch/gateway-lld/issues/06-adzuna-aggregate-endpoints.md)). With `cache == store` it isn't Adzuna's count, so it can't feed that disclosure.
 - `ATTRIBUTION[Source.adzuna] = "The Adzuna API"` is exported from here.
+- **`calls_left` is public** because `failures` holds plain strings, and `fetch` raises with no result when every source fails. Collection needs it to tell that broadening can't help ([Collection LLD](collection.md) §7).
 
 ## 4. Fetch flow
 
@@ -132,7 +134,7 @@ Then `fetch` concatenates the sources' Postings, runs `coalesce`, and returns. R
 def coalesce(postings: list[Posting]) -> tuple[list[Posting], dict[str, list[str]]]: ...
 ```
 
-A pure function, and the one Duplicate rule. The Gateway applies it to each merged result, and ⏳ Collection's `collect` re-applies it across Fetches. Collapsing is a ⏳ `run_log` `note`, not a Caveat. No LLM or Jev. See [Gateway query interface](../../.scratch/gateway-lld/issues/02-gateway-query-interface.md).
+A pure function, and the one Duplicate rule. The Gateway applies it to each merged result, and Collection's `collect` re-applies it across Fetches ([Collection LLD](collection.md) §6). Collapsing is a `run_log` `note`, not a Caveat. No LLM or Jev. See [Gateway query interface](../../.scratch/gateway-lld/issues/02-gateway-query-interface.md).
 
 **Two Postings are Duplicates when all hold:**
 1. Same normalised title and same normalised employer.
@@ -336,7 +338,7 @@ budget(source TEXT, utc_day TEXT, used INT, PRIMARY KEY (source, utc_day))
 - **Read-through, like Jev (Kernel §11):** the steps in §4. A failing miss was rejected, because a recording Run could then never fill the file without a second setting.
 - **Reports:** a replay hit is `cache = replay` with `fetched_at` from the row. A live call during replay is `miss`.
 - **Written as served,** after the close-date filter, so a replay returns what the recording Run returned.
-- **Never purged, ignores the TTL, skips the close-date filter on read.** Filtering would make Postings vanish as dates pass, change the prompts and miss every LLM cache entry. ⏳ Collection's age Caveat discloses the staleness.
+- **Never purged, ignores the TTL, skips the close-date filter on read.** Filtering would make Postings vanish as dates pass, change the prompts and miss every LLM cache entry. Collection's Replay age Caveat discloses the staleness.
 - A replay hit returns before L2, so a replayed Run stays reproducible.
 
 ## 11. L2 store (`gateway/store.py`, pass 2)
@@ -383,7 +385,7 @@ Known limits:
 
 **"Enough" means a full page.** Matches sort newest first, then by key, like `sort_by=date`. L2 serves page N only if slice `(N-1)*50 .. N*50` is full, so it never returns less than a live call would. Otherwise the call goes live, and any overlap is removed by key in `collect`. Only the failure fallback serves a partial page. `Fetch` needs no target count.
 
-**Outcome fields:** `cache = store`, `total` = L2's match count, `dropped = 0`, `fetched_at` = the oldest `last_seen_at` served, `calls_left` = current. A read-before-call hit spends no budget. ⏳ Whether an L2 answer's age raises a Caveat is Collection's.
+**Outcome fields:** `cache = store`, `total` = L2's match count, `dropped = 0`, `fetched_at` = the oldest `last_seen_at` served, `calls_left` = current. A read-before-call hit spends no budget. A normal L2 read raises no Caveat ([Collection LLD](collection.md) §11).
 
 ## 12. Expiry and sweep (pass 2)
 
@@ -427,7 +429,7 @@ Fills the Jobs APIs row of Kernel §15.
 | Tests | Use | Runs |
 |---|---|---|
 | Gateway | `make_gateway(settings, transport=httpx.MockTransport(...))` serving `tests/fixtures/jobs/`, with `gateway_db` under `tmp_path` | the real clients, mappers, L1 and guard |
-| Stages | `FakeGateway(results)` in `gateway/testing.py`, returning canned `FetchResult`s from `fetch` | nothing below `fetch`. Matched by duck typing, no `Protocol` |
+| Stages | `FakeGateway(results)` in `gateway/testing.py`, returning canned `FetchResult`s from `fetch`, and a settable `calls_left` | nothing below `fetch`. Matched by duck typing, no `Protocol` |
 
 - Fixtures hold `{status, latency_ms, headers, body}`, with secrets replaced by `REDACTED`. The handler returns `status` and `body`.
 - TTL and expiry tests backdate rows in `gateway_db` directly, so no clock needs injecting.
@@ -459,7 +461,7 @@ Each step leaves one small `pytest` file behind. No test spends live quota.
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
   - ⏳ **Infra shell:** shared daily budget across concurrent Runs, persistence off SQLite, MiniStack if required.
-  - ⏳ **Collection:** the `search_jobs` schema, re-applying `coalesce`, the `run_log` note for merged Duplicates, every Caveat's trigger and wording, whether the replay Caveat reports live calls made during replay, and telling Relevance about FAA "Public Notice" announcements and any-word titles.
+  - **Collection:** settled in the [Collection LLD](collection.md): the `search_jobs` schema, re-applying `coalesce`, the `run_log` note for merged Duplicates, every Caveat's trigger, live calls in the replay Caveat, and FAA "Public Notice" announcements and any-word titles in Relevance.
   - ⏳ **Analysis:** federal pay apart from Adzuna salaries.
   - ⏳ **Brief:** rendering the attribution, and the `total` disclosure with Collection.
   - ⏳ **Delivery:** sample-run strategy within the Adzuna budget, and listing the aggregate exclusion in the README's known limitations.

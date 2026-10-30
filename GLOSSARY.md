@@ -92,6 +92,10 @@ _Avoid_: Warning, error, disclaimer
 One end-to-end attempt to answer a Hiring Request, which may span several sessions across Pauses.
 _Avoid_: Job, session, execution
 
+**Attempt**:
+One pass of fetching and judging Postings under one Search Plan.
+_Avoid_: Try, round, iteration
+
 **Pause**:
 A point where a Run stops and waits for the user: clarification, plan approval or low-data review.
 _Avoid_: Interrupt, checkpoint, stop

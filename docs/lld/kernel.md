@@ -38,13 +38,13 @@ src/talent_scout/
     replay.py       # SQLite replay cache for LLM and Jev (pass 2)
     events.py       # emit(): guarded custom stream events (pass 3, Runtime LLD §10)
     testing.py      # fake_classifier, FakeToolChatModel
-  <stage>/types.py  # stage-owned types; may import only kernel.types
+  <stage>/types.py  # stage-owned types; may import only kernel.types and gateway.types
 ```
 
 - `uv`, Python 3.12, `pytest`. Settings come from the root `.env`, loaded before the first LangChain call, because LangSmith caches its env vars (§13).
 - Pydantic v2 everywhere. Every model, `State` included, uses `ConfigDict(frozen=True, extra="forbid")`.
 - Enums are `StrEnum`, money is `float`, and dates are `date`.
-- **Import direction:** `kernel/state.py` imports the stage `types.py` modules, which import only `kernel.types`. Nothing loops.
+- **Import direction:** `kernel/state.py` imports the stage `types.py` modules, which import `kernel.types` and, for Collection's `FetchRecord`, `gateway/types.py`. That module imports only `kernel.types`, so nothing loops.
 - **Keep model module paths stable.** Checkpoints store class paths, so moving a model breaks rehydration.
 
 ## 3. Domain types (`kernel/types.py`)
@@ -164,9 +164,14 @@ class State(BaseModel):                     # frozen, extra="forbid"
 
     # --- Collection
     messages: list[AnyMessage] = []
+    fetches: list[FetchRecord] = []
     postings: dict[str, Posting] = {}       # keyed by Posting.key
+    relevance_verdicts: dict[str, bool] = {}
     sample: list[str] = []                  # Relevant Posting keys, in order
+    fetch_blocked: str | None = None
     broadened_plans: list[SearchPlan] = []
+    low_data_decision: Literal["broaden", "continue", "abort"] | None = None
+    low_data_guidance: str | None = None
 
     # --- Analysis
     extractions: Annotated[dict[str, Extraction], merge] = {}   # the only reducer
@@ -195,9 +200,12 @@ class State(BaseModel):                     # frozen, extra="forbid"
 | `search_plan` | Request & Plan | `plan`; `plan_review` on an edit | replaced on `plan_review` reject |
 | `plan_decision`, `plan_feedback` | Request & Plan | `plan_review` | replaced at each review |
 | `messages` | Collection | `fetch_agent`, `tools` | `[]` on each `broaden` |
+| `fetches` | Collection | `tools` appends, `collect` strips Postings | kept across attempts |
 | `postings` | Collection | `collect` | kept across attempts |
-| `sample` | Collection | `relevance` | recomputed each attempt |
+| `relevance_verdicts` | Collection | `relevance` | kept across attempts |
+| `sample`, `fetch_blocked` | Collection | `relevance` | recomputed each attempt |
 | `broadened_plans` | Collection | `broaden` appends | |
+| `low_data_decision`, `low_data_guidance` | Collection | `low_data_review` | replaced at each review |
 | `extractions` | Analysis | `batch_extract` × N | |
 | `stats` | Analysis | `stats` | |
 | `brief`, `brief_markdown` | Brief | `render` | |
@@ -234,7 +242,7 @@ Elsewhere a reducer would only be a convenience, and explicit writes read better
 |---|---|---|
 | `clarify` → `intake` → `clarity_check` | `questions` rewritten with answers; `request_draft` replaced; an Assumption is added if the re-ask cap is hit | earlier questions (re-asks are counted from them) |
 | `plan_review` reject → `plan` | `search_plan` replaced | everything else; nothing has been fetched yet |
-| → `broaden` | the new plan is appended to `broadened_plans`; `messages` = `[]`; `sample` is recomputed by the next `relevance` | `postings` |
+| → `broaden` | the new plan is appended to `broadened_plans`; `messages` = `[]`; `sample` and `fetch_blocked` are recomputed by the next `relevance` | `postings`, `fetches`, `relevance_verdicts` |
 | `critic` → `write_brief` | ⏳ draft and verdicts replaced (Brief LLD) | `stats`, `sample` |
 | Pause re-entry, or a kill mid-node | nothing: an uncommitted node wrote nothing | everything |
 
@@ -249,12 +257,12 @@ Elsewhere a reducer would only be a convenience, and explicit writes read better
 | `clarity_check` | `clarify` · `plan` · END | `questions` and `hiring_request`, with no decision field: an unanswered question goes to `clarify`, a set `hiring_request` to `plan`, neither to END. A vague answer is re-asked at most once (HLD), counted from earlier `questions` with the same `about`; once the cap is hit, the field settles with an Assumption, or the Run aborts ([Request & Plan LLD](request-plan.md) §5). |
 | `plan_review` ⏸ | `fetch_agent` · `plan` · END | `plan_decision`, the user's answer (approve / edit / reject + feedback / abort). The Pause node writes only the answer; an edit writes `search_plan`. |
 | `fetch_agent` | `tools` · `collect` | `messages[-1].tool_calls` |
-| `relevance` | `Send`×N → `batch_extract` · `broaden` · `low_data_review` | `relevance` writes `sample` and the Sufficiency verdict: `len(sample)` vs `current_plan.target_postings`. Attempts left = cap − `len(broadened_plans)`. |
-| `low_data_review` ⏸ | `broaden` · `Send`×N · `stats` · END | The user's answer. The `stats` edge exists because a fan-out with zero branches would stall the Run. |
+| `relevance` | `Send`×N → `batch_extract` · `broaden` · `low_data_review` | `sample` vs `current_plan.target_postings`, then `fetch_blocked`, then attempts left = 2 − `len(broadened_plans)` ([Collection LLD](collection.md) §4). Sufficient returns `"analyse"`, which Runtime turns into Analysis's `fan_out`. |
+| `low_data_review` ⏸ | `broaden` · `Send`×N · `stats` · END | `low_data_decision`, the user's answer. `fan_out` sends zero Postings to `stats`, because a fan-out with zero branches would stall the Run. |
 | `critic` | `write_brief` · `render` | ⏳ critic verdicts and revision cap (Brief LLD) |
 
 - Every `Send` payload is a model instance, not a dict. The guard enforces this.
-- ⏳ The caps (attempts, revisions) and the names of the decision fields belong to the stage LLDs.
+- ⏳ The revision cap and its decision fields belong to the Brief LLD.
 
 ## 8. Write guard
 
@@ -286,9 +294,11 @@ def log(state, node, kind, message, **data) -> dict:
   - Postings the Gateway mapper dropped (counted)
   - a Posting skipped after `LLMExhausted` (§12)
   - continuing at `low_data_review` with too few Postings, or broadening N times
-  - old or soft-expired Postings in the window, and the age of cached jobs data in replay (§14)
+  - most of the Sample being old or federal, and the age of cached jobs data in replay (§14)
   - Jev input truncated, or Jev falling back to the LLM (§11)
   - one jobs source failing while the other succeeded
+
+  Collection's triggers are in the [Collection LLD](collection.md) §11.
 - **Backend errors are never Caveats.** A Run killed by `LLMExhausted`, a 401 or a bug stops the Run; Clients show "Stopped at <node>: <reason>. Resume with `scout resume <id>`" ([Runtime LLD](runtime.md) §9, §12), and the details go to logs and LangSmith. A successful LLM fallback isn't shown either, because the fallback's output passes the same validation and can't change a job-related conclusion.
 - **No copies of domain objects.** Run Notes are built by Brief from `run_log` plus the slices (`questions`, `assumptions`, `current_plan` / `broadened_plans`, `sample`). This narrows the wording of HLD §9; what Run Notes contain is unchanged.
 - **`data` is plain JSON** because strict msgpack blocks models stored in untyped fields.
@@ -389,7 +399,7 @@ One `Settings(BaseSettings)` (`pydantic-settings`) read from the root `.env`. `g
 Off by default. Setting `REPLAY_CACHE=<path>` switches on replay for the whole graph; the Gateway reads the same setting for jobs data, so HLD §7's "the whole graph runs from cached responses" holds as written.
 - **LLM:** a ~25-line `BaseCache` on stdlib `sqlite3`, installed with `set_llm_cache()`. LangChain keys it on the messages plus the model id and parameters, so prompt edits, model changes and feedback retries all miss correctly. Written by hand to avoid the `langchain-community` dependency.
 - **Jev:** a second table in the same file, used by `jev.judge` (§11).
-- **A replayed Run is always obvious to the user.** ⏳ Brief: `render` puts a replay banner at the top of the Market Brief, read from settings ("Replayed run: jobs data, LLM and Jev responses came from the replay cache, not live sources"). ⏳ Collection logs a Caveat with the age of the oldest cached jobs response used, because replay ignores L1's TTL.
+- **A replayed Run is always obvious to the user.** ⏳ Brief: `render` puts a replay banner at the top of the Market Brief, read from settings ("Replayed run: jobs data, LLM and Jev responses came from the replay cache, not live sources"). Collection logs a Caveat with the age of the oldest cached jobs response used, because replay ignores L1's TTL ([Collection LLD](collection.md) §11).
 - Cache hits repeat the original cost in metadata. That's harmless.
 
 ## 15. Test seams

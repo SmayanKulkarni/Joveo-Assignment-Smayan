@@ -22,7 +22,7 @@ It owns:
 
 It does **not** own:
 - `SearchPlan` and its limits, which live in the Kernel so that `broaden` gets them too (§6)
-- `broaden` and `low_data_review` (⏳ Collection)
+- `broaden` and `low_data_review` ([Collection LLD](collection.md))
 - Insight emphasis from `focus` (⏳ Brief)
 - preferences (⏳ Long-term memory). Its seam is in §10.
 
@@ -35,7 +35,7 @@ src/talent_scout/request_plan/
   nodes.py      # make_nodes(deps), ROUTERS
 ```
 
-`types.py` already exists as a stub at this path from the Runtime build (Runtime §5), and this LLD fills in its fields. Like every stage `types.py`, it may import only `kernel.types`.
+`types.py` already exists as a stub at this path from the Runtime build (Runtime §5), and this LLD fills in its fields. It may import only `kernel.types`.
 
 ## 3. Types and state
 
@@ -255,6 +255,6 @@ Runtime pass 1 comes first, since this stage needs `runtime/deps.py`, `runtime/p
 
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
-  - ⏳ **Collection:** `broaden` works within the `SearchPlan` limits.
+  - **Collection:** `broaden` works within the `SearchPlan` limits ([Collection LLD](collection.md) §9).
   - ⏳ **Brief:** Insight emphasis from `focus`; rendering Assumptions in the Run Notes.
   - ⏳ **Long-term memory:** §10.

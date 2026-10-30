@@ -33,6 +33,17 @@ Work deliberately left out of an LLD, with why and what would bring it back. One
 | Fetching Adzuna's per-country category list | A fixed list of known tags is enough, and the call would spend quota | A valid tag being rejected for some country |
 | Multi-country Runs | `SearchPlan` holds one country, and Stats would mix currencies | A client asking for regional comparisons |
 
+## Collection
+
+| Item | Why it's left out | Brings it back |
+|---|---|---|
+| A second tool, such as `get_search_status` | It would only repeat what the tool messages say, and the Gateway already picks sources | Another real data source or action for the model to choose |
+| A cap on the Sample | Extra Postings make Stats better, and batching is Analysis's job | Analysis cost on large Samples proving a problem |
+| Judging seniority in Relevance | It would empty the Sample of unlevelled Postings and bias the seniority mix | A client needing one level's market alone |
+| Sufficiency below the target, such as 80% | One rule against the Search Plan's target is simple to explain | First-Attempt broadens proving common even with the 1.5× raw goal |
+| Several Postings per Jev request | Saves under a cent per Run, and a shared request has to fit 32 KB | Per-request latency becoming the bottleneck |
+| A Caveat on normal L2 reads | Up to 7 days old is within the data's expected freshness | `l2_fresh_days` being raised |
+
 ## Runtime and Clients
 
 | Item | Why it's left out | Brings it back |

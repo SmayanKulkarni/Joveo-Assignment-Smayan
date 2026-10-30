@@ -106,6 +106,16 @@ OWNERS = {
 
 `build_graph(deps, saver)` wraps every node and router in `owned(name, owner)` from `OWNERS` and compiles once, on `State`. The list of targets goes to `add_conditional_edges`, because a router returning `Send` can't be read for its destinations.
 
+**`"analyse"`.** Collection's routers return this plain outcome where they would fan out, because `Send` payloads and batching belong to Analysis and a stage can't import another. `build_graph` wraps those two routers:
+
+```python
+def routed(state):
+    out = router(state)
+    return fan_out(state) if out == "analyse" else out
+```
+
+`fan_out` comes from ⏳ Analysis and also sends zero Postings to `stats`, which is why `low_data_review` keeps its `stats` target. Until Analysis lands, the stub in `runtime/testing.py` returns `"stats"`. See the [Collection LLD](collection.md) §4.
+
 **Fixed per-call config:** `thread_id`, `run_name="scout"`, tags, `thread_id` in LangSmith metadata, `durability="sync"`, `stream_mode=["updates", "messages", "custom", "tasks"]`. `recursion_limit` stays at the default (10007). All four modes are on from pass 1, and pass 3 only adds their mapping.
 
 ## 5. Pause protocol (`runtime/pause.py`)
@@ -129,7 +139,7 @@ ANSWERS = {"clarify": ClarifyAnswer, "plan_review": PlanReviewAnswer, "low_data_
 
 - **Payload and answer models live in the owning stage's `types.py`.** Runtime creates them as stubs at their final path, the way `analysis/types.py` and `brief/types.py` already work, because checkpoints store class paths. Stage LLDs own the fields. Stub shapes:
   - `ClarifyPayload`, `ClarifyAnswer`, `PlanReviewPayload`, `PlanReviewAnswer`: final, in [Request & Plan LLD](request-plan.md) §3
-  - `LowDataPayload(count: int, target: int)`, `LowDataAnswer(action: broaden | continue | abort)`
+  - `LowDataPayload`, `LowDataAnswer`: final, in [Collection LLD](collection.md) §3. Their stubs start as `LowDataPayload(count: int, target: int)` and `LowDataAnswer(action: broaden | continue | abort)`.
 - **A concrete union, not `payload: dict`.** The serializer keeps only the outermost model's class, so an untyped payload comes back from a fresh process as a dict.
 - **Allowlist:** the three Pause classes and the three answer classes go in `JsonPlusSerializer(allowed_msgpack_modules=[...])`. Nested models don't need listing, but enums inside them (`PlanAction`, `RequestField`) do, or each load logs a "blocked" warning.
 - **Answers:** the Controller checks a client's answer with `ANSWERS[pause.kind].model_validate(...)` and resumes with `Command(resume=<answer model>)`, so a stage node receives a typed answer. Clients render by `kind`.
@@ -289,7 +299,7 @@ def emit(event: dict) -> None:
         pass
 ```
 
-- The `tools` executor emits `{"type": "tool_called", "name", "summary"}` and `{"type": "tool_returned", ...}`, with summaries ⏳ Collection writes.
+- The `tools` executor emits `{"type": "tool_called", "name", "summary"}` and `{"type": "tool_returned", ...}`, with summaries from [Collection LLD](collection.md) §5.
 - The Gateway's `fetch` emits `{"type": "api_called", "source", "cached", "count", "failed"}` per source, after the `gather`. `cached` means `cache != miss`.
 - Stages and the Gateway emit plain dicts, so they never import Runtime. The Controller maps them to `RunEvent` and drops unknown types with a log line.
 
@@ -337,7 +347,7 @@ while isinstance(outcome, Paused):
 |---|---|---|
 | `clarify` | The questions and their options | An answer to each, in turn: a number picks that option, anything else is free text, Enter skips |
 | `plan_review` | The Search Plan and Assumptions | One letter: approve / edit / reject (then asks for feedback) / abort |
-| `low_data_review` | The counts | One choice: broaden / continue / abort |
+| `low_data_review` | The counts, plans tried and any block reason | One choice: broaden (then optional guidance) / continue / abort |
 
 - **Bad answers:** `InvalidAnswer` prints the errors and re-asks the same Pause, with no attempt cap.
 - **`edit`:** writes the Search Plan as JSON to a temp file and opens `$EDITOR` (`notepad` as the Windows fallback). On save it validates against `SearchPlan`, and on an error re-opens the file with the error at the top.
@@ -427,7 +437,7 @@ Each step leaves one small `pytest` file behind. No test calls an LLM or a jobs 
 
 **Pass 3 (event stream):**
 1. `kernel/events.py`. Test: a no-op outside a graph, delivered inside one and through `owned()`.
-2. Emit from the `tools` executor (⏳ Collection) and the Gateway's `fetch`. Test: the real Gateway on a mock transport, inside a one-node graph, emits one `api_called` per source, including a failed one.
+2. Emit from the `tools` executor ([Collection LLD](collection.md) §14) and the Gateway's `fetch`. Test: the real Gateway on a mock transport, inside a one-node graph, emits one `api_called` per source, including a failed one.
 3. The rest of the mapping in `runtime/events.py`. Test on a scripted graph: tokens only from `fetch_agent`, reasoning optional, `Token` and `Reasoning` absent from the replay buffer, and a `Send` run with one failure counts correctly across the rerun, with `NodeDone` firing once.
 4. CLI live view (§12) and Streamlit's tool and API lines. One live run to check how the view reads, and check whether `deepseek/deepseek-v4.1-flash` sends readable reasoning, which research didn't test.
 
@@ -437,7 +447,7 @@ Each step leaves one small `pytest` file behind. No test calls an LLM or a jobs 
 
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
-  - ⏳ **Collection:** payload and answer fields for `low_data_review`, tool event summaries, and its pass-through Pause.
+  - ⏳ **Analysis:** `fan_out(state)` (§4).
   - ⏳ **Brief:** `critic` pass-through until pass 5. `done` depends on `render` writing `brief`.
   - ⏳ **Long-term memory:** opening the Store.
   - ⏳ **Infra shell:** the API and workers wrap `RunController`. A worker owning the task is what would make a client detach possible.

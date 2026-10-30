@@ -47,7 +47,7 @@ The system is split by concern, not one component per node. The Kernel declares 
 | A | **Kernel** | State schema and reducers, domain types, LLM tier factory, Jev classifier wrapper and all Jev thresholds | `run_log` (append-only; every node writes to it) |
 | B | **Jobs Data Gateway** | Adzuna and USAJOBS clients, L1 cache, budget guard, replay mode, expiry and sweep; the L2 store comes later | none (outside the graph) |
 | C | **Request & Plan** | `intake`, `clarity_check`, `clarify` ⏸, `plan`, `plan_review` ⏸ | Hiring Request, Clarifying Questions and answers, Assumptions, Search Plan |
-| D | **Collection** | `@tool`s, `fetch_agent`, `tools` executor, `collect`, `relevance`, Sufficiency rule, `broaden`, `low_data_review` ⏸ | tool messages, Postings, Sample, attempt count |
+| D | **Collection** | `search_jobs` tool, `fetch_agent`, `tools` executor, `collect`, `relevance`, Sufficiency rule, `broaden`, `low_data_review` ⏸ | tool messages, Fetch records, Postings, relevance verdicts, Sample, broadened plans, the low-data answer |
 | E | **Analysis** | `batch_extract` (Send fan-out and its reducer), `stats` | per-Posting extractions, stats |
 | F | **Brief** | `write_brief`, `critic`, `render`, building the Run Notes from `run_log` | brief draft, critic verdicts, final JSON and Markdown |
 | G | **Runtime** | Graph wiring and compile, SQLite checkpointer and Store, run registry, Run Controller, event stream, Pause protocol, concurrent-resume guard | nothing in graph state; owns threads and the registry |
@@ -76,7 +76,7 @@ flowchart TD
   plan_review[/plan_review · PAUSE 2/]
   fetch_agent[fetch_agent · LLM with bound tools]
   tools[tools · custom executor]
-  collect[collect · dedupe, normalise, store]
+  collect[collect · dedupe, store]
   relevance[relevance · Jev per posting]
   broaden[broaden · LLM revises plan]
   low_data_review[/low_data_review · PAUSE 3/]
@@ -106,7 +106,7 @@ flowchart TD
   collect --> relevance
   relevance -.->|"enough: Send x N"| batch_extract
   relevance -.->|"too few, attempts left"| broaden
-  relevance -.->|"attempts exhausted"| low_data_review
+  relevance -.->|"attempts exhausted, or no more data to get"| low_data_review
   broaden --> fetch_agent
   low_data_review -.->|"broaden"| broaden
   low_data_review -.->|"continue: Send x N"| batch_extract
@@ -127,6 +127,7 @@ flowchart TD
 ```
 
 - The `continue with 0 postings → stats` edge exists because a `Send` fan-out with zero branches never reaches `stats`. Without the edge, the Run would stall silently.
+- A Run gets 3 Attempts (2 broadens) before `low_data_review`, where each further broaden is the user's choice. It skips straight there when Adzuna's budget is out or every search failed. ([Collection LLD](lld/collection.md) §4, §7)
 - A vague answer to a Clarifying Question is re-asked at most once. After that, the Run proceeds and records an Assumption, unless there is no readable role or the country has no source, which ends the Run. ([Request & Plan LLD](lld/request-plan.md) §5)
 - **Tool execution** uses a custom executor node: it reads `tool_calls`, dispatches each by name and returns `ToolMessage`s. The prebuilt `ToolNode` is not used, to insulate the graph from churn in LangChain's internals. Research confirmed that churn: `create_react_agent` is deprecated and `langchain` no longer re-exports `ToolNode`. ([Jobs sources and tool execution](../.scratch/talent-scout-hld/issues/03-jobs-sources-and-tool-execution.md), [LangGraph persistence research](../.scratch/talent-scout-hld/issues/15-research-langgraph-persistence-and-resume.md))
 
