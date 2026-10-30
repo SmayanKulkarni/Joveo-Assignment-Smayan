@@ -122,6 +122,7 @@ class Store:
             self._db.execute("ROLLBACK")
             raise
         self._db.execute("COMMIT")
+        self._purge()
 
     def get_l2(self, f: Fetch, size: int) -> tuple[Page, datetime] | None:
         """Page `f.page` of the stored Postings that `f` would have matched, newest first, or None when that slice is empty.
@@ -154,7 +155,7 @@ class Store:
         return Page([p for p, _ in served], len(matches), 0), datetime.fromisoformat(min(s for _, s in served))
 
     def _purge(self) -> None:
-        """Drops closed L1 rows and stale L2 rows. Runs from put_l1, which every live write goes through."""
+        """Drops closed L1 rows and stale L2 rows. Runs after each live write, the only moment the tables grow."""
         self._db.execute("DELETE FROM l1 WHERE expires_at < ?", (_today(),))
         self._db.execute("DELETE FROM l2_postings WHERE last_seen_at < ?", (self._l2_cutoff(),))
 

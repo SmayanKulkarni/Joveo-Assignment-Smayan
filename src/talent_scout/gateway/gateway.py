@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import UTC, datetime
+from typing import NamedTuple
 
 import httpx
 import langsmith as ls
@@ -14,6 +15,13 @@ from talent_scout.gateway.usajobs import UsajobsClient
 from talent_scout.kernel.replay import Replay, open_replay
 from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.types import Posting, Source
+
+
+class Served(NamedTuple):
+    page: Page
+    fetched_at: datetime
+    cache: CacheStatus
+    failure: str | None = None  # set when L2 answered for a source whose live call failed
 
 
 class JobsGateway:
@@ -60,40 +68,39 @@ class JobsGateway:
         except (ValueError, TypeError):  # a row that no longer validates is a miss, and the live answer overwrites it
             return None
 
-    async def _serve(self, source: Source, f: Fetch) -> tuple[Page, datetime, CacheStatus, str | None]:
-        """Returns the answer and, when it is L2's fallback for a failed live call, that call's failure."""
+    async def _serve(self, source: Source, f: Fetch) -> Served:
         key = f.model_dump_json()
         async with self._locks.setdefault((source, key), asyncio.Lock()):
             if replayed := self._replayed(source, key):
-                return *replayed, CacheStatus.replay, None
+                return Served(*replayed, CacheStatus.replay)
             if cached := self._store.get_l1(source, key):
-                (page, fetched_at), cache, failure = cached, CacheStatus.hit, None
+                served = Served(*cached, CacheStatus.hit)
             else:
-                page, fetched_at, cache, failure = await self._beyond_l1(source, f, key)
-            page = without_closed(page)
+                served = await self._beyond_l1(source, f, key)
+            page = without_closed(served.page)
             if self._replay:
                 self._replay.put_jobs(
-                    source, key, POSTINGS.dump_json(page.postings).decode(), page.total, page.dropped, fetched_at.isoformat()
+                    source, key, POSTINGS.dump_json(page.postings).decode(), page.total, page.dropped, served.fetched_at.isoformat()
                 )
-            return page, fetched_at, cache, failure
+            return served._replace(page=page)
 
-    async def _beyond_l1(self, source: Source, f: Fetch, key: str) -> tuple[Page, datetime, CacheStatus, str | None]:
+    async def _beyond_l1(self, source: Source, f: Fetch, key: str) -> Served:
         # L2 holds Adzuna only: USAJOBS calls are free, and its Postings match poorly.
         stored = self._store.get_l2(f, PAGE_SIZE) if source == Source.adzuna else None
         if stored and len(stored[0].postings) == PAGE_SIZE:  # a short page would skew the Sample, so only a full one skips the call
-            return *stored, CacheStatus.store, None
+            return Served(*stored, CacheStatus.store)
         try:
             page = await self._clients[source].search(f)
         except GatewayError as e:  # SourceRejected and bugs are not GatewayErrors, so they still stop the Run
             if stored is None:
                 raise
-            return *stored, CacheStatus.store, str(e)
+            return Served(*stored, CacheStatus.store, str(e))
         fetched_at = datetime.now(UTC)
         # Stored unfiltered, so the row's expiry still sees every close date.
         self._store.put_l1(source, key, page, fetched_at)
         if source == Source.adzuna:
             self._store.put_l2(f, page.postings, fetched_at)
-        return page, fetched_at, CacheStatus.miss, None
+        return Served(page, fetched_at, CacheStatus.miss)
 
     async def _resolve(self, source: Source, f: Fetch) -> tuple[list[Posting], SourceOutcome, str | None]:
         # No inputs and only counts as outputs: Postings, URLs and keys never reach LangSmith.
