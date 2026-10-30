@@ -18,4 +18,6 @@ Resolved during charting. A **Jobs Data Gateway** sits outside the graph, betwee
 - **Budget guard**: tracks daily Adzuna calls and refuses before the limit.
 - **Replay mode**: the whole graph runs from cached responses; doubles as the test harness.
 - **Update from [Research: Adzuna API facts](13-research-adzuna-api-facts.md)**: the ~50 per page limit is unconfirmed (no documented max). The L2 rationale still holds because each extra page of a broad Domain pull costs quota. Adzuna has no expiry field, so Adzuna Postings only ever soft-expire.
+- **Update from [L1 cache, budget guard and replay](../../gateway-lld/issues/04-l1-cache-budget-guard-and-replay.md)**: L1 stores mapped Postings, not raw responses. A 24-hour TTL triggers a refetch, and a row is deleted only once every Posting in it has closed. Adzuna's limit is confirmed at 25 calls a day.
+- **Update from [L2 store, expiry and sweep](../../gateway-lld/issues/07-l2-store-expiry-and-sweep.md)**: L2 holds Adzuna Postings only, skips a call only when it can fill the requested page, and also backs failed live calls. Soft expiry is 7 days after Adzuna last returned a Posting. The sweep runs after each live write, not at Run start.
 - **Prompt caching** is a prompt-construction principle, not a component: stable instructions and schema first so batch calls share a cached prefix.

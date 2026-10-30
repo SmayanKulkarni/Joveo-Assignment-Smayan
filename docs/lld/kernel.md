@@ -36,6 +36,7 @@ src/talent_scout/
     llm.py          # Tiers, LLMExhausted, check_balance()
     settings.py     # Settings, get_settings()
     replay.py       # SQLite replay cache for LLM and Jev (pass 2)
+    events.py       # emit(): guarded custom stream events (pass 3, Runtime LLD §10)
     testing.py      # fake_classifier, FakeToolChatModel
   <stage>/types.py  # stage-owned types; may import only kernel.types
 ```
@@ -198,7 +199,7 @@ Why it looks like this:
 - **Frozen.** In LangGraph, `state.postings["x"] = p` inside a node silently does nothing, because only *returned* updates are saved. Frozen turns that into an immediate error, so every change has to come back as `{"postings": ...}`.
 - **Search Plan split.** `broaden` belongs to Collection but revises the plan. Giving Collection its own `broadened_plans` keeps one writer per slice, and `current_plan` reads both. The attempt count is `len(broadened_plans)`: no counter to drift, and every revision shows up in Run Notes for free.
 - **`sample` holds keys, not Postings.** Analysis and Brief look Postings up in `postings`, so there's one copy of each.
-- **`focus` reuses `Dimension`,** so `--focus compensation` needs no new type. What each focus value changes is ⏳ the Request & Plan and Clients LLDs.
+- **`focus` reuses `Dimension`,** so `--focus compensation` needs no new type. What each focus value changes is ⏳ the Request & Plan LLD; Clients only pass it through ([Runtime LLD](runtime.md) §12).
 - ⏳ Stage LLDs add their private fields here: the Brief draft, critic verdicts and revision state; `plan_review` feedback; and each stage's routing-decision fields.
 - ⏳ The `preferences` slice is added by the Long-term memory LLD.
 
@@ -279,7 +280,7 @@ def log(state, node, kind, message, **data) -> dict:
   - old or soft-expired Postings in the window, and the age of cached jobs data in replay (§14)
   - Jev input truncated, or Jev falling back to the LLM (§11)
   - one jobs source failing while the other succeeded
-- **Backend errors are never Caveats.** A Run killed by `LLMExhausted`, a 401 or a bug stops the Run; ⏳ Clients show "Run stopped at <node>, resume with `--resume`", and the details go to logs and LangSmith. A successful LLM fallback isn't shown either, because the fallback's output passes the same validation and can't change a job-related conclusion.
+- **Backend errors are never Caveats.** A Run killed by `LLMExhausted`, a 401 or a bug stops the Run; Clients show "Stopped at <node>: <reason>. Resume with `scout resume <id>`" ([Runtime LLD](runtime.md) §9, §12), and the details go to logs and LangSmith. A successful LLM fallback isn't shown either, because the fallback's output passes the same validation and can't change a job-related conclusion.
 - **No copies of domain objects.** Run Notes are built by Brief from `run_log` plus the slices (`questions`, `assumptions`, `current_plan` / `broadened_plans`, `sample`). This narrows the wording of HLD §9; what Run Notes contain is unchanged.
 - **`data` is plain JSON** because strict msgpack blocks models stored in untyped fields.
 - **No timestamps.** List order is event order, LangSmith has the times, and replay transcripts stay byte-identical.
@@ -287,12 +288,12 @@ def log(state, node, kind, message, **data) -> dict:
 
 ## 10. Persistence and serialization rules
 
-From the Pydantic-state research. The Runtime parts are Runtime's to build.
+From the Pydantic-state research. The Runtime parts are built per the [Runtime LLD](runtime.md).
 - Nodes return **partial dicts whose values are model instances**, never the full `State`. Returning `State` rewrites every set field. Model instances keep each node's state read around 0.01 ms, against about 0.6 ms for dicts on 1,000 Postings.
 - `LANGGRAPH_STRICT_MSGPACK=true`, and no `Any` anywhere in persisted state. Compile then allowlists every type reachable from the schema automatically. Interrupt payload types that aren't in state go into `allowed_msgpack_modules`.
 - Validators re-run when a checkpoint loads, so a model that becomes stricter can fail on an old checkpoint.
-- ⏳ Runtime: graph output and `get_state().values` are raw dicts with unwritten defaults missing, so the Run Controller wraps them with `State.model_validate(...)`.
-- ⏳ Runtime: Store values are written with `model_dump(mode="json")` and read with `model_validate`. `SqliteStore` gets its own autocommit connection.
+- Graph output and `get_state().values` are raw dicts with unwritten defaults missing, so the Run Controller wraps them with `State.model_validate(...)` (Runtime LLD §6).
+- ⏳ Long-term memory: Store values are written with `model_dump(mode="json")` and read with `model_validate`, and the Store gets its own autocommit connection. Nothing opens the Store before pass 6 (Runtime LLD §16).
 
 ## 11. Jev wrapper
 
@@ -347,9 +348,9 @@ class LLMExhausted(Exception): tier, name, attempts   # chained to the last erro
 - **Validation retry.** On a `ValidationError`, resend the same prompt plus the bad output as an `AIMessage` and a `HumanMessage` with the Pydantic error text and "return corrected JSON". One feedback retry per model, so at most 4 attempts over the 2-model chain.
 - **Transport failures.** Each model gets `with_retry` (3 attempts, jittered backoff) on 429, 5xx, timeouts, connection errors and 402 (usually in-flight spend, which clears), then falls to the next model with an explicit exception list: provider errors, including an error body returned with HTTP 200. A small loop does this instead of `with_fallbacks`, because `with_fallbacks` re-raises the first error and `LLMExhausted` must chain to the last. Never fall back on 400, 401 or 422 (our bug) or 402 (same account); those propagate. 60 s timeout per call.
 - **Streaming path.** LangGraph's `messages` stream mode sends every call through `_astream`, not `_create_chat_result`. `_CostedOpenRouter` overrides it so a mid-stream error frame, a `ValueError` from the stream or an empty stream raises `_ProviderError` and gets the same retry and fallback. Cost is set after the chunks merge, in `_agenerate_with_cache` (a private langchain-core method; re-check on upgrades), because chunk addition rejects a float in `usage_metadata`. The 60 s timeout then applies per read, not per call.
-- **Chain exhausted.** `LLMExhausted.attempts` counts validation attempts plus 3 per model that failed on transport. `LLMExhausted` propagates by default: the Run stops at that node, the checkpoint stays at the last committed step, and `--resume` reruns only that node. A stage may catch it where losing one item is acceptable (⏳ Analysis: skip one Posting) and must then log a Caveat.
+- **Chain exhausted.** `LLMExhausted.attempts` counts validation attempts plus 3 per model that failed on transport. `LLMExhausted` propagates by default: the Run stops at that node, the checkpoint stays at the last committed step, and `scout resume` reruns only that node. A stage may catch it where losing one item is acceptable (⏳ Analysis: skip one Posting) and must then log a Caveat.
 - **Concurrency.** One process-wide `asyncio.Semaphore` (20, from settings) around every call, so Runtime needs no LangGraph `max_concurrency` for spend.
-- **Balance.** ⏳ The Run Controller calls `check_balance` before starting or resuming a Run and refuses below the floor (default $0.25). It reads `effective_budget.remaining_usd` from `GET /api/v1/key`, the tightest of the key limit and the guardrail budgets; a null budget means uncapped and always passes.
+- **Balance.** The Run Controller calls `check_balance` before starting or resuming a Run and refuses below the floor (default $0.25), skipping it when `replay_cache` is set (Runtime LLD §6). It reads `effective_budget.remaining_usd` from `GET /api/v1/key`, the tightest of the key limit and the guardrail budgets; a null budget means uncapped and always passes.
 - **Tracing and cost.** The outer runnable gets `run_name=f"llm:{name}"`. Each model is tagged `tier:<tier>` and `model:<id>` before wrapping, since `with_config` on a wrapped runnable names only the outer chain. Metadata carries `tier` and `name`. `ChatOpenRouter` runs reach LangSmith without cost, so a `ChatOpenRouter` subclass copies `response_metadata["cost"]` into `usage_metadata["total_cost"]`, which LangSmith reads as the run's `total_cost` (confirmed live; prompt and completion cost stay empty). The structured runnable returns only the schema instance: which model answered and how many retries ran is visible only in LangSmith, and nothing about it goes in `run_log`.
 - **Build pass.** HLD §11 puts fallbacks in pass 2. The chain is a list, so pass 1 can run a 1-model chain with no code change.
 
@@ -371,6 +372,8 @@ One `Settings(BaseSettings)` (`pydantic-settings`) read from the root `.env`. `g
 | `adzuna_daily_limit` | 25 |
 | `l1_ttl_hours` | 24 |
 | `l2_fresh_days` | 7 |
+| `runs_db` (path) | `.cache/runs.sqlite` |
+| `runs_dir` (path) | `runs` |
 
 ## 14. Replay cache (`kernel/replay.py`, pass 2)
 

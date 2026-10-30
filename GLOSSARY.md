@@ -30,6 +30,10 @@ _Avoid_: Job, listing, ad, result
 **Relevant Posting**:
 A Posting judged to actually match the researched role, as opposed to a keyword collision.
 
+**Duplicate**:
+A Posting judged to advertise the same job as another Posting that was kept, from the same or another source, even when advertised in a different place.
+_Avoid_: Repost, copy
+
 **Sample**:
 The deduplicated set of Relevant Postings a brief is built on.
 _Avoid_: Dataset, results

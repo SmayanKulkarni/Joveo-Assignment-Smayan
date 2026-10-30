@@ -35,7 +35,7 @@ flowchart LR
 ```
 
 - **Stack**: Python, LangChain + LangGraph, OpenRouter for every LLM call and for Jev, LangSmith tracing. API keys live in the root `.env`.
-- **Jobs sources**: Adzuna is the primary source. USAJOBS is used only for US locations and covers federal roles only. The model reaches both through LangChain `@tool`s and never calls the APIs directly. ([Jobs sources and tool execution](../.scratch/talent-scout-hld/issues/03-jobs-sources-and-tool-execution.md))
+- **Jobs sources**: Adzuna is the primary source. USAJOBS is used only for US locations and covers federal roles only. The model reaches them through one LangChain `search_jobs` tool; the Gateway picks the sources, merges them and collapses Duplicates. The model never calls the APIs directly. ([Gateway query interface](../.scratch/gateway-lld/issues/02-gateway-query-interface.md)) ([Jobs sources and tool execution](../.scratch/talent-scout-hld/issues/03-jobs-sources-and-tool-execution.md))
 - **Clients call only the Run Controller.** It offers four operations: start, resume, stream events and get state. Clients never touch the graph directly. ([Client surfaces and the Run Controller](../.scratch/talent-scout-hld/issues/09-client-surfaces-and-run-controller.md))
 
 ## 3. Components
@@ -51,7 +51,7 @@ The system is split by concern, not one component per node. The Kernel declares 
 | E | **Analysis** | `batch_extract` (Send fan-out and its reducer), `stats` | per-Posting extractions, stats |
 | F | **Brief** | `write_brief`, `critic`, `render`, building the Run Notes from `run_log` | brief draft, critic verdicts, final JSON and Markdown |
 | G | **Runtime** | Graph wiring and compile, SQLite checkpointer and Store, run registry, Run Controller, event stream, Pause protocol, concurrent-resume guard | nothing in graph state; owns threads and the registry |
-| H | **Clients** | CLI (Pause UX, `--resume`, `--focus`, progress); Streamlit later | none |
+| H | **Clients** | CLI (Pause UX, `scout resume`, `--focus`, progress); Streamlit later | none |
 | I | **Long-term memory** | Preferences namespace in the Store, read by `intake` | preferences |
 | J | **Infra shell** *(future phase)* | API, queue and workers on MiniStack, wrapping the Run Controller | none |
 
@@ -158,11 +158,12 @@ All thresholds live in one place (the Kernel) and are tuned per model, because J
 
 The gateway sits outside the graph, between the tools and the APIs, and protects a small daily Adzuna quota. ([Gateway caching and expiry](../.scratch/talent-scout-hld/issues/04-jobs-data-gateway-caching-and-expiry.md))
 
-- **L1 exact-query cache**: maps normalised request params to the raw response, with a short TTL. This makes repeat runs, tests and replay free. Must-have.
-- **L2 region × Domain Posting store** (built later): every Posting is stored, deduplicated by source ID and tagged with a region and a Domain. The region comes from Adzuna's `location.area` hierarchy. The Domain comes from Adzuna's category tag; USAJOBS job families are mapped onto the same list. Before calling the API, the gateway checks whether L2 already has enough fresh Postings for that region, Domain and role.
-- **Expiry**: hard expiry applies when the source gives a close date that has passed (USAJOBS `ApplicationCloseDate`). Soft expiry applies when a Posting is older than a freshness window. Adzuna has no expiry field, so its Postings only ever soft-expire, and every Adzuna search passes `max_days_old`. Expired rows are filtered out on read, and a sweep at the start of each Run purges them.
-- **Budget guard**: counts calls per source and refuses before the limit. Neither API publishes a firm quota, so the guard counts calls regardless.
+- **L1 exact-query cache**: maps a normalised query, per source, to its mapped Postings. After 24 hours a row is refetched rather than served, and it is deleted only once every Posting in it has closed. This makes repeat runs, tests and replay free. Must-have. ([L1 cache, budget guard and replay](../.scratch/gateway-lld/issues/04-l1-cache-budget-guard-and-replay.md))
+- **L2 region × Domain Posting store** (built later): every Adzuna Posting is stored, deduplicated by source ID. USAJOBS isn't stored, because its calls are free. On an L1 miss, the gateway skips the API call if L2 can fill the requested page with fresh Postings matching the region, Domain and role, reusing a Posting only for a query no broader than the one that found it. L2 also serves whatever it has when a live call fails. ([L2 store, expiry and sweep](../.scratch/gateway-lld/issues/07-l2-store-expiry-and-sweep.md))
+- **Expiry**: hard expiry applies when the source gives a close date that has passed (USAJOBS `ApplicationCloseDate`). Soft expiry applies 7 days after Adzuna last returned a Posting. Adzuna has no expiry field, so its Postings only ever soft-expire, and every Adzuna search passes `max_days_old`. Expired rows are filtered out on read, and a sweep after each live write purges them, so cache hits do no sweep work.
+- **Budget guard**: counts calls per source and refuses before the limit. Adzuna's limit is 25 calls a day, from the account dashboard. USAJOBS publishes no firm quota, so its calls are counted but not limited.
 - **Replay mode**: the whole graph runs from cached responses. This doubles as the test harness.
+- **Adzuna aggregates are excluded**: `histogram`, `top_companies`, `history` and the search `mean` carry no Posting IDs and don't feed the Market Brief. A source's match count may appear only as labelled sampling disclosure. ([Adzuna aggregate endpoints](../.scratch/gateway-lld/issues/06-adzuna-aggregate-endpoints.md))
 
 Source facts that shape the design ([Adzuna research](../.scratch/talent-scout-hld/issues/13-research-adzuna-api-facts.md), [USAJOBS research](../.scratch/talent-scout-hld/issues/14-research-usajobs-api-facts.md)):
 - **Adzuna**:
@@ -181,7 +182,7 @@ Source facts that shape the design ([Adzuna research](../.scratch/talent-scout-h
 Being able to close the client at any Pause and resume exactly there is non-negotiable. ([Persistence and durable resume](../.scratch/talent-scout-hld/issues/10-persistence-and-durable-resume.md), [LangGraph persistence research](../.scratch/talent-scout-hld/issues/15-research-langgraph-persistence-and-resume.md))
 
 - **Backend**:
-  - The SQLite checkpointer stores threads. `SqliteStore`, in the same file, stores long-term preferences and the run registry.
+  - The SQLite checkpointer stores threads. `SqliteStore`, in the same file, stores long-term preferences from pass 6.
   - Its known limit is a single writer: fine for the CLI, and replaced in the infra phase (Postgres is the candidate).
   - `MemorySaver` was rejected because its state dies with the process.
 - **Durability**:
@@ -191,7 +192,7 @@ Being able to close the client at any Pause and resume exactly there is non-nego
   - Each Pause node makes exactly one `interrupt()` call, never inside `try/except`, and only writes the answer.
   - Anything generative, such as drafting questions, happens in the node before. The paused node re-runs from the top when resumed.
 - **Returning re-shows the same Pause**: the Run Controller loads the thread, reads the pending payload from `get_state(...).interrupts`, re-displays it and resumes with `Command(resume=answer)`.
-- **Run registry**: a `("runs",)` namespace in the Store records thread, request summary, status and last-updated time. CLI `--resume` lists the resumable Runs, and Streamlit keeps the thread ID in the URL.
+- **Run registry**: a plain `runs` table in the same file records thread, request summary, status and last-updated time. It's an index: the checkpoint is the truth, and disagreements reconcile on read. `scout resume` lists the resumable Runs, and Streamlit keeps the thread ID in the URL. ([Run Controller API and wiring](../.scratch/runtime-lld/issues/02-run-controller-and-wiring.md))
 - **Concurrent resume guard**: LangGraph does not stop two processes from resuming the same thread at once, so the Run Controller does.
 - **Kill mid-node**: only that node re-runs, and any repeated fetches are served from the L1 cache at no quota cost.
 
@@ -218,7 +219,7 @@ flowchart LR
 ```
 
 - The core graph never depends on the infra shell. The shell wraps the core only through the Run Controller, which makes it an addition rather than a rewrite. ([Build priority order](../.scratch/talent-scout-hld/issues/02-build-priority-order.md), [Client surfaces and the Run Controller](../.scratch/talent-scout-hld/issues/09-client-surfaces-and-run-controller.md))
-- In this phase, the per-Run expiry sweep becomes a scheduled job, and persistence moves off SQLite.
+- In this phase, the expiry sweep also runs as a scheduled job, and persistence moves off SQLite.
 - The infra shell's own LLD decides the API surface, queue technology, worker model, threading vs async, how concurrent Runs share the daily Adzuna budget, and the web UI.
 
 ## 11. Build order
@@ -242,9 +243,7 @@ After that come the `samples/`, README and write-up, as a delivery task.
 |---|---|
 | Analysis | Currency and period normalisation, treatment of `salary_is_predicted`, USAJOBS vs Adzuna in compensation stats, batch sizing for large Samples |
 | Brief | Rules for the Confidence Tag and the Hiring Outlook |
-| Jobs Data Gateway | Whether Adzuna's histogram, top_companies and history endpoints feed the brief (they carry no Posting IDs, so they are not strict Evidence) |
-| Request & Plan, Clients | What each `--focus` flag changes |
-| Runtime | Streaming event model |
+| Request & Plan | What each `--focus` flag changes |
 | Long-term memory | Which preferences are remembered, and whether they are learned or asked |
 | Infra shell | Everything listed in §10 |
 | Delivery | Choosing the three sample runs within the Adzuna budget |

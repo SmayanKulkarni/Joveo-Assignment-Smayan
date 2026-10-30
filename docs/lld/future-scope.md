@@ -14,3 +14,27 @@ Work deliberately left out of an LLD, with why and what would bring it back. One
 | Timestamps on `run_log` entries | List order is event order, LangSmith has the times, and replay transcripts stay byte-identical | A consumer that needs wall-clock times without LangSmith |
 | Production tier models: cheap `openai/gpt-6-luna` → `anthropic/claude-haiku-5.5`, strong `anthropic/claude-sonnet-5.5` → `openai/gpt-6.1-sol` | This is a testing project for now, so both tiers run DeepSeek v4.1 Flash → MiniMax M3.1 Flash | Leaving the testing phase: set `LLM_CHEAP` / `LLM_STRONG` in `.env` and re-run the live smoke script |
 | Claude `cache_control` for prompt caching | Caching only pays off in the strong tier's critic loop, and the testing models cache automatically or not at all | The critic pass (5) running on a Claude strong tier |
+
+## Jobs Data Gateway
+
+| Item | Why it's left out | Brings it back |
+|---|---|---|
+| L2 Region and Domain columns | A full scan of about 8,750 rows takes under 40 ms | A larger Adzuna budget making the scan slow |
+| USAJOBS in L2 | Its calls are free, and its Postings match poorly | USAJOBS gaining a real quota |
+| HTML stripping in the mappers | None seen in 100 Adzuna results | HTML appearing in a description |
+| Serving a past-TTL L1 row when the budget is out | It would need its own status and Caveat, and L2's fallback covers that reuse | L2 not being built |
+| A reserve of Adzuna calls for walkthroughs | Lowering `adzuna_daily_limit` in `.env` does the job | Needing to hold calls back routinely |
+
+## Runtime and Clients
+
+| Item | Why it's left out | Brings it back |
+|---|---|---|
+| A simple web UI replacing Streamlit | Streamlit is enough for now, and a real UI needs the Infra shell's API | The Infra shell phase; Streamlit is deleted then |
+| Streamlit re-attach, Cancel button and token display | The page is disposable, and re-attach would add a Controller method only it uses | The web UI needing them, built on its own API |
+| Persisted event history | `get_run` rebuilds what matters from `run_log`, the pending Pause and status | A client that must show tokens or tool lines after a reload |
+| Detaching a CLI from a live Run | The Controller lives in the CLI process and dies with it | Infra shell workers owning the task |
+| Partial-field display of structured output | Fragments stay provisional until the node finishes, and a drafting state reads fine | Wanting the Brief to appear as it's written |
+| Message IDs on `Token`, to clear an abandoned attempt | A retried `fetch_agent` turn is rare, and the cost is cosmetic | Retried text proving confusing in live use |
+| Friendly node labels | Raw names are clear enough for this audience | Showing the live view to clients |
+| Balance checks between nodes | A Run's spend is small next to the floor, and a mid-Run failure resumes cleanly | Costlier production tier models |
+| Deleting lock files | Empty files are harmless, and deleting one races a concurrent lock on Windows | A Run count that makes the directory a nuisance |

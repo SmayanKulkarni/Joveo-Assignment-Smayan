@@ -16,3 +16,5 @@ Resolved during charting.
 - Both are standard LangChain `@tool`s bound to the fetch model, so the model decides which to call.
 - Tool calls run through a **custom tool executor node** (reads `tool_calls`, dispatches by name, returns `ToolMessage`s) instead of the prebuilt `ToolNode`, to insulate from LangChain internals churn. This satisfies "ToolNode or equivalent" and is fully explainable live.
 - Tools never call the APIs directly; they go through the Jobs Data Gateway (see [Jobs Data Gateway caching and expiry](04-jobs-data-gateway-caching-and-expiry.md)).
+
+**Update from [Gateway query interface](../../gateway-lld/issues/02-gateway-query-interface.md) (2026-10-30):** the two source tools become one `search_jobs` tool. The Gateway picks sources by rule (Adzuna always, USAJOBS when the country is `us`), fans out, merges and collapses Duplicates, so the model no longer chooses the source.

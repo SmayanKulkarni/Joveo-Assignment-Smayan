@@ -405,6 +405,8 @@ The tables only grow on a live write, so nothing else needs to trigger it, and c
 
 Each source call is a LangSmith child run `gateway:<source>`, with metadata `source`, `page`, `cache` and `calls_left`, and a summary output (count, dropped, total), not the Postings. Never the URL or a key. The exact `traceable` API gets checked at build time, through the `langchain-router` skill.
 
+From pass 3, `fetch` also emits one `api_called` custom event per source for the live view, through the Kernel's guarded `emit()`, which does nothing outside a graph. See the [Runtime LLD](runtime.md) §10.
+
 ## 14. Settings
 
 All in Kernel §13 and already in `kernel/settings.py`: `adzuna_app_id`, `adzuna_app_key`, `usajobs_api_key`, `usajobs_user_agent`, `replay_cache`, plus:
