@@ -3,6 +3,8 @@ import json
 
 import aiosqlite
 import pytest
+from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
+from langchain_core.messages import AIMessage, HumanMessage
 
 from talent_scout.kernel.llm import BalanceTooLow
 from talent_scout.kernel.testing import make_settings
@@ -10,7 +12,7 @@ from talent_scout.kernel.types import Dimension
 from talent_scout.runtime import controller as controller_module
 from talent_scout.runtime import graph as graph_module
 from talent_scout.runtime.controller import InvalidAnswer, NotResumable, RunController, UnknownRun
-from talent_scout.runtime.events import Done, NodeDone, Paused, Stopped
+from talent_scout.runtime.events import Done, NodeDone, NodeStarted, Paused, Reasoning, Stopped, Token
 from talent_scout.runtime.guard import RunLocked, take_lock
 from talent_scout.runtime.pause import ClarifyPause, LowDataPause, PlanReviewPause
 from talent_scout.runtime.registry import Registry, RunStatus
@@ -83,7 +85,7 @@ def test_happy_path_goes_through_each_typed_pause_to_done(settings):
     assert isinstance(terminal, Done) and terminal.status == "done"
     # The last leg, replayed from the buffer, in order and ending on the terminal event.
     assert [e.node for e in events if isinstance(e, NodeDone)] == ["low_data_review", "stats", "write_brief", "critic", "render"]
-    assert events[0] == NodeDone(node="low_data_review", notes=["continue"])
+    assert events[:2] == [NodeStarted(node="low_data_review"), NodeDone(node="low_data_review", notes=["continue"])]
     assert events[-1] == terminal
 
 
@@ -328,7 +330,7 @@ def test_closing_a_subscriber_does_not_stop_the_run(settings):
 
     first, terminal = asyncio.run(go())
 
-    assert first == NodeDone(node="intake", notes=["stub"])
+    assert first == NodeStarted(node="intake")
     assert isinstance(terminal, Paused)
 
 
@@ -342,7 +344,7 @@ def test_a_live_subscriber_sees_what_a_late_one_replays(settings):
     live, replayed = asyncio.run(go())
 
     assert live == replayed
-    assert [e.node for e in live[:-1]] == ["intake", "clarity_check"]
+    assert [e.node for e in live if isinstance(e, NodeDone)] == ["intake", "clarity_check"]
     assert isinstance(live[-1], Paused)
 
 
@@ -355,3 +357,44 @@ def test_open_builds_the_real_deps_without_a_network_call(tmp_path):
             return await controller.list_runs()
 
     assert asyncio.run(go()) == []
+
+
+def speaks(monkeypatch, texts: dict[str, str]):
+    """Make stub nodes call a streaming fake model, as the real ones will."""
+    nodes = stub_nodes()
+
+    def speaking(name, text):
+        async def node(state):
+            await GenericFakeChatModel(messages=iter([AIMessage(text)])).ainvoke([HumanMessage("go")])
+            return await nodes[name](state)
+
+        return node
+
+    monkeypatch.setattr(graph_module, "stub_nodes", lambda: {**nodes, **{n: speaking(n, t) for n, t in texts.items()}})
+
+
+def test_tokens_come_only_from_fetch_agent_and_never_reach_the_replay_buffer(settings, monkeypatch):
+    speaks(monkeypatch, {"fetch_agent": "alpha beta", "plan": "ignored words"})
+
+    async def go():
+        async with RunController.open(settings) as controller:
+            handle = await controller.start("Engineer, Texas")
+            live, replayed = [], []
+            while True:
+                collector = asyncio.create_task(_collect(handle))  # subscribed before the leg reaches its nodes
+                terminal = await handle.wait()
+                live += await collector
+                replayed += [e async for e in handle.events()]
+                if not isinstance(terminal, Paused):
+                    return live, replayed
+                handle = await controller.resume(handle.thread_id, ANSWER_FOR[terminal.pause.kind])
+
+    async def _collect(handle):
+        return [e async for e in handle.events()]
+
+    live, replayed = asyncio.run(go())
+
+    tokens = [e for e in live if isinstance(e, (Token, Reasoning))]
+    assert tokens and {e.node for e in tokens} == {"fetch_agent"}
+    assert "".join(e.text for e in tokens) == "alpha beta"
+    assert not any(isinstance(e, (Token, Reasoning)) for e in replayed)

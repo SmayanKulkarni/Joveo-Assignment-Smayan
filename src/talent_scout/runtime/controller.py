@@ -21,7 +21,7 @@ from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.state import State
 from talent_scout.kernel.types import Dimension, Model
 from talent_scout.runtime.deps import Deps
-from talent_scout.runtime.events import ChunkMapper, Done, Paused, RunEvent, Stopped
+from talent_scout.runtime.events import LIVE_ONLY, ChunkMapper, Done, Paused, RunEvent, Stopped
 from talent_scout.runtime.graph import build_graph
 from talent_scout.runtime.guard import RunLocked, take_lock
 from talent_scout.runtime.pause import ALLOWED_MSGPACK, ANSWERS, Pause
@@ -109,7 +109,8 @@ class RunHandle:
         task.add_done_callback(lambda _: self._publish_end())
 
     def _publish(self, event: RunEvent) -> None:
-        self._buffer.append(event)
+        if not isinstance(event, LIVE_ONLY):
+            self._buffer.append(event)
         for queue in self._subscribers:
             queue.put_nowait(event)
 
