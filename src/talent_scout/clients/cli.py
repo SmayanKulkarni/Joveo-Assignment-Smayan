@@ -27,11 +27,25 @@ from talent_scout.runtime.controller import (
     RunView,
     UnknownRun,
 )
-from talent_scout.runtime.events import NodeDone, Paused, RunEvent, Stopped
+from talent_scout.runtime.events import (
+    ApiCalled,
+    ExtractProgress,
+    NodeDone,
+    NodeStarted,
+    Paused,
+    Reasoning,
+    RunEvent,
+    Stopped,
+    Token,
+    ToolCalled,
+    ToolReturned,
+)
 from talent_scout.runtime.guard import RunLocked
 from talent_scout.runtime.registry import RunStatus
 
 SIGINT_EXIT = 130
+# Nodes whose LLM output is JSON, so they get a spinner instead of streamed text.
+DRAFTING_NODES = {"clarity_check", "plan", "broaden", "write_brief"}
 # "salary" is the spec's name for compensation.
 FOCUS_CHOICES = [*(d.value for d in Dimension), "salary"]
 PLAN_CHOICES = {"a": PlanAction.approve, "e": PlanAction.edit, "r": PlanAction.reject, "x": PlanAction.abort}
@@ -41,17 +55,99 @@ REFUSALS = (BalanceTooLow, RunLocked, UnknownRun, NotResumable, httpx.HTTPError)
 console = Console()
 
 
+def event_line(event: RunEvent) -> str | None:
+    """The one-line text of a tool or API event, shared with the Streamlit client."""
+    match event:
+        case ToolCalled(name=name, summary=summary):
+            return f"→ {name}: {summary}"
+        case ToolReturned(name=name, summary=summary):
+            return f"← {name}: {summary}"
+        case ApiCalled(source=source, failed=True):
+            return f"· {source} failed"
+        case ApiCalled(source=source, count=count, cached=cached):
+            return f"· {source}: {count} Postings" + (" (cached)" if cached else "")
+
+
+class LiveView:
+    """Chat-style rendering of one Run's events."""
+
+    def __init__(self, out: Console):
+        self._out = out
+        self._status = None
+        # Prose or reasoning is on screen without its newline yet; the value is the event type that wrote it.
+        self._open: type | None = None
+
+    @property
+    def spinning(self) -> bool:
+        return self._status is not None
+
+    def _say(self, text: str, **options) -> None:
+        # soft_wrap and no markup: text arrives in fragments, and the model's words aren't rich markup.
+        self._out.print(text, soft_wrap=True, markup=False, highlight=False, **options)
+
+    def _spin(self, label: str) -> None:
+        self._status = self._out.status(label)
+        self._status.start()
+
+    def _stop_spinner(self) -> None:
+        if self._status:
+            self._status.stop()
+            self._status = None
+
+    def _end_line(self) -> None:
+        if self._open:
+            self._out.print()
+            self._open = None
+
+    def _stream(self, event: Token | Reasoning) -> None:
+        # Raw text can't print under a live display, so the spinner stops at the first fragment.
+        self._stop_spinner()
+        if self._open not in (None, type(event)):
+            self._end_line()
+        self._open = type(event)
+        self._say(event.text, end="", style="dim" if isinstance(event, Reasoning) else None)
+
+    def show(self, event: RunEvent) -> None:
+        match event:
+            case Token() | Reasoning():
+                self._stream(event)
+                return
+            case NodeStarted(node=node):
+                self._end_line()
+                if node in DRAFTING_NODES:
+                    self._spin(f"drafting {node}…")
+                elif node == "batch_extract":
+                    self._spin("extracting…")
+            case ExtractProgress(done=done, total=total):
+                if self._status:
+                    self._status.update(f"extracted {done}/{total}")
+            case NodeDone(node=node, notes=notes):
+                self._stop_spinner()
+                self._end_line()
+                self._say(f"✓ {node} — {'; '.join(notes)}" if notes else f"✓ {node}")
+            case _ if line := event_line(event):
+                self._end_line()
+                self._say(line)
+
+    def close(self) -> None:
+        self._stop_spinner()
+        self._end_line()
+
+
 async def _follow(handle: RunHandle) -> RunEvent:
+    view = LiveView(console)
     try:
         async for event in handle.events():
-            if isinstance(event, NodeDone):
-                print(f"✓ {event.node} — {'; '.join(event.notes)}" if event.notes else f"✓ {event.node}")
+            view.show(event)
         return await handle.wait()
     except asyncio.CancelledError:
         # Ctrl-C: asyncio.run cancelled this driver, and the Run is stopped here so it stays resumable.
+        view.close()
         stopped = await handle.cancel()
         print(_stopped_line(stopped, handle.thread_id))
         raise
+    finally:
+        view.close()  # a raised error must not leave the spinner thread running
 
 
 async def drive_start(settings: Settings, request: str, focus: list[Dimension]) -> tuple[str, RunEvent]:

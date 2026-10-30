@@ -303,6 +303,8 @@ def emit(event: dict) -> None:
 - The Gateway's `fetch` emits `{"type": "api_called", "source", "cached", "count", "failed"}` per source, after the `gather`. `cached` means `cache != miss`.
 - Stages and the Gateway emit plain dicts, so they never import Runtime. The Controller maps them to `RunEvent` and drops unknown types with a log line.
 
+**Reasoning from `deepseek/deepseek-v4.1-flash`.** Checked live, one `fetch_agent`-style chat turn at `low` effort through `ChunkMapper`: it sends readable reasoning, 17 `Reasoning` events ahead of the answer, in a terse scratchpad voice ("Compare decimals: 9.9 = 9.90 > 9.11"). The one-sentence answer arrived as a single `Token`. That is one short turn, so it says nothing about how prose chunks on longer answers. MiniMax was not checked.
+
 **Known limits** (none needs code):
 - Replay-cache hits give one whole message, not a typewriter effect, and identical hits may dedupe.
 - Tokens from an attempt abandoned by a retry or fallback stay on screen, since they're never retracted. `Token` has no message ID, so the client can't replace them. The `NodeDone` that follows is what counts.

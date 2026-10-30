@@ -4,13 +4,13 @@ import re
 
 import streamlit as st
 
-from talent_scout.clients.cli import LOW_DATA_CHOICES, REFUSALS
+from talent_scout.clients.cli import LOW_DATA_CHOICES, REFUSALS, event_line
 from talent_scout.clients.pauses import render_pause
 from talent_scout.clients.streamlit_bridge import Live, get_bridge
 from talent_scout.kernel.types import Dimension
 from talent_scout.request_plan.types import PlanAction
 from talent_scout.runtime.controller import InvalidAnswer, RunView
-from talent_scout.runtime.events import NodeDone, Stopped
+from talent_scout.runtime.events import ExtractProgress, NodeDone, Stopped
 from talent_scout.runtime.registry import RunStatus
 
 LOW_DATA_ACTIONS = list(LOW_DATA_CHOICES.values())
@@ -105,7 +105,7 @@ def _brief_page(view: RunView) -> None:
 
 def _drain(live: Live) -> None:
     """Show node lines until the Run stops, pauses or finishes, then redraw from its real status."""
-    last = None
+    last = bar = None
     with st.status("Run in progress", expanded=True) as status:
         while True:
             try:
@@ -119,6 +119,11 @@ def _drain(live: Live) -> None:
             last = event
             if isinstance(event, NodeDone):
                 st.write(f"✓ {event.node}" + (f" — {'; '.join(event.notes)}" if event.notes else ""))
+            elif isinstance(event, ExtractProgress):
+                bar = bar or st.progress(0.0)
+                bar.progress(min(event.done / event.total, 1.0), text=f"extracted {event.done}/{event.total}")
+            elif line := event_line(event):  # tokens and reasoning give None, so they stay off this page
+                st.text(line)  # text, since tool summaries carry search queries that markdown would mangle
         failed = isinstance(last, Stopped)
         status.update(label="Stopped" if failed else "Finished", state="error" if failed else "complete")
     del st.session_state["live"]
