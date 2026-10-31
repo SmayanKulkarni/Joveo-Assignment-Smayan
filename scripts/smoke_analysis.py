@@ -18,6 +18,7 @@ from talent_scout.kernel.state import LogKind, State
 from talent_scout.kernel.types import HiringRequest, SearchPlan
 
 FIXTURES = Path(__file__).parent.parent / "tests" / "fixtures" / "jobs"
+sys.stdout.reconfigure(encoding="utf-8")  # merges print an arrow the Windows console can't encode
 # Pairs the merge prompt must keep apart whenever both show up in the Sample.
 MUST_STAY_APART = [("AWS", "S3"), ("Git", "GitLab")]
 
@@ -57,6 +58,9 @@ async def run_analysis(state: State, model: str) -> State:
     sends = fan_out(state)
     print(f"{len(state.sample)} Postings in {len(sends)} Batches")
     updates = await asyncio.gather(*(nodes["batch_extract"](s.arg) for s in sends))
+    for send, update in zip(sends, updates):
+        if not update:  # batch_extract returns {} when the model's output was unusable
+            print(f"Batch of {len(send.arg.postings)} Postings returned no Extractions")
     state = state.model_copy(update={"extractions": {k: e for u in updates for k, e in u.get("extractions", {}).items()}})
     state = state.model_copy(update=await nodes["normalise_skills"](state))
     return state.model_copy(update=await nodes["stats"](state))
@@ -78,7 +82,6 @@ def check_stay_apart(state: State) -> None:
 
 
 async def main():
-    sys.stdout.reconfigure(encoding="utf-8")  # merges print an arrow the Windows console can't encode
     model = sys.argv[1] if len(sys.argv) > 1 else "minimax/minimax-m3.1-flash"
     state = await run_analysis(initial_state(), model)
 

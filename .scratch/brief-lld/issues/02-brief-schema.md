@@ -2,7 +2,7 @@
 
 Type: grilling
 Status: open
-Assignee: none
+Assignee: smayankulkarni05
 Blocked by: 01
 
 ## Question

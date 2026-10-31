@@ -67,17 +67,27 @@ def _names_to_merge(extractions: dict[str, Extraction]) -> list[str]:
     return sorted(top)
 
 
+def _root(aliases: dict[str, str], name: str) -> str:
+    seen = set()
+    while (folded := fold(name)) in aliases and folded not in seen:
+        seen.add(folded)
+        name = aliases[folded]
+    return name
+
+
 def _aliases(groups: list[SkillGroup], names: set[str]) -> dict[str, str]:
     aliases: dict[str, str] = {}
     for g in groups:
-        canonical = g.canonical.strip()
-        if not fold(canonical):
+        if not fold(g.canonical):
             continue
+        # Aim at the end of any chain so a reciprocal pair or a cycle can't form, and stats resolves in one hop.
+        canonical = _root(aliases, g.canonical.strip())
         for variant in map(fold, g.variants):
             # Only names the model was shown can be aliased, and the first group to claim one keeps it.
             if variant in names and variant != fold(canonical):
                 aliases.setdefault(variant, canonical)
-    return aliases
+    # A name aliased before its canonical was itself aliased still points down a chain.
+    return {variant: _root(aliases, canonical) for variant, canonical in aliases.items()}
 
 
 def make_nodes(deps: Deps) -> dict[str, Node]:

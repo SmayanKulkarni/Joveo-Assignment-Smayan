@@ -68,6 +68,19 @@ def test_only_the_most_common_names_are_sent():
     assert len(sent) == MAX_SKILLS_TO_MERGE and "skill 000" not in sent
 
 
+def test_reciprocal_and_chained_groups_resolve_to_one_name():
+    deps, *_ = make_deps(cheap=[groups(
+        ("analytics", ["data analytics", "analytics"]),
+        ("data analytics", ["analytics", "data analytics"]),
+        ("beta", ["alpha", "beta"]),
+        ("gamma", ["beta", "gamma"]),
+    )])
+
+    update = run_normalise(deps, a=extraction("Data Analytics", "Analytics", "Alpha", "Beta", "Gamma"))
+
+    assert update["skill_aliases"] == {"data analytics": "analytics", "alpha": "gamma", "beta": "gamma"}
+
+
 def test_the_merge_note_lists_every_merge():
     deps, *_ = make_deps(cheap=[groups(("Apache Spark", ["spark", "apache spark"]), ("PostgreSQL", ["postgres"]))])
 

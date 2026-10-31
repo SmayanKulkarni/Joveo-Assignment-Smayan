@@ -20,6 +20,8 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (component F in [
 
 <!-- one line per closed ticket -->
 
+- [Live probe of the writer and critic](issues/01-live-probe-writer-and-critic.md): the writer cites real Stats, but leaves recommendations empty, varies its outlook on identical input and can run away at zero Postings, while a strict critic rejects accurate Insights and loosened wording fixes much of that.
+
 ## Not yet specified
 
 - Any Caveats Brief itself raises, which hang on how confidence, recommendations, bad citations and the critic are decided.
