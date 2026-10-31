@@ -6,6 +6,8 @@ from langgraph.store.base import BaseStore
 from talent_scout.analysis.nodes import ROUTERS as ANALYSIS_ROUTERS
 from talent_scout.analysis.nodes import fan_out
 from talent_scout.analysis.nodes import make_nodes as analysis_nodes
+from talent_scout.brief.nodes import ROUTERS as BRIEF_ROUTERS
+from talent_scout.brief.nodes import make_nodes as brief_nodes
 from talent_scout.collection.nodes import ROUTERS as COLLECTION_ROUTERS
 from talent_scout.collection.nodes import make_nodes as collection_nodes
 from talent_scout.kernel.state import State, owned
@@ -61,6 +63,8 @@ def build_graph(deps: Deps, saver: BaseCheckpointSaver | None, store: BaseStore 
         real_routers.update(COLLECTION_ROUTERS)
         real_nodes.update(analysis_nodes(deps))
         real_routers.update(ANALYSIS_ROUTERS)
+        real_nodes.update(brief_nodes(deps))
+        real_routers.update(BRIEF_ROUTERS)
     nodes = {**stub_nodes(), **real_nodes}
     routers = {**STUB_ROUTERS, **real_routers}
     for name in FAN_OUT_ROUTERS:
