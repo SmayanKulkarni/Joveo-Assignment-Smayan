@@ -85,8 +85,8 @@ routers = {**STUB_ROUTERS, **real_routers}
 EDGES = [
     (START, "intake"), ("intake", "clarity_check"), ("clarify", "intake"),
     ("plan", "plan_review"), ("tools", "fetch_agent"), ("collect", "relevance"),
-    ("broaden", "fetch_agent"), ("batch_extract", "stats"), ("stats", "write_brief"),
-    ("write_brief", "critic"), ("render", END),
+    ("broaden", "fetch_agent"), ("batch_extract", "normalise_skills"), ("normalise_skills", "stats"),
+    ("stats", "write_brief"), ("write_brief", "critic"), ("render", END),
 ]
 CONDITIONAL = {
     "clarity_check":   ["clarify", "plan", END],
@@ -99,7 +99,7 @@ CONDITIONAL = {
 OWNERS = {
     "request_plan": ["intake", "clarity_check", "clarify", "plan", "plan_review"],
     "collection":   ["fetch_agent", "tools", "collect", "relevance", "broaden", "low_data_review"],
-    "analysis":     ["batch_extract", "stats"],
+    "analysis":     ["batch_extract", "normalise_skills", "stats"],
     "brief":        ["write_brief", "critic", "render"],
 }
 ```
@@ -114,7 +114,7 @@ def routed(state):
     return fan_out(state) if out == "analyse" else out
 ```
 
-`fan_out` comes from ⏳ Analysis and also sends zero Postings to `stats`, which is why `low_data_review` keeps its `stats` target. Until Analysis lands, the stub in `runtime/testing.py` returns `"stats"`. See the [Collection LLD](collection.md) §4.
+`fan_out` comes from the [Analysis LLD](analysis.md) §5 and also sends zero Postings to `stats`, which is why `low_data_review` keeps its `stats` target. Until Analysis lands, the stub in `runtime/testing.py` returns `"stats"`. See the [Collection LLD](collection.md) §4. Its `Send` payload, `ExtractBatch`, isn't reachable from `State`, so it joins `ALLOWED_MSGPACK`.
 
 **Fixed per-call config:** `thread_id`, `run_name="scout"`, tags, `thread_id` in LangSmith metadata, `durability="sync"`, `stream_mode=["updates", "messages", "custom", "tasks"]`. `recursion_limit` stays at the default (10007). All four modes are on from pass 1, and pass 3 only adds their mapping.
 
@@ -449,7 +449,7 @@ Each step leaves one small `pytest` file behind. No test calls an LLM or a jobs 
 
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
-  - ⏳ **Analysis:** `fan_out(state)` (§4).
+  - **Analysis:** settled in the [Analysis LLD](analysis.md): `fan_out(state)` (§4), and the `normalise_skills` node it adds to the graph.
   - ⏳ **Brief:** `critic` pass-through until pass 5. `done` depends on `render` writing `brief`.
   - ⏳ **Long-term memory:** opening the Store.
   - ⏳ **Infra shell:** the API and workers wrap `RunController`. A worker owning the task is what would make a client detach possible.

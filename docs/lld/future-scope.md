@@ -44,6 +44,18 @@ Work deliberately left out of an LLD, with why and what would bring it back. One
 | Several Postings per Jev request | Saves under a cent per Run, and a shared request has to fit 32 KB | Per-request latency becoming the bottleneck |
 | A Caveat on normal L2 reads | Up to 7 days old is within the data's expected freshness | `l2_fresh_days` being raised |
 
+## Analysis
+
+| Item | Why it's left out | Brings it back |
+|---|---|---|
+| A Jev veto on each skill merge | It agreed with all 12 probed merges, so it would add a placement, a threshold and many calls to catch nothing. Never tried against a bad merge | Over-merging appearing in live runs despite the tight prompt |
+| Splitting a bad Batch in half and retrying | Bad output hasn't been seen at 8,192 tokens, and a Caveat covers the loss | The "Postings not extracted" Caveat firing on real Runs |
+| Detecting employer boilerplate in skills | Ranking by distinct employers already demotes it | A single employer's text still topping skills in live runs |
+| Live FX rates | A dependency and a failure mode, and they'd change Stats on replay | Using the Brief for budgets where a stale rate matters |
+| Salary amounts read from Posting text | An LLM reading figures is what the "Python computes" rule avoids, and structured fields exist | A market where structured pay is nearly always missing |
+| A stripped title for grouping | Code can't remove locations or levels without damaging real variants | Title Stats proving too fragmented to use |
+| Advertised and estimated pay reconciled into one figure | There's no honest way to weight a model's guess against a stated salary | A published accuracy figure for Adzuna's estimates |
+
 ## Runtime and Clients
 
 | Item | Why it's left out | Brings it back |

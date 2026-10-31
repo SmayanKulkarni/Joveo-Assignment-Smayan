@@ -48,7 +48,7 @@ The system is split by concern, not one component per node. The Kernel declares 
 | B | **Jobs Data Gateway** | Adzuna and USAJOBS clients, L1 cache, budget guard, replay mode, expiry and sweep; the L2 store comes later | none (outside the graph) |
 | C | **Request & Plan** | `intake`, `clarity_check`, `clarify` ⏸, `plan`, `plan_review` ⏸ | Hiring Request, Clarifying Questions and answers, Assumptions, Search Plan |
 | D | **Collection** | `search_adzuna` and `search_usajobs` tools, `fetch_agent`, `tools` executor, `collect`, `relevance`, Sufficiency rule, `broaden`, `low_data_review` ⏸ | tool messages, Fetch records, Postings, relevance verdicts, Sample, broadened plans, the low-data answer |
-| E | **Analysis** | `batch_extract` (Send fan-out and its reducer), `stats` | per-Posting extractions, stats |
+| E | **Analysis** | `batch_extract` (Send fan-out and its reducer), `normalise_skills`, `stats` | per-Posting extractions, skill aliases, stats |
 | F | **Brief** | `write_brief`, `critic`, `render`, building the Run Notes from `run_log` | brief draft, critic verdicts, final JSON and Markdown |
 | G | **Runtime** | Graph wiring and compile, SQLite checkpointer and Store, run registry, Run Controller, event stream, Pause protocol, concurrent-resume guard | nothing in graph state; owns threads and the registry |
 | H | **Clients** | CLI (Pause UX, `scout resume`, `--focus`, progress); Streamlit later | none |
@@ -81,6 +81,7 @@ flowchart TD
   broaden[broaden · LLM revises plan]
   low_data_review[/low_data_review · PAUSE 3/]
   batch_extract[batch_extract x N · LLM]
+  normalise_skills[normalise_skills · LLM]
   stats[stats · python]
   write_brief[write_brief · LLM structured output]
   critic[critic · Jev per insight]
@@ -112,7 +113,8 @@ flowchart TD
   low_data_review -.->|"continue: Send x N"| batch_extract
   low_data_review -.->|"continue with 0 postings"| stats
   low_data_review -.->|"abort"| END_
-  batch_extract -->|"reducer merges"| stats
+  batch_extract -->|"reducer merges"| normalise_skills
+  normalise_skills --> stats
   stats --> write_brief --> critic
   critic -.->|"unsupported, revisions left"| write_brief
   critic -.->|"supported, or revision cap hit"| render
@@ -135,8 +137,9 @@ flowchart TD
 
 ([What does the LLM do versus code?](../.scratch/talent-scout-hld/issues/05-llm-extracts-code-computes.md))
 
-- **The LLM extracts per-Posting facts**: skills, seniority, must-have vs nice-to-have, years of experience.
+- **The LLM extracts per-Posting facts**: skills as written, seniority, must-have vs nice-to-have, years of experience, employer type. Code drops any skill or year not found in the Posting's text. A single later LLM call groups skill spellings across Batches. ([Analysis LLD](lld/analysis.md) §6, §7)
 - **Python computes every number**: counts, salary median and middle 50%, pay-disclosure share, top employers, posting-date trend. `stats` is a fixed node, not a tool. There is no decision for a model to make there, and a tool would add nondeterminism, tokens and a failure mode.
+- **Pay stays in three separate groups**: advertised, Adzuna-estimated and federal are never pooled. All 100 Adzuna salaries in the fixtures are estimates. ([Analysis LLD](lld/analysis.md) §9)
 - The brief writer receives the precomputed stats and Posting IDs. It chooses and phrases Insights but never invents figures.
 - **Sufficiency** is a rule (count of Relevant Postings vs the Search Plan's target, with capped attempts), not an LLM opinion.
 
@@ -230,8 +233,8 @@ Requirement tiers come in priority order ([Build priority order](../.scratch/tal
 
 Each component's LLD covers all of its tiers, but the build goes in **passes across components**, not one finished component at a time. ([Component breakdown and build order](../.scratch/talent-scout-hld/issues/16-component-breakdown-and-build-order.md))
 
-1. **Must-have walking skeleton**: Kernel → Gateway (L1, budget guard, replay, Adzuna) → Runtime + CLI (SQLite and the Pause protocol from day one) → Request & Plan (clarify only) → Collection → Analysis (sequential extraction) → Brief (no critic).
-2. **Recommended**: `plan_review` and `low_data_review` Pauses, Send fan-out, fallbacks, `--focus`, USAJOBS, Streamlit, Gateway L2.
+1. **Must-have walking skeleton**: Kernel → Gateway (L1, budget guard, replay, Adzuna) → Runtime + CLI (SQLite and the Pause protocol from day one) → Request & Plan (clarify only) → Collection → Analysis (with its Send fan-out, [Analysis LLD](lld/analysis.md) §5) → Brief (no critic).
+2. **Recommended**: `plan_review` and `low_data_review` Pauses, fallbacks, `--focus`, USAJOBS, Streamlit, Gateway L2.
 3. **Streaming progress**: the Runtime event stream, rendered by the clients.
 4. **Infra shell** (J).
 5. **Critic pass** (F).
@@ -243,7 +246,6 @@ After that come the `samples/`, README and write-up, as a delivery task.
 
 | Component | Open questions |
 |---|---|
-| Analysis | Currency and period normalisation, treatment of `salary_is_predicted`, USAJOBS vs Adzuna in compensation stats, batch sizing for large Samples |
 | Brief | Rules for the Confidence Tag and the Hiring Outlook |
 | Long-term memory | Which preferences are remembered, and whether they are learned or asked |
 | Infra shell | Everything listed in §10 |

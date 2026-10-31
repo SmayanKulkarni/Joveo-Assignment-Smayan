@@ -26,7 +26,7 @@ It owns:
 It does **not** own:
 - `SearchPlan` and its limits (Kernel §3, [Request & Plan LLD](request-plan.md) §6)
 - `Fetch`, `coalesce`, the per-source call or the budget guard (Gateway)
-- `fan_out`, batching and federal pay in Stats (⏳ Analysis)
+- `fan_out`, batching and federal pay in Stats ([Analysis LLD](analysis.md))
 - rendering Caveats and the `total` disclosure (⏳ Brief)
 
 ## 2. Layout
@@ -384,6 +384,6 @@ Request & Plan pass 1 comes first, since this stage needs the `SearchPlan` limit
 
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
-  - ⏳ **Analysis:** `fan_out(state)`: its Sends, batching, and zero Postings to `stats`. Federal pay apart from Adzuna salaries.
+  - **Analysis:** settled in the [Analysis LLD](analysis.md): `fan_out(state)`, its Sends and batching, zero Postings to `stats`, and federal pay apart from Adzuna salaries.
   - ⏳ **Brief:** every Caveat in Run Notes, the `total` disclosure, and rendering `broadened_plans`.
   - ⏳ **Delivery:** choosing sample runs so 18 worst-case Adzuna calls fit the daily limit.

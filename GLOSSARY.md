@@ -49,6 +49,13 @@ _Avoid_: Metric, number
 A slice of the Sample analysed independently and in parallel with other Batches.
 _Avoid_: Chunk, page
 
+**Extraction**:
+The facts the LLM read from one Posting: skills as written, seniority, years of experience and employer type. Any skill or year not found in the Posting's text is dropped by code.
+_Avoid_: Analysis, parse
+
+**Advertised pay**:
+A salary the employer stated, as opposed to **Estimated pay**, which is the jobs source's own guess at a salary (Adzuna's `salary_is_predicted`). The two are never pooled, and only Advertised pay counts as disclosed.
+
 **Domain**:
 The broad occupational area of a Posting (e.g. IT, engineering, marketing), taken from the jobs source's own category.
 _Avoid_: Industry, sector, vertical

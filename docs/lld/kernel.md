@@ -175,6 +175,7 @@ class State(BaseModel):                     # frozen, extra="forbid"
 
     # --- Analysis
     extractions: Annotated[dict[str, Extraction], merge] = {}   # the only reducer
+    skill_aliases: dict[str, str] = {}      # folded skill name -> canonical name
     stats: MarketStats | None = None
 
     # --- Brief
@@ -207,6 +208,7 @@ class State(BaseModel):                     # frozen, extra="forbid"
 | `broadened_plans` | Collection | `broaden` appends | |
 | `low_data_decision`, `low_data_guidance` | Collection | `low_data_review` | replaced at each review |
 | `extractions` | Analysis | `batch_extract` × N | |
+| `skill_aliases` | Analysis | `normalise_skills` | |
 | `stats` | Analysis | `stats` | |
 | `brief`, `brief_markdown` | Brief | `render` | |
 | `run_log` | Kernel | every node via `log()` | never cleared |
@@ -292,7 +294,7 @@ def log(state, node, kind, message, **data) -> dict:
 - **Narrative only:** routing decisions and reasons, Jev outcomes, Caveats, skip counts, and the original request wording.
 - **Caveats are the transparency channel.** A `caveat` entry records a limitation that affects how far the user can trust the Market Brief. `data` may carry `dimension` and `posting_keys`. **Brief must render every Caveat in Run Notes**; `warning` and `note` entries stay internal. Stages decide when to raise one, and each stage LLD lists its Caveats. Known so far:
   - Postings the Gateway mapper dropped (counted)
-  - a Posting skipped after `LLMExhausted` (§12)
+  - Postings left without an Extraction after bad output, and the other Analysis Caveats ([Analysis LLD](analysis.md) §10)
   - continuing at `low_data_review` with too few Postings, or broadening N times
   - most of the Sample being old or federal, and the age of cached jobs data in replay (§14)
   - Jev input truncated, or Jev falling back to the LLM (§11)
@@ -356,7 +358,7 @@ class Tiers:
 
 def make_tiers(settings) -> Tiers: ...        # real ChatOpenRouter chains
 async def check_balance(settings) -> float: ...  # GET /api/v1/key; raises below the floor
-class LLMExhausted(Exception): tier, name, attempts   # chained to the last error
+class LLMExhausted(Exception): tier, name, attempts, bad_output   # chained to the last error; bad_output: that error was bad output, not transport
 ```
 
 - **Two entry points, async only.** `structured` serves intake, plan, extraction, brief writing, the critic and Jev's LLM fallback. `chat` exists only for `fetch_agent`, which needs tools and its own message history; tools are bound to each model *before* the chain is built, because a fallback wrapper has no `bind_tools`. Stages own every prompt.
@@ -367,7 +369,7 @@ class LLMExhausted(Exception): tier, name, attempts   # chained to the last erro
 - **Validation retry.** On a `ValidationError`, resend the same prompt plus the bad output as an `AIMessage` and a `HumanMessage` with the Pydantic error text and "return corrected JSON". One feedback retry per model, so at most 4 attempts over the 2-model chain.
 - **Transport failures.** Each model gets `with_retry` (3 attempts, jittered backoff) on 429, 5xx, timeouts, connection errors and 402 (usually in-flight spend, which clears), then falls to the next model with an explicit exception list: provider errors, including an error body returned with HTTP 200. A small loop does this instead of `with_fallbacks`, because `with_fallbacks` re-raises the first error and `LLMExhausted` must chain to the last. Never fall back on 400, 401 or 422 (our bug) or 402 (same account); those propagate. 60 s timeout per call.
 - **Streaming path.** LangGraph's `messages` stream mode sends every call through `_astream`, not `_create_chat_result`. `_CostedOpenRouter` overrides it so a mid-stream error frame, a `ValueError` from the stream or an empty stream raises `_ProviderError` and gets the same retry and fallback. Cost is set after the chunks merge, in `_agenerate_with_cache` (a private langchain-core method; re-check on upgrades), because chunk addition rejects a float in `usage_metadata`. The 60 s timeout then applies per read, not per call.
-- **Chain exhausted.** `LLMExhausted.attempts` counts validation attempts plus 3 per model that failed on transport. `LLMExhausted` propagates by default: the Run stops at that node, the checkpoint stays at the last committed step, and `scout resume` reruns only that node. A stage may catch it where losing one item is acceptable (⏳ Analysis: skip one Posting) and must then log a Caveat.
+- **Chain exhausted.** `LLMExhausted.attempts` counts validation attempts plus 3 per model that failed on transport. `LLMExhausted` propagates by default: the Run stops at that node, the checkpoint stays at the last committed step, and `scout resume` reruns only that node. A stage may catch it where losing one item is acceptable and must then log a Caveat. Analysis does so only when `bad_output` is true, since the same text would fail on every resume, and it loses one Batch ([Analysis LLD](analysis.md) §6).
 - **Concurrency.** One process-wide `asyncio.Semaphore` (20, from settings) around every call, so Runtime needs no LangGraph `max_concurrency` for spend.
 - **Balance.** The Run Controller calls `check_balance` before starting or resuming a Run and refuses below the floor (default $0.25), skipping it when `replay_cache` is set (Runtime LLD §6). It reads `effective_budget.remaining_usd` from `GET /api/v1/key`, the tightest of the key limit and the guardrail budgets; a null budget means uncapped and always passes.
 - **Tracing and cost.** The outer runnable gets `run_name=f"llm:{name}"`. Each model is tagged `tier:<tier>` and `model:<id>` before wrapping, since `with_config` on a wrapped runnable names only the outer chain. Metadata carries `tier` and `name`. `ChatOpenRouter` runs reach LangSmith without cost, so a `ChatOpenRouter` subclass copies `response_metadata["cost"]` into `usage_metadata["total_cost"]`, which LangSmith reads as the run's `total_cost` (confirmed live; prompt and completion cost stay empty). The structured runnable returns only the schema instance: which model answered and how many retries ran is visible only in LangSmith, and nothing about it goes in `run_log`.
