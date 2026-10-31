@@ -91,6 +91,31 @@ def test_two_bad_responses_reach_next_model():
     assert len(first.seen) == 2
 
 
+def cut_off(content):
+    return AIMessage(content=content, response_metadata={"finish_reason": "length"})
+
+
+def test_a_cut_off_reply_skips_the_feedback_retry_and_reaches_the_next_model():
+    first, second = model(cut_off('{"n":')), model(GOOD)
+    assert run_structured(tiers(first, second)) == Out(n=3)
+    assert len(first.seen) == 1
+
+
+def test_a_cut_off_reply_counts_real_attempts_and_is_bad_output():
+    with pytest.raises(LLMExhausted) as e:
+        run_structured(tiers(model("bad", cut_off('{"n":'))))
+    assert e.value.attempts == 2 and e.value.bad_output
+    with pytest.raises(LLMExhausted) as e:
+        run_structured(tiers(model(cut_off('{"n":'))))
+    assert e.value.attempts == 1 and e.value.bad_output
+
+
+def test_a_cut_off_reply_that_still_validates_is_kept():
+    m = model(cut_off(GOOD))
+    assert run_structured(tiers(m)) == Out(n=3)
+    assert len(m.seen) == 1
+
+
 def test_chain_running_out_raises_exhausted():
     t = tiers(model("bad", "bad"), model("bad", "bad"))
     with pytest.raises(LLMExhausted) as e:

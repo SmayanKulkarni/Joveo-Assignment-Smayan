@@ -144,12 +144,15 @@ class Tiers:
             async def run(text: str, config: RunnableConfig) -> M:
                 messages: list[BaseMessage] = [SystemMessage(system), HumanMessage(text)]
                 last: ValidationError | None = None
-                for _ in range(2):
+                for attempt in range(1, 3):
                     reply = await call.ainvoke(messages, config)
                     try:
                         return schema.model_validate_json(reply.text)
                     except ValidationError as err:
                         last = err
+                        # A reply cut off at the limit isn't a mistake it can correct, and a rerun costs the full limit again.
+                        if reply.response_metadata.get("finish_reason") == "length":
+                            raise _BadOutput(attempts=attempt) from err
                         # Resend with the bad output and the error so the model can correct itself.
                         messages = [
                             *messages,
