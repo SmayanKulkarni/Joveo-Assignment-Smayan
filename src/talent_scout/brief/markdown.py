@@ -1,14 +1,19 @@
 from collections import Counter
+from urllib.parse import quote, urlparse
 
-from talent_scout.brief.rules import SOURCE_NAMES
-from talent_scout.brief.types import MarketBrief
-from talent_scout.kernel.types import Posting, SearchPlan
+from talent_scout.brief.rules import SOURCE_NAMES, plural
+from talent_scout.brief.types import Insight, MarketBrief
+from talent_scout.kernel.types import Evidence, Posting, SearchPlan
 
 REPLAY_BANNER = "Replayed run: jobs data, LLM and Jev responses came from the replay cache, not live sources"
 NO_RECOMMENDATIONS = (
     "Not enough evidence to suggest a job title.",
     "Not enough evidence to suggest a salary band.",
     "Not enough evidence to suggest top skills.",
+)
+CONFIDENCE_KEY = (
+    "High: 30+ Postings from 10+ employers. Medium: 10+ from 5+, or capped because pay is estimated, skills come from snippets, "
+    "data is old or the critic couldn't confirm it. Low: anything thinner, directional only. An Insight takes its weakest cited figure."
 )
 
 
@@ -25,6 +30,19 @@ def _item(label: str, lines: list[str], empty: str) -> str:
     if len(lines) == 1:
         return f"- **{label}:** {lines[0]}"
     return "\n".join([f"- **{label}:**", *(f"  - {line}" for line in lines)])
+
+
+def _evidence(refs: dict[tuple[str, ...], int]) -> str:
+    if not refs:
+        return "## Evidence\n\nNone."
+    return "## Evidence\n\n" + "\n".join(f"- **E{n}:** {', '.join(keys)}" for keys, n in refs.items())
+
+
+def _postings_table(postings: list[Posting]) -> str:
+    if not postings:
+        return "## Postings analysed\n\nNone."
+    rows = [f"| {_cell(p.key)} | {_cell(p.title)} | {_cell(p.company or '')} | {_link(p.url)} |" for p in postings]
+    return "\n".join(["## Postings analysed", "", "| Key | Title | Company | Link |", "|---|---|---|---|", *rows])
 
 
 def _run_notes(brief: MarketBrief, postings: list[Posting]) -> str:
@@ -49,9 +67,32 @@ def _run_notes(brief: MarketBrief, postings: list[Posting]) -> str:
     return "## Run Notes\n\n" + "\n".join(items)
 
 
+def _cell(text: str) -> str:
+    # Posting text comes from outside, so it can't be allowed to end a cell or a row.
+    return " ".join(text.replace("|", " ").split())
+
+
+def _link(url: str) -> str:
+    # Only http(s): anything else, such as javascript:, would be a live link in the reader's viewer.
+    if urlparse(url).scheme not in ("http", "https"):
+        return ""
+    return f"[link](<{quote(url, safe=':/?#[]@!$&()*+,;=%~-._')}>)"
+
+
+def _insights(insights: list[Insight], refs: dict[tuple[str, ...], int]) -> str:
+    def evidence_line(evidence: Evidence) -> str:
+        n = refs.setdefault(tuple(evidence.posting_keys), len(refs) + 1)
+        return f"Evidence: {plural(evidence.count, 'Posting')} [E{n}]"
+
+    if not insights:
+        return "## Insights\n\nNone: this Brief has no findings."
+    items = [f"**[{i.confidence.value.capitalize()}]** {i.text}\n\n{i.confidence_reason}. {evidence_line(i.evidence)}" for i in insights]
+    return "## Insights\n\n" + "\n\n".join(items) + "\n\n" + CONFIDENCE_KEY
+
+
 def render_markdown(brief: MarketBrief, postings: list[Posting]) -> str:
-    if brief.insights or postings or any(brief.recommendations.model_dump().values()):
-        raise NotImplementedError("Markdown for a Brief with Postings is not built yet")
+    if any(brief.recommendations.model_dump().values()) or brief.outlook.stat_ids:
+        raise NotImplementedError("Markdown for recommendations and a rated Outlook is not built yet")
 
     request, outlook = brief.hiring_request, brief.outlook
     summary = brief.summary
@@ -60,14 +101,16 @@ def render_markdown(brief: MarketBrief, postings: list[Posting]) -> str:
         summary += f"\n\nWeak Sample: {brief.stats.sample_size} Postings against a target of {target}. Treat this Brief as directional."
 
     parts = [f"> {REPLAY_BANNER}"] if brief.replayed else []
+    refs: dict[tuple[str, ...], int] = {}  # Posting keys -> E number, by first appearance
+    insights = _insights(brief.insights, refs)
     parts += [
         f"# Market Brief: {request.role}, {request.location}",
         f"## Summary\n\n{summary}",
         f"## Hiring Outlook\n\n**{outlook.rating.value.replace('_', ' ').capitalize()}**\n\n{outlook.reason}",
         "## Client Recommendations\n\n" + "\n".join(f"- {line}" for line in NO_RECOMMENDATIONS),
-        "## Insights\n\nNone: this Brief has no findings.",
+        insights,
         _run_notes(brief, postings),
-        "## Evidence\n\nNone.",
-        "## Postings analysed\n\nNone.",
+        _evidence(refs),
+        _postings_table(postings),
     ]
     return "\n\n".join(parts) + "\n"

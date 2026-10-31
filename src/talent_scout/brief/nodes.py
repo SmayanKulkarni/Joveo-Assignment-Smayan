@@ -1,7 +1,7 @@
 from collections import Counter
 
 from talent_scout.brief.markdown import render_markdown
-from talent_scout.brief.rules import default_outlook, empty_draft, match_totals
+from talent_scout.brief.rules import build_insights, default_outlook, empty_draft, match_totals, rule_draft
 from talent_scout.brief.types import ClientRecommendations, Confidence, MarketBrief, RunNotes
 from talent_scout.gateway.types import ATTRIBUTION
 from talent_scout.kernel.state import LogKind, State, log
@@ -34,10 +34,10 @@ def after_critic(state: State) -> str:
 
 def make_nodes(deps: Deps) -> dict[str, Node]:
     async def write_brief(state: State) -> dict:
-        if state.stats.sample_size > 0:
-            raise NotImplementedError("Briefs for a Sample with Postings are not built yet")
-        draft = empty_draft(state.hiring_request)
-        return {"brief_draft": draft, **log(state, "write_brief", LogKind.note, "0 Insights from the empty draft", insights=0, draft="empty")}
+        # The rule draft stands in until the LLM writer lands.
+        kind, draft = ("rule", rule_draft(state.stats)) if state.stats.sample_size else ("empty", empty_draft(state.hiring_request))
+        message = f"{len(draft.insights)} Insights from the {kind} draft"
+        return {"brief_draft": draft, **log(state, "write_brief", LogKind.note, message, insights=len(draft.insights), draft=kind)}
 
     async def critic(state: State) -> dict:
         # A pass-through until the real critic lands: no verdicts, so after_critic goes to render.
@@ -50,7 +50,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
             replayed=deps.settings.replay_cache is not None,
             summary=draft.summary,
             summary_stat_ids=draft.summary_stat_ids,
-            insights=[],  # write_brief gives a draft with Insights only for a Sample it can't yet write for
+            insights=build_insights(state.stats, state.sample_postings, draft.insights, [v.supported for v in state.critic_verdicts]),
             recommendations=ClientRecommendations(job_title=None, salary_band=None, top_skills=None),
             outlook=default_outlook(state.stats.sample_size),
             run_notes=_run_notes(state),

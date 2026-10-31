@@ -4,8 +4,6 @@ from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
 
-import pytest
-
 from talent_scout.brief.nodes import ROUTERS, _run_notes, after_critic, make_nodes
 from talent_scout.brief.rules import match_totals
 from talent_scout.brief.types import InsightVerdict
@@ -73,12 +71,6 @@ def test_zero_postings_write_brief_makes_no_llm_call_and_render_says_there_are_n
     assert "Weak Sample: 0 Postings against a target of 30" in md
     assert not md.startswith(">")
     assert "Adzuna API" not in md
-
-
-def test_a_sample_with_postings_fails_loudly_instead_of_printing_no_findings():
-    state = zero_state(stats=MarketStats(sample_size=5, stats=[]))
-    with pytest.raises(NotImplementedError):
-        asyncio.run(make_nodes(fake_deps(make_settings()))["write_brief"](state))
 
 
 def test_replay_banner_only_on_replay_and_two_renders_are_identical():
