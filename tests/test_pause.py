@@ -10,9 +10,12 @@ from talent_scout.analysis.types import (
     Seniority,
     SkillMention,
 )
+from talent_scout.brief.types import (
+    BandRecommendation, BriefDraft, BriefRevision, ClientRecommendations, Confidence, Insight, InsightDraft, InsightVerdict,
+)
 from talent_scout.collection.testing import posting, record
 from talent_scout.collection.types import LowDataAnswer, LowDataPayload
-from talent_scout.kernel.types import ClarifyingQuestion, RequestField, SearchPlan, WorkMode
+from talent_scout.kernel.types import ClarifyingQuestion, Dimension, Evidence, RequestField, SearchPlan, WorkMode
 from talent_scout.request_plan.types import (
     ClarifyAnswer,
     ClarifyPayload,
@@ -29,6 +32,7 @@ from talent_scout.runtime.pause import (
     Pause,
     PlanReviewPause,
 )
+from talent_scout.runtime.testing import stub_brief
 
 QUESTION = ClarifyingQuestion(about=RequestField.role, text="Which engineer?", options=["Software"], answer=None)
 PLAN = SearchPlan(
@@ -38,6 +42,17 @@ PLAN = SearchPlan(
 LOW_DATA = LowDataPayload(
     count=3, target=50, attempts=2, plans=[PLAN], fetched=12, rejected=9, calls_left=4, blocked=None,
 )
+# Nested enums (Dimension, Confidence) only show up in a Brief that has parts.
+FULL_BRIEF = stub_brief().model_copy(update={
+    "insights": [Insight(
+        text="t", dimension=Dimension.compensation, stat_ids=["a"], evidence=Evidence(posting_keys=["adzuna:1"]),
+        confidence=Confidence.medium, confidence_reason="r",
+    )],
+    "recommendations": ClientRecommendations(
+        job_title=None, top_skills=None,
+        salary_band=BandRecommendation(reason="r", stat_ids=["a"], evidence=Evidence(posting_keys=[]), low=1, high=2, unit="USD/year"),
+    ),
+})
 PAUSES = [
     ClarifyPause(payload=ClarifyPayload(questions=[QUESTION])),
     PlanReviewPause(payload=PlanReviewPayload(plan=PLAN, assumptions=[])),
@@ -62,6 +77,11 @@ VALUES = [
         years_min=5, employer_type=EmployerType.agency, ungrounded=1,
     ),
     ExtractBatch(postings=[posting("1"), posting("2")]),
+    BriefDraft(summary="s", summary_stat_ids=["demand.sample_size"], insights=[InsightDraft(text="t", stat_ids=["a"])]),
+    BriefRevision(insights=[InsightDraft(text="t", stat_ids=["a"])]),
+    InsightVerdict(supported=True, p_yes=0.9),
+    stub_brief(),
+    FULL_BRIEF,
 ]
 
 

@@ -4,10 +4,11 @@ from collections import Counter
 from langgraph.types import Send
 
 from talent_scout.analysis.prompts import EXTRACT_SYSTEM, MERGE_SYSTEM
-from talent_scout.analysis.stats import compute_stats, fold, mentions
+from talent_scout.analysis.stats import compute_stats, mentions
 from talent_scout.analysis.types import BatchFacts, ExtractBatch, Extraction, PostingFacts, SkillGroup, SkillGroups
 from talent_scout.kernel.llm import LLMExhausted
 from talent_scout.kernel.state import LogKind, RunLogEntry, State, log
+from talent_scout.kernel.text import fold
 from talent_scout.kernel.types import Posting
 from talent_scout.runtime.deps import Deps, Node, Router
 

@@ -3,7 +3,9 @@ from contextlib import asynccontextmanager
 from langgraph.types import interrupt
 
 from talent_scout.analysis.types import EmployerType, Extraction, Seniority
-from talent_scout.brief.types import MarketBrief
+from talent_scout.brief.types import (
+    ClientRecommendations, HiringOutlook, MarketBrief, OutlookRating, RunNotes,
+)
 from talent_scout.collection.types import LowDataPayload
 from talent_scout.gateway.testing import FakeGateway
 from talent_scout.kernel.jev import Jev
@@ -12,7 +14,7 @@ from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.state import LogKind, State, log
 from talent_scout.kernel.testing import FakeToolChatModel, fake_classifier
 from talent_scout.kernel.thresholds import CUTS
-from talent_scout.kernel.types import ClarifyingQuestion, HiringRequest, MarketStats, RequestField, SearchPlan
+from talent_scout.kernel.types import ClarifyingQuestion, Evidence, HiringRequest, MarketStats, RequestField, SearchPlan
 from talent_scout.request_plan.types import ClarifyPayload, PlanReviewPayload
 from talent_scout.runtime.deps import Deps, Node, Router
 from talent_scout.runtime.pause import ClarifyPause, LowDataPause, PlanReviewPause
@@ -27,6 +29,21 @@ _PLAN = SearchPlan(
 )
 _EXTRACTION = Extraction(skills=[], seniority=Seniority.unknown, years_min=None, employer_type=EmployerType.unknown, ungrounded=0)
 _QUESTION = ClarifyingQuestion(about=RequestField.role, text="Which role?", options=["Stub role"], answer=None)
+
+
+def stub_brief() -> MarketBrief:
+    """The smallest valid Brief: no Postings, so no Insights and no recommendations."""
+    no_evidence = Evidence(posting_keys=[])
+    return MarketBrief(
+        hiring_request=_REQUEST, replayed=False, summary="Stub summary", summary_stat_ids=[], insights=[],
+        recommendations=ClientRecommendations(job_title=None, salary_band=None, top_skills=None),
+        outlook=HiringOutlook(rating=OutlookRating.competitive, reason="Stub", stat_ids=[], evidence=no_evidence),
+        run_notes=RunNotes(
+            questions=[], assumptions=[], focus=[], final_plan=_PLAN, earlier_plans=[], postings_analysed=no_evidence,
+            match_totals=[], caveats=[], attribution=None,
+        ),
+        stats=MarketStats(sample_size=0, stats=[]),
+    )
 
 
 def _stub(name: str, **update) -> Node:
@@ -74,7 +91,7 @@ def stub_nodes() -> dict[str, Node]:
         "stats": _stub("stats", stats=MarketStats(sample_size=0, stats=[])),
         "write_brief": _stub("write_brief"),
         "critic": _stub("critic"),
-        "render": _stub("render", brief=MarketBrief(), brief_markdown="# Stub brief"),
+        "render": _stub("render", brief=stub_brief(), brief_markdown="# Stub brief"),
     }
 
 

@@ -6,6 +6,7 @@ from statistics import median, quantiles
 
 from talent_scout.analysis.types import EmployerType, Extraction, Requirement
 from talent_scout.kernel.state import State
+from talent_scout.kernel.text import employer_key, fold
 from talent_scout.kernel.types import (
     ADZUNA_CURRENCY, Dimension, Evidence, HiringRequest, MarketStats, PayPeriod, Posting, SearchPlan, Source, Stat,
 )
@@ -18,7 +19,6 @@ TREND_DAYS = 14
 MIN_TREND_POSTINGS = 20
 TREND_NOTE = "Ads still live, which tilts recent because filled ads disappear."
 
-LEGAL_SUFFIXES = frozenset({"inc", "llc", "ltd", "limited", "pvt", "private", "corp", "corporation", "co", "plc", "gmbh"})
 KNOWN_AGENCIES = frozenset({
     "randstad", "adecco", "manpowergroup", "robert half", "kforce", "insight global", "teksystems", "hays",
     "michael page", "kelly services", "aerotek", "allegis",
@@ -46,11 +46,6 @@ _EMPLOYER_TYPE_NAME = {
 }
 
 
-def fold(s: str) -> str:
-    # Keeps + and # so C, C++ and C# stay three skills.
-    return " ".join(re.sub(r"[^\w+#]+", " ", s.casefold()).split())
-
-
 def mentions(term: str, text: str) -> bool:
     # An empty term would match between any two words.
     return bool(term) and re.search(rf"(?<![\w+#]){re.escape(term)}(?![\w+#])", text) is not None
@@ -74,13 +69,6 @@ def _plural(n: int, word: str) -> str:
 
 def _common(spellings: Counter) -> str:
     return min(spellings, key=lambda s: (-spellings[s], s))
-
-
-def _employer_key(company: str | None) -> str | None:
-    words = fold(company or "").split()
-    while len(words) > 1 and words[-1] in LEGAL_SUFFIXES:
-        words.pop()
-    return " ".join(words) or None
 
 
 def _group(sample: list[Posting], key_of: Callable[[Posting], str | None], spelling_of: Callable[[Posting], str]) -> list[tuple[str, str, list[str]]]:
@@ -212,9 +200,9 @@ def _pay(sample: list[Posting], extracted: dict[str, Extraction], request: Hirin
             stats.append(_stat(f"comp.{id}_share", Dimension.compensation, label, share, "share", adzuna))
 
     if "estimated" in reached and "advertised" not in reached:
-        caveats.append("Pay is estimated: no advertised pay reached 5 figures, so pay comes from Adzuna's own estimates")
+        caveats.append(f"Pay is estimated: fewer than {MIN_PAY_FIGURES} advertised salaries, so pay comes from Adzuna's own estimates")
     if not reached:
-        caveats.append(f"Too little pay data: no pay group reached {MIN_PAY_FIGURES} figures")
+        caveats.append(f"Too little pay data: no pay group has {MIN_PAY_FIGURES} salaries")
     if assumed := len(unknown_period["advertised"]):
         caveats.append(f"Pay period assumed: treated as annual for {_plural(assumed, 'advertised figure')} with no pay period")
     if excluded:
@@ -232,7 +220,7 @@ def _skills(sample: list[Posting], extracted: dict[str, Extraction], aliases: di
     found: dict[str, dict[str, Requirement]] = defaultdict(dict)
     spellings: dict[str, Counter] = defaultdict(Counter)
     canonical_names: dict[str, str] = {}
-    employer_of = {p.key: _employer_key(p.company) or p.key for p in sample}  # no company: its own employer
+    employer_of = {p.key: employer_key(p.company) or p.key for p in sample}  # no company: its own employer
     for p in sample:
         if p.key not in extracted:
             continue
@@ -289,7 +277,7 @@ def _employer_type(name: str, postings: list[Posting], extracted: dict[str, Extr
 def _competition(sample: list[Posting], extracted: dict[str, Extraction]) -> list[Stat]:
     c, total = Dimension.competition, len(sample)
     by_key = {p.key: p for p in sample}
-    employers = _group(sample, lambda p: _employer_key(p.company), lambda p: p.company)
+    employers = _group(sample, lambda p: employer_key(p.company), lambda p: p.company)
     stats = [
         _stat(f"competition.employer.{_slug(key)}", c, f"{name}: {len(keys)} of {total} Postings in the Sample", len(keys), "postings", keys)
         for key, name, keys in employers[:TOP_EMPLOYERS]

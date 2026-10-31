@@ -3,9 +3,10 @@ from typing import Annotated, Literal
 from pydantic import Field
 
 from talent_scout.analysis.types import EmployerType, ExtractBatch, Extraction, Requirement, Seniority
+from talent_scout.brief.types import BriefDraft, BriefRevision, Confidence, InsightVerdict, MarketBrief, OutlookRating
 from talent_scout.collection.types import FetchRecord, LowDataAnswer, LowDataPayload
 from talent_scout.gateway.types import CacheStatus
-from talent_scout.kernel.types import Model, PayPeriod, RequestField, Source, WorkMode
+from talent_scout.kernel.types import Dimension, Model, PayPeriod, RequestField, Source, WorkMode
 from talent_scout.request_plan.types import (
     ClarifyAnswer,
     ClarifyPayload,
@@ -41,5 +42,6 @@ ALLOWED_MSGPACK = [
     for cls in (
         ClarifyPause, PlanReviewPause, LowDataPause, *ANSWERS.values(), PlanAction, RequestField, RequestDraft, WorkMode,
         FetchRecord, CacheStatus, Source, PayPeriod, ExtractBatch, Extraction, Seniority, EmployerType, Requirement,
+        BriefDraft, BriefRevision, InsightVerdict, MarketBrief, Confidence, OutlookRating, Dimension,
     )
 ]

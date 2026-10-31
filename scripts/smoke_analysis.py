@@ -9,7 +9,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from talent_scout.analysis.nodes import fan_out, make_nodes
-from talent_scout.analysis.stats import fold
+from talent_scout.kernel.text import fold
 from talent_scout.gateway.adzuna import _map as map_adzuna
 from talent_scout.gateway.usajobs import _map as map_usajobs
 from talent_scout.kernel.llm import make_tiers

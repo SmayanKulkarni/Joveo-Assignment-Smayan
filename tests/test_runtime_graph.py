@@ -6,14 +6,13 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, START
 from langgraph.types import Command
 
-from talent_scout.brief.types import MarketBrief
 from talent_scout.kernel.state import State
 from talent_scout.kernel.testing import make_settings
 from talent_scout.kernel.types import ClarifyingQuestion, RequestField
 from talent_scout.runtime.graph import OWNERS, build_graph
 from talent_scout.runtime.pause import ALLOWED_MSGPACK, ANSWERS, ClarifyPause, LowDataPause, PlanReviewPause
 from talent_scout.runtime.registry import RunStatus, derive_status
-from talent_scout.runtime.testing import ANSWER_FOR, fake_deps
+from talent_scout.runtime.testing import ANSWER_FOR, fake_deps, stub_brief
 
 
 def test_full_graph_compiles_with_every_owned_node():
@@ -57,6 +56,6 @@ def test_stub_run_reaches_render_through_all_three_pauses(tmp_path):
         "collect", "relevance", "low_data_review", "stats", "write_brief", "critic", "render",
     ]
     assert state.questions[0].answer == "Software"
-    assert state.brief == MarketBrief()
+    assert state.brief == stub_brief()
     assert state.brief_markdown
     assert derive_status(snapshot) == (RunStatus.done, None)

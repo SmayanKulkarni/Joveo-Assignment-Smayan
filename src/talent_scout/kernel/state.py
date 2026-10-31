@@ -8,7 +8,7 @@ from langgraph.types import Command, Send
 from pydantic import BaseModel, Field, JsonValue, TypeAdapter, ValidationError
 
 from talent_scout.analysis.types import Extraction
-from talent_scout.brief.types import MarketBrief
+from talent_scout.brief.types import BriefDraft, InsightVerdict, MarketBrief
 from talent_scout.collection.types import FetchRecord
 from talent_scout.kernel.types import (
     Assumption,
@@ -83,6 +83,9 @@ class State(Model):
     skill_aliases: dict[str, str] = _owned_by(Owner.analysis, default_factory=dict)  # folded name -> canonical name
     stats: MarketStats | None = _owned_by(Owner.analysis, default=None)
 
+    brief_draft: BriefDraft | None = _owned_by(Owner.brief, default=None)
+    critic_verdicts: list[InsightVerdict] = _owned_by(Owner.brief, default_factory=list)  # matches the start of brief_draft.insights
+    revisions: int = _owned_by(Owner.brief, default=0)
     brief: MarketBrief | None = _owned_by(Owner.brief, default=None)
     brief_markdown: str | None = _owned_by(Owner.brief, default=None)
 
