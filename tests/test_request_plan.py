@@ -376,7 +376,7 @@ def test_after_review_outcomes():
 
 
 def drive(deps, request_text, tmp_path):
-    """Runs the real Request & Plan with the other stages stubbed, answering every Pause."""
+    """Runs the real Request & Plan, answering every Pause and stopping before fetch_agent."""
 
     async def go():
         async with aiosqlite.connect(tmp_path / "runs.sqlite") as conn:
@@ -386,7 +386,7 @@ def drive(deps, request_text, tmp_path):
             config = {"configurable": {"thread_id": "t1"}}
             command, kinds = {"request_text": request_text}, []
             while True:
-                await graph.ainvoke(command, config)
+                await graph.ainvoke(command, config, interrupt_before=["fetch_agent"])
                 snapshot = await graph.aget_state(config)
                 if not snapshot.interrupts:
                     return kinds, State.model_validate(snapshot.values)
@@ -407,7 +407,7 @@ def test_a_clear_request_reaches_fetch_agent_with_a_plan(tmp_path):
     kinds, state = drive(deps, "Data Analyst, Bangalore", tmp_path)
 
     assert "clarify" not in kinds
-    assert [e.node for e in state.run_log][:5] == ["intake", "clarity_check", "plan", "plan_review", "fetch_agent"]
+    assert [e.node for e in state.run_log] == ["intake", "clarity_check", "plan", "plan_review"]
     assert state.search_plan.titles == ["Data Analyst"]
 
 
@@ -424,6 +424,6 @@ def test_texas_goes_through_a_real_clarify_loop_to_fetch_agent(tmp_path):
 
     nodes = [e.node for e in state.run_log]
     assert kinds[0] == "clarify"
-    assert nodes[:8] == ["intake", "clarity_check", "clarify", "intake", "clarity_check", "plan", "plan_review", "fetch_agent"]
+    assert nodes == ["intake", "clarity_check", "clarify", "intake", "clarity_check", "plan", "plan_review"]
     assert state.hiring_request.role == "Software Engineer"
     assert state.search_plan.titles == ["Software Engineer"]

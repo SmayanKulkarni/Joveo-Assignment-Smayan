@@ -13,18 +13,18 @@ Source tickets (each holds the full reasoning):
 
 ## 1. What the Gateway is
 
-A plain async Python library outside the graph, between Collection's `search_jobs` tool and the jobs APIs. It protects a small daily Adzuna quota.
+A plain async Python library outside the graph, between Collection's `search_adzuna` and `search_usajobs` tools and the jobs APIs. It protects a small daily Adzuna quota.
 
 It owns:
 - `Fetch` and `FetchResult`, the typed interface
-- source choice and fan-out
+- the per-source call: `fetch(f, source)`
 - the Adzuna and USAJOBS HTTP clients and mappers
 - Duplicate coalescing (`coalesce`)
 - L1, L2, the budget guard, expiry and sweep
 - jobs-data replay, and the test fake
 
 It does **not** own:
-- the LLM-facing `search_jobs` schema, tool args → `Fetch`, or when to page ([Collection LLD](collection.md) §5)
+- the LLM-facing tool schemas, tool args → `Fetch`, which source to call, or when to page ([Collection LLD](collection.md) §5)
 - when to raise a Caveat and its wording ([Collection LLD](collection.md) §11). The Gateway only supplies the data.
 - rendering "The Adzuna API" attribution (⏳ Brief)
 - keeping federal pay apart from Adzuna salary Stats (⏳ Analysis)
@@ -59,7 +59,7 @@ class Fetch(BaseModel):
     radius_km: int               # >= 0
     max_days_old: int            # >= 1
     category: str | None         # Adzuna tag
-    page: int = 1                # >= 1, same page of each source
+    page: int = 1                # >= 1
 
 class CacheStatus(StrEnum): hit, miss, replay, store     # store is pass 2
 
@@ -77,7 +77,7 @@ class FetchResult(BaseModel):
     failures: dict[Source, str]  # sources that failed
 
 class JobsGateway:
-    async def fetch(self, f: Fetch) -> FetchResult: ...
+    async def fetch(self, f: Fetch, source: Source) -> FetchResult: ...
     def calls_left(self, source: Source) -> int | None: ...   # the store's count; None = unmetered
     # used as `async with`, which opens and closes one httpx.AsyncClient per source
 
@@ -88,17 +88,17 @@ def make_gateway(settings: Settings, transport: httpx.AsyncBaseTransport | None 
 - **Named `Fetch`,** because the glossary avoids "query" and "search" for the Hiring Request.
 - **Validation:** a validator lowercases, strips and collapses whitespace in `title`, `location` and `category`, so equal Fetches are equal objects. Any `country` outside `ADZUNA_CURRENCY` is rejected: it's a planning bug, not a source failure. The [Request & Plan LLD](request-plan.md) §6 constrains the Search Plan to the same table, which moves to `kernel/types.py`.
 - **One title per Fetch.** Adzuna's `what_or` ORs single words, so title variants can't be combined. Each variant is its own Fetch and its own L1 key.
-- **One page per call.** A `Fetch` asks for page N of each source, so one call costs at most one logical API call per source. Page size is a client constant (50 for both). Collection decides whether another page is worth it, from `total` and `calls_left`.
-- **No `sources`, work mode or target count.** The source rule picks sources, `Posting` can't carry a work mode, and L2 doesn't need a target (§11).
+- **One page per call.** A call asks one source for page N, so it costs at most one logical API call. Page size is a client constant (50 for both). Collection decides whether another page is worth it, from `total` and `calls_left`.
+- **No `source` on `Fetch`, no work mode or target count.** The source is an argument of `fetch`, so L1 keys and replay files don't change with who chose it. `Posting` can't carry a work mode, and L2 doesn't need a target (§11).
 - **`total` is disclosure only.** It may appear in Run Notes or a Caveat, labelled as the source's own match count ("Analysed 50 of about 3,200 Adzuna matches"), and is never a Stat, Evidence or a demand figure ([Adzuna aggregate endpoints](../../.scratch/gateway-lld/issues/06-adzuna-aggregate-endpoints.md)). With `cache == store` it isn't Adzuna's count, so it can't feed that disclosure.
 - `ATTRIBUTION[Source.adzuna] = "The Adzuna API"` is exported from here.
 - **`calls_left` is public** because `failures` holds plain strings, and `fetch` raises with no result when every source fails. Collection needs it to tell that broadening can't help ([Collection LLD](collection.md) §7).
 
 ## 4. Fetch flow
 
-**Source choice:** Adzuna always, USAJOBS when `country == "us"`. Sources run concurrently. The model never picks a source.
+**Source choice belongs to the model:** Collection exposes one tool per source and the model picks which to call, so tool selection shows in the trace. The Gateway only refuses `source == usajobs` with `country != "us"` (a `ValueError`, a planning bug like a bad `country`).
 
-Each source is resolved independently, first answer wins:
+The source is resolved by the first answer that wins:
 
 | # | Step | Sources | `cache` | Then |
 |---|---|---|---|---|
@@ -111,7 +111,7 @@ Each source is resolved independently, first answer wins:
 
 When `REPLAY_CACHE` is set, the answer from steps 2 to 5 is also written to the replay file, as served.
 
-Then `fetch` concatenates the sources' Postings, runs `coalesce`, and returns. Rows are written before `fetch` returns, so a kill mid-node re-serves them at no quota cost.
+Then `fetch` runs `coalesce` on the source's Postings and returns. Duplicates across the two sources are merged later, by Collection's `collect`. Rows are written before `fetch` returns, so a kill mid-node re-serves them at no quota cost.
 
 ## 5. Errors
 
@@ -450,7 +450,7 @@ Each step leaves one small `pytest` file behind. No test spends live quota.
 
 **Pass 2:** USAJOBS, L2, expiry and sweep.
 1. `usajobs.py`. Test on `usajobs_search.json`: the description starts with `JobSummary`, `:443` is gone, FAA's 1,176 locations → `("US",)`, `SY` → `None` salary, the Domain table, and blank description is a drop. A `429` is `SourceUnavailable` with no lockout.
-2. Fan-out: `country == "us"` calls both, others call Adzuna only, one source failing still returns the other. Test: a re-announced ad collapses, while NAVSEA's offices and FAA FV/FG stay apart, through `coalesce`.
+2. `fetch(f, source)`: `usajobs` with `country != "us"` raises `ValueError`, and a failing source gives `GatewayError` for that call only. Test: a re-announced ad collapses, while NAVSEA's offices and FAA FV/FG stay apart, through `coalesce`.
 3. The close-date filter, and `_purge()` for L1. Test: an expired Posting is filtered and not counted in `dropped`, a row is deleted only when all its Postings have closed, and a replay row skips both.
 4. L2 in `store.py`, `CacheStatus.store`, and steps 3 and 5 of §4. Test: the four rows of the reuse table, page N served only when full, no spend on a read-before-call hit, the fallback fills both `sources` and `failures`, an L2 answer isn't written to L1, and a replay hit returns before L2.
 5. `_purge()` for L2. Test: rows past `l2_fresh_days` are hidden on read and deleted after the next live write.
@@ -461,7 +461,7 @@ Each step leaves one small `pytest` file behind. No test spends live quota.
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
   - ⏳ **Infra shell:** shared daily budget across concurrent Runs, persistence off SQLite, MiniStack if required.
-  - **Collection:** settled in the [Collection LLD](collection.md): the `search_jobs` schema, re-applying `coalesce`, the `run_log` note for merged Duplicates, every Caveat's trigger, live calls in the replay Caveat, and FAA "Public Notice" announcements and any-word titles in Relevance.
+  - **Collection:** settled in the [Collection LLD](collection.md): the `search_adzuna` and `search_usajobs` schemas, re-applying `coalesce`, the `run_log` note for merged Duplicates, every Caveat's trigger, live calls in the replay Caveat, and FAA "Public Notice" announcements and any-word titles in Relevance.
   - ⏳ **Analysis:** federal pay apart from Adzuna salaries.
   - ⏳ **Brief:** rendering the attribution, and the `total` disclosure with Collection.
   - ⏳ **Delivery:** sample-run strategy within the Adzuna budget, and listing the aggregate exclusion in the README's known limitations.

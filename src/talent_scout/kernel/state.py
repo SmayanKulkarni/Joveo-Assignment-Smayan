@@ -1,7 +1,7 @@
 import functools
 import inspect
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from langchain_core.messages import AnyMessage
 from langgraph.types import Command, Send
@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, JsonValue, TypeAdapter, ValidationError
 
 from talent_scout.analysis.types import Extraction
 from talent_scout.brief.types import MarketBrief
+from talent_scout.collection.types import FetchRecord
 from talent_scout.kernel.types import (
     Assumption,
     ClarifyingQuestion,
@@ -72,6 +73,11 @@ class State(Model):
     postings: dict[str, Posting] = _owned_by(Owner.collection, default_factory=dict)
     sample: list[str] = _owned_by(Owner.collection, default_factory=list)
     broadened_plans: list[SearchPlan] = _owned_by(Owner.collection, default_factory=list)
+    fetches: list[FetchRecord] = _owned_by(Owner.collection, default_factory=list)
+    relevance_verdicts: dict[str, bool] = _owned_by(Owner.collection, default_factory=dict)
+    fetch_blocked: str | None = _owned_by(Owner.collection, default=None)
+    low_data_decision: Literal["broaden", "continue", "abort"] | None = _owned_by(Owner.collection, default=None)
+    low_data_guidance: str | None = _owned_by(Owner.collection, default=None)
 
     extractions: Annotated[dict[str, Extraction], merge] = _owned_by(Owner.analysis, default_factory=dict)
     stats: MarketStats | None = _owned_by(Owner.analysis, default=None)

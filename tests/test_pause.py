@@ -2,6 +2,7 @@ import pytest
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from pydantic import TypeAdapter, ValidationError
 
+from talent_scout.collection.testing import posting, record
 from talent_scout.collection.types import LowDataAnswer, LowDataPayload
 from talent_scout.kernel.types import ClarifyingQuestion, RequestField, SearchPlan, WorkMode
 from talent_scout.request_plan.types import (
@@ -26,10 +27,13 @@ PLAN = SearchPlan(
     titles=["Engineer"], country="us", location="Texas", radius_km=0,
     max_days_old=30, target_postings=50, category=None,
 )
+LOW_DATA = LowDataPayload(
+    count=3, target=50, attempts=2, plans=[PLAN], fetched=12, rejected=9, calls_left=4, blocked=None,
+)
 PAUSES = [
     ClarifyPause(payload=ClarifyPayload(questions=[QUESTION])),
     PlanReviewPause(payload=PlanReviewPayload(plan=PLAN, assumptions=[])),
-    LowDataPause(payload=LowDataPayload(count=3, target=50)),
+    LowDataPause(payload=LOW_DATA),
 ]
 DRAFT = RequestDraft(
     role="Engineer", location="Texas", country="us", seniority=None, employment_type=None,
@@ -40,6 +44,9 @@ VALUES = [
     ClarifyAnswer(answers=["Software"]),
     PlanReviewAnswer(action=PlanAction.edit, plan=PLAN, feedback=None),
     LowDataAnswer(action="continue"),
+    LowDataAnswer(action="broaden", guidance="Try wider"),
+    # Source-keyed dicts and enums inside a record must survive too.
+    record([posting("1")]),
     DRAFT,
 ]
 
@@ -59,8 +66,8 @@ def test_strict_mode_blocks_a_class_off_the_allowlist():
 
 
 def test_pause_union_picks_its_class_by_kind():
-    pause = TypeAdapter(Pause).validate_python({"kind": "low_data_review", "payload": {"count": 1, "target": 2}})
-    assert pause == LowDataPause(payload=LowDataPayload(count=1, target=2))
+    pause = TypeAdapter(Pause).validate_python({"kind": "low_data_review", "payload": LOW_DATA.model_dump()})
+    assert pause == LowDataPause(payload=LOW_DATA)
 
 
 @pytest.mark.parametrize(

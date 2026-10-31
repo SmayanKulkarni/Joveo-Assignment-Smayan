@@ -2,11 +2,17 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
+from talent_scout.collection.nodes import ROUTERS as COLLECTION_ROUTERS
+from talent_scout.collection.nodes import make_nodes as collection_nodes
 from talent_scout.kernel.state import State, owned
 from talent_scout.request_plan.nodes import ROUTERS as REQUEST_PLAN_ROUTERS
 from talent_scout.request_plan.nodes import make_nodes as request_plan_nodes
 from talent_scout.runtime.deps import Deps, Node, Router
-from talent_scout.runtime.testing import STUB_ROUTERS, stub_nodes
+from talent_scout.runtime.testing import STUB_ROUTERS, stub_fan_out, stub_nodes
+
+# Until Analysis lands, its fan_out is the stub, which sends everything to stats.
+fan_out = stub_fan_out
+FAN_OUT_ROUTERS = ("relevance", "low_data_review")
 
 EDGES = [
     (START, "intake"), ("intake", "clarity_check"), ("clarify", "intake"),
@@ -19,7 +25,7 @@ CONDITIONAL = {
     "clarity_check":   ["clarify", "plan", END],
     "plan_review":     ["fetch_agent", "plan", END],
     "fetch_agent":     ["tools", "collect"],
-    "relevance":       ["batch_extract", "broaden", "low_data_review"],
+    "relevance":       ["batch_extract", "stats", "broaden", "low_data_review"],
     "low_data_review": ["broaden", "batch_extract", "stats", END],
     "critic":          ["write_brief", "render"],
 }
@@ -32,6 +38,15 @@ OWNERS = {
 _OWNER_OF = {node: owner for owner, nodes in OWNERS.items() for node in nodes}
 
 
+def _with_fan_out(router: Router) -> Router:
+    # Collection returns "analyse" because Send payloads belong to Analysis, and a stage can't import another.
+    def routed(state: State):
+        out = router(state)
+        return fan_out(state) if out == "analyse" else out
+
+    return routed
+
+
 def build_graph(deps: Deps, saver: BaseCheckpointSaver | None) -> CompiledStateGraph:
     # A landed stage's make_nodes(deps) and ROUTERS go here and override its stubs.
     real_nodes: dict[str, Node] = {}
@@ -39,8 +54,12 @@ def build_graph(deps: Deps, saver: BaseCheckpointSaver | None) -> CompiledStateG
     if not deps.stub_stages:
         real_nodes.update(request_plan_nodes(deps))
         real_routers.update(REQUEST_PLAN_ROUTERS)
+        real_nodes.update(collection_nodes(deps))
+        real_routers.update(COLLECTION_ROUTERS)
     nodes = {**stub_nodes(), **real_nodes}
     routers = {**STUB_ROUTERS, **real_routers}
+    for name in FAN_OUT_ROUTERS:
+        routers[name] = _with_fan_out(routers[name])
 
     builder = StateGraph(State)
     for name, fn in nodes.items():

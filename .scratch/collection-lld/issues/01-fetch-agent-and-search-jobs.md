@@ -1,4 +1,4 @@
-# The fetch agent and search_jobs
+# The fetch agent and its source tools
 
 Type: grilling
 Status: resolved
@@ -13,7 +13,8 @@ What does the model control when fetching, how do Postings get from a tool call 
 
 Decided by grilling.
 
-- **`search_jobs(title, page=1)`.** Country, location, radius, `max_days_old` and category are pinned by code from `current_plan`, so the model can't drift from the plan the user approved. The title may be any string, not only one from the plan, because the model's judgement on variants is the point of having an agent.
+- **Revised: two tools, `search_adzuna` and `search_usajobs`, each `(title, page=1)`.** The original single `search_jobs` is superseded: the spec evaluates tool calling, so the model must choose the tool, visibly in the trace. `search_usajobs` is bound only for `country == "us"`. The Gateway call becomes `fetch(f, source)`, and `FetchRecord` gains `source`. Reasons and costs are in the Collection LLD §5. Bullets below that say "one tool" are the superseded decision.
+- **`search_jobs(title, page=1)` (superseded).** Country, location, radius, `max_days_old` and category are pinned by code from `current_plan`, so the model can't drift from the plan the user approved. The title may be any string, not only one from the plan, because the model's judgement on variants is the point of having an agent.
 - **One tool, disclosed.** The spec says "use tool calling so the model decides which tool to use", while the Gateway LLD fixed one tool. The model decides titles, pages and when to stop, but never which tool. A second tool such as `get_search_status` would only repeat what tool messages say, so it isn't built. The write-up says so.
 - **`fetch_results: list[FetchResult]`.** A new Collection slice written by `tools`, read by `collect` and cleared by `broaden`. `ToolMessage.artifact` is untyped, so strict msgpack blocks models there, and 50 Postings per call don't belong in history.
 - **The model sees a summary:** new-Posting count, each source's total, `calls_left`, failures and a few sample titles.

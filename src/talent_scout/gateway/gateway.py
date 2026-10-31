@@ -12,6 +12,7 @@ from talent_scout.gateway.http import TIMEOUT
 from talent_scout.gateway.store import POSTINGS, Store, without_closed
 from talent_scout.gateway.types import CacheStatus, Fetch, FetchResult, GatewayError, Page, SourceOutcome
 from talent_scout.gateway.usajobs import UsajobsClient
+from talent_scout.kernel.events import emit
 from talent_scout.kernel.replay import Replay, open_replay
 from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.types import Posting, Source
@@ -114,29 +115,26 @@ class JobsGateway:
             run.add_outputs({"count": len(page.postings), "dropped": page.dropped, "total": page.total})
         return page.postings, outcome, failure
 
-    async def fetch(self, f: Fetch) -> FetchResult:
+    def calls_left(self, source: Source) -> int | None:
+        # Public because a failed source returns no result, so Collection can't read the budget from one.
+        return self._store.calls_left(source)
+
+    async def fetch(self, f: Fetch, source: Source) -> FetchResult:
         if not self._clients:
             raise RuntimeError("JobsGateway must be opened with `async with` before fetch")
-        # Adzuna always; USAJOBS only covers the US.
-        names = [s for s in self._clients if s == Source.adzuna or f.country == "us"]
-        answers = await asyncio.gather(*(self._resolve(s, f) for s in names), return_exceptions=True)
-
-        postings, sources, failures = [], {}, {}
-        for source, answer in zip(names, answers):
-            if isinstance(answer, GatewayError):
-                failures[source] = str(answer)
-            elif isinstance(answer, BaseException):
-                raise answer  # SourceRejected and bugs stop the Run, even if another source answered
-            else:
-                source_postings, sources[source], failure = answer
-                postings += source_postings
-                if failure:  # L2 answered for a source whose live call failed, and Collection still needs to know
-                    failures[source] = failure
-        if not sources:
-            raise GatewayError("; ".join(f"{s}: {m}" for s, m in failures.items()))
-
+        # The model picks the source; USAJOBS only covers the US, so anything else is a planning bug.
+        if source == Source.usajobs and f.country != "us":
+            raise ValueError(f"usajobs only covers country 'us', not {f.country!r}")
+        # A failed source raises GatewayError and SourceRejected stops the Run, both straight from here.
+        try:
+            postings, outcome, failure = await self._resolve(source, f)
+        except Exception:
+            emit({"type": "api_called", "source": source, "cached": False, "count": 0, "failed": True})
+            raise
+        emit({"type": "api_called", "source": source, "cached": outcome.cache != CacheStatus.miss, "count": len(postings), "failed": False})
         kept, merged = coalesce(postings)
-        return FetchResult(postings=kept, merged=merged, sources=sources, failures=failures)
+        # `failure` is set when L2 answered for a source whose live call failed, and Collection still needs to know.
+        return FetchResult(postings=kept, merged=merged, sources={source: outcome}, failures={source: failure} if failure else {})
 
 
 def make_gateway(settings: Settings, transport: httpx.AsyncBaseTransport | None = None) -> JobsGateway:

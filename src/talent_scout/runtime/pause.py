@@ -2,8 +2,9 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from talent_scout.collection.types import LowDataAnswer, LowDataPayload
-from talent_scout.kernel.types import Model, RequestField, WorkMode
+from talent_scout.collection.types import FetchRecord, LowDataAnswer, LowDataPayload
+from talent_scout.gateway.types import CacheStatus
+from talent_scout.kernel.types import Model, PayPeriod, RequestField, Source, WorkMode
 from talent_scout.request_plan.types import (
     ClarifyAnswer,
     ClarifyPayload,
@@ -36,5 +37,8 @@ ANSWERS = {"clarify": ClarifyAnswer, "plan_review": PlanReviewAnswer, "low_data_
 # class path, and an unlisted one logs a "blocked" warning on every load.
 ALLOWED_MSGPACK = [
     (cls.__module__, cls.__name__)
-    for cls in (ClarifyPause, PlanReviewPause, LowDataPause, *ANSWERS.values(), PlanAction, RequestField, RequestDraft, WorkMode)
+    for cls in (
+        ClarifyPause, PlanReviewPause, LowDataPause, *ANSWERS.values(), PlanAction, RequestField, RequestDraft, WorkMode,
+        FetchRecord, CacheStatus, Source, PayPeriod,
+    )
 ]

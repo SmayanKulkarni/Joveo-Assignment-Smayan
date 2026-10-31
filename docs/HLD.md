@@ -35,7 +35,7 @@ flowchart LR
 ```
 
 - **Stack**: Python, LangChain + LangGraph, OpenRouter for every LLM call and for Jev, LangSmith tracing. API keys live in the root `.env`.
-- **Jobs sources**: Adzuna is the primary source. USAJOBS is used only for US locations and covers federal roles only. The model reaches them through one LangChain `search_jobs` tool; the Gateway picks the sources, merges them and collapses Duplicates. The model never calls the APIs directly. ([Gateway query interface](../.scratch/gateway-lld/issues/02-gateway-query-interface.md)) ([Jobs sources and tool execution](../.scratch/talent-scout-hld/issues/03-jobs-sources-and-tool-execution.md))
+- **Jobs sources**: Adzuna is the primary source. USAJOBS is used only for US locations and covers federal roles only. The model reaches them through two LangChain tools, `search_adzuna` and `search_usajobs` (the second bound only for US plans), and chooses between them; the Gateway calls the chosen source, and Collection merges the two and collapses Duplicates. The model never calls the APIs directly. ([Gateway query interface](../.scratch/gateway-lld/issues/02-gateway-query-interface.md)) ([Jobs sources and tool execution](../.scratch/talent-scout-hld/issues/03-jobs-sources-and-tool-execution.md))
 - **Clients call only the Run Controller.** It offers four operations: start, resume, stream events and get state. Clients never touch the graph directly. ([Client surfaces and the Run Controller](../.scratch/talent-scout-hld/issues/09-client-surfaces-and-run-controller.md))
 
 ## 3. Components
@@ -47,7 +47,7 @@ The system is split by concern, not one component per node. The Kernel declares 
 | A | **Kernel** | State schema and reducers, domain types, LLM tier factory, Jev classifier wrapper and all Jev thresholds | `run_log` (append-only; every node writes to it) |
 | B | **Jobs Data Gateway** | Adzuna and USAJOBS clients, L1 cache, budget guard, replay mode, expiry and sweep; the L2 store comes later | none (outside the graph) |
 | C | **Request & Plan** | `intake`, `clarity_check`, `clarify` ⏸, `plan`, `plan_review` ⏸ | Hiring Request, Clarifying Questions and answers, Assumptions, Search Plan |
-| D | **Collection** | `search_jobs` tool, `fetch_agent`, `tools` executor, `collect`, `relevance`, Sufficiency rule, `broaden`, `low_data_review` ⏸ | tool messages, Fetch records, Postings, relevance verdicts, Sample, broadened plans, the low-data answer |
+| D | **Collection** | `search_adzuna` and `search_usajobs` tools, `fetch_agent`, `tools` executor, `collect`, `relevance`, Sufficiency rule, `broaden`, `low_data_review` ⏸ | tool messages, Fetch records, Postings, relevance verdicts, Sample, broadened plans, the low-data answer |
 | E | **Analysis** | `batch_extract` (Send fan-out and its reducer), `stats` | per-Posting extractions, stats |
 | F | **Brief** | `write_brief`, `critic`, `render`, building the Run Notes from `run_log` | brief draft, critic verdicts, final JSON and Markdown |
 | G | **Runtime** | Graph wiring and compile, SQLite checkpointer and Store, run registry, Run Controller, event stream, Pause protocol, concurrent-resume guard | nothing in graph state; owns threads and the registry |

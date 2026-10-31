@@ -19,7 +19,7 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (component D in [
 
 <!-- one line per closed ticket -->
 
-- [The fetch agent and search_jobs](issues/01-fetch-agent-and-search-jobs.md): one tool taking only `title` and `page`, cheap tier, 6 Fetches per Attempt, with results in their own slice and only a summary in messages.
+- [The fetch agent and its source tools](issues/01-fetch-agent-and-search-jobs.md): two tools, `search_adzuna` and `search_usajobs`, each taking only `title` and `page`, cheap tier, 6 Fetches per Attempt, with results in their own slice and only a summary in messages.
 - [What Relevant means and how it is judged](issues/02-relevance.md): role only, one Jev request per Posting, verdicts kept across Attempts, and the Sample draws on every Attempt.
 - [Sufficiency, broaden and blocked Attempts](issues/03-sufficiency-broaden-and-blocked-attempts.md): `len(sample) >= target` with 2 broadens, USAJOBS counted, `broaden` can't touch country or target, and `fetch_blocked` skips straight to the Pause.
 - [The low_data_review Pause](issues/04-low-data-review.md): the payload shows counts, plans and the block reason; the answer is an action plus optional guidance, and `broaden` is always allowed.

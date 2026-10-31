@@ -10,6 +10,7 @@ from pathlib import Path
 import httpx
 import langsmith as ls
 import pytest
+from langgraph.graph import END, START, StateGraph
 from unittest.mock import MagicMock
 
 from talent_scout.gateway import http
@@ -21,6 +22,7 @@ from talent_scout.gateway.store import Store
 from talent_scout.gateway.testing import FakeGateway
 from talent_scout.gateway.types import BudgetExhausted, CacheStatus, Fetch, FetchResult, GatewayError, SourceOutcome, SourceRejected, SourceUnavailable
 from talent_scout.gateway.usajobs import UsajobsClient
+from talent_scout.kernel.state import State
 from talent_scout.kernel.testing import make_settings
 from talent_scout.kernel.types import Salary, Source
 
@@ -58,24 +60,24 @@ def route(adzuna, usajobs=None):
     return lambda request: (usajobs if request.url.host == USAJOBS_HOST else adzuna)(request)
 
 
-def run_all(handler, *fetches, settings=None, usajobs=None):
-    """Fetches in order through one open gateway."""
+def run_all(handler, *fetches, settings=None, usajobs=None, source=Source.adzuna):
+    """Fetches in order, all of one source, through one open gateway."""
     async def go():
         async with make_gateway(settings or gateway_settings(), transport=httpx.MockTransport(route(handler, usajobs))) as gw:
-            return [await gw.fetch(f) for f in fetches]
+            return [await gw.fetch(f, source) for f in fetches]
 
     return asyncio.run(go())
 
 
-def run_fetch_keeping_db(handler, f=None, settings=None, usajobs=None):
+def run_fetch_keeping_db(handler, f=None, settings=None, usajobs=None, source=Source.adzuna):
     """One fetch against whatever gateway_db already holds, like a restarted process."""
-    return run_all(handler, f or make_fetch(), settings=settings, usajobs=usajobs)[0]
+    return run_all(handler, f or make_fetch(), settings=settings, usajobs=usajobs, source=source)[0]
 
 
-def run_fetch(handler, f=None, settings=None, usajobs=None):
+def run_fetch(handler, f=None, settings=None, usajobs=None, source=Source.adzuna):
     # Starts from an empty gateway_db, so serving a different body for the same Fetch never meets an old L1 row.
     (settings or gateway_settings()).gateway_db.unlink(missing_ok=True)
-    return run_fetch_keeping_db(handler, f, settings, usajobs)
+    return run_fetch_keeping_db(handler, f, settings, usajobs, source)
 
 
 def run_search(handler, f=None, client_cls=AdzunaClient):
@@ -315,7 +317,7 @@ def test_adzuna_429_is_budget_exhausted_with_no_retry():
 
 def test_fetch_outside_async_with_is_a_usage_error():
     with pytest.raises(RuntimeError, match="async with"):
-        asyncio.run(make_gateway(gateway_settings()).fetch(make_fetch()))
+        asyncio.run(make_gateway(gateway_settings()).fetch(make_fetch(), Source.adzuna))
 
 
 def test_body_without_results_is_source_unavailable():
@@ -437,7 +439,7 @@ def test_concurrent_identical_fetches_share_one_call():
 
     async def go():
         async with make_gateway(gateway_settings(), transport=httpx.MockTransport(route(serve(fixture_body("adzuna_search"), seen=seen)))) as gw:
-            return await asyncio.gather(gw.fetch(make_fetch()), gw.fetch(make_fetch()))
+            return await asyncio.gather(gw.fetch(make_fetch(), Source.adzuna), gw.fetch(make_fetch(), Source.adzuna))
 
     a, b = asyncio.run(go())
     assert len(seen) == 1
@@ -460,7 +462,7 @@ def test_empty_result_list_is_cached_but_failures_and_bad_bodies_are_not():
 def test_rows_are_committed_before_fetch_returns_and_hold_no_credentials():
     async def go():
         async with make_gateway(gateway_settings(), transport=httpx.MockTransport(route(serve(fixture_body("adzuna_search"))))) as gw:
-            await gw.fetch(make_fetch())
+            await gw.fetch(make_fetch(), Source.adzuna)
             return db_exec("SELECT source, fetch, postings, expires_at FROM l1")  # a second connection, gateway still open
 
     ((source, key, postings, expires_at),) = asyncio.run(go())
@@ -528,9 +530,26 @@ def test_fake_gateway_returns_canned_results_in_order():
 
     async def go():
         async with FakeGateway([first, second]) as gw:
-            return await gw.fetch(make_fetch()), await gw.fetch(make_fetch(page=2))
+            return await gw.fetch(make_fetch(), Source.adzuna), await gw.fetch(make_fetch(page=2), Source.adzuna)
 
     assert asyncio.run(go()) == (first, second)
+
+
+def test_calls_left_is_public_on_the_real_gateway_and_settable_on_the_fake():
+    async def go():
+        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(route(serve(fixture_body("adzuna_search"))))) as gw:
+            before = gw.calls_left(Source.adzuna), gw.calls_left(Source.usajobs)
+            await gw.fetch(make_fetch(), Source.adzuna)
+            return before, gw.calls_left(Source.adzuna)
+
+    gateway_settings().gateway_db.unlink(missing_ok=True)
+    limit = gateway_settings().adzuna_daily_limit
+    assert asyncio.run(go()) == ((limit, None), limit - 1)
+
+    fake = FakeGateway([])
+    assert fake.calls_left(Source.adzuna) is None
+    fake.left[Source.adzuna] = 0
+    assert fake.calls_left(Source.adzuna) == 0
 
 
 # --- replay ---
@@ -594,7 +613,7 @@ def traced_fetch(handler, *fetches):
     async def go():
         async with make_gateway(gateway_settings(), transport=httpx.MockTransport(route(handler))) as gw:
             with ls.trace("run", "chain"):
-                return [await gw.fetch(f) for f in fetches]
+                return [await gw.fetch(f, Source.adzuna) for f in fetches]
 
     with ls.tracing_context(enabled=True, client=client):
         out = asyncio.run(go())
@@ -778,31 +797,37 @@ def test_usajobs_body_without_search_result_is_source_unavailable():
 
 
 def test_usajobs_reports_no_calls_left():
-    out = run_fetch(serve({"count": 0, "results": []}), usajobs=serve(fixture_body("usajobs_search")))
+    out = run_fetch(serve({"count": 0, "results": []}), usajobs=serve(fixture_body("usajobs_search")), source=Source.usajobs)
     assert out.sources[Source.usajobs].calls_left is None
     assert out.sources[Source.usajobs].total == 65
 
 
-# --- fan-out ---
+# --- source choice ---
 
 def empty_adzuna():
     return serve({"count": 0, "results": []})
 
 
-def test_us_calls_both_sources_and_other_countries_call_adzuna_only():
+def test_a_call_reaches_only_the_source_it_names():
     adzuna_seen, usajobs_seen = [], []
-    us = run_fetch(
-        serve(fixture_body("adzuna_search"), seen=adzuna_seen), usajobs=serve(fixture_body("usajobs_search"), seen=usajobs_seen)
-    )
-    assert set(us.sources) == {Source.adzuna, Source.usajobs} and us.failures == {}
-    assert {p.source for p in us.postings} == {Source.adzuna, Source.usajobs}
+    adzuna, usajobs = serve(fixture_body("adzuna_search"), seen=adzuna_seen), serve(fixture_body("usajobs_search"), seen=usajobs_seen)
+    a = run_fetch(adzuna, usajobs=usajobs)
+    assert set(a.sources) == {Source.adzuna} and len(adzuna_seen) == 1 and usajobs_seen == []
 
-    adzuna_seen.clear(), usajobs_seen.clear()
-    gb = run_fetch(serve(fixture_body("adzuna_search"), seen=adzuna_seen), make_fetch(country="gb"), usajobs=serve({}, seen=usajobs_seen))
-    assert set(gb.sources) == {Source.adzuna} and len(adzuna_seen) == 1 and usajobs_seen == []
+    adzuna_seen.clear()
+    u = run_fetch(adzuna, usajobs=usajobs, source=Source.usajobs)
+    assert set(u.sources) == {Source.usajobs} and adzuna_seen == [] and len(usajobs_seen) == 1
+    assert {p.source for p in u.postings} == {Source.usajobs}
 
 
-def test_both_sources_are_in_flight_at_once():
+def test_usajobs_outside_the_us_is_refused_without_a_call():
+    seen = []
+    with pytest.raises(ValueError, match="usajobs"):
+        run_fetch(serve({}, seen=seen), make_fetch(country="gb"), usajobs=serve({}, seen=seen), source=Source.usajobs)
+    assert seen == []
+
+
+def test_two_sources_can_be_in_flight_at_once():
     arrived, both = set(), asyncio.Event()
 
     def rendezvous(body):
@@ -810,26 +835,31 @@ def test_both_sources_are_in_flight_at_once():
             arrived.add(request.url.host)
             if len(arrived) == 2:
                 both.set()
-            await asyncio.wait_for(both.wait(), 1)  # a sequential fan-out would time out here
+            await asyncio.wait_for(both.wait(), 1)  # calls that waited on each other would time out here
             return httpx.Response(200, json=body)
 
         return handler
 
-    out = run_fetch(rendezvous({"count": 0, "results": []}), usajobs=rendezvous(usajobs_page([])))
-    assert set(out.sources) == {Source.adzuna, Source.usajobs}
+    async def go():
+        transport = httpx.MockTransport(route(rendezvous({"count": 0, "results": []}), rendezvous(usajobs_page([]))))
+        async with make_gateway(gateway_settings(), transport=transport) as gw:
+            return await asyncio.gather(gw.fetch(make_fetch(), Source.adzuna), gw.fetch(make_fetch(), Source.usajobs))
+
+    gateway_settings().gateway_db.unlink(missing_ok=True)
+    a, u = asyncio.run(go())
+    assert set(a.sources) == {Source.adzuna} and set(u.sources) == {Source.usajobs}
 
 
-def test_one_source_failing_still_returns_the_other():
-    out = run_fetch(serve(fixture_body("adzuna_search")), usajobs=serve({}, status=500))
-    assert set(out.sources) == {Source.adzuna} and set(out.failures) == {Source.usajobs} and out.postings
+def test_a_failing_source_raises_for_its_own_call_only():
+    adzuna_ok, usajobs_down = serve(fixture_body("adzuna_search")), serve({}, status=500)
+    assert run_fetch(adzuna_ok, usajobs=usajobs_down).postings
+    with pytest.raises(GatewayError, match="usajobs"):
+        run_fetch(adzuna_ok, usajobs=usajobs_down, source=Source.usajobs)
 
-    out = run_fetch(serve({}, status=500), usajobs=serve(fixture_body("usajobs_search")))
-    assert set(out.sources) == {Source.usajobs} and set(out.failures) == {Source.adzuna} and out.postings
 
-
-def test_source_rejected_from_one_source_wins_over_a_result_from_the_other():
+def test_source_rejected_names_the_source_that_was_called():
     with pytest.raises(SourceRejected) as e:
-        run_fetch(serve(fixture_body("adzuna_search")), usajobs=serve({}, status=401))
+        run_fetch(serve(fixture_body("adzuna_search")), usajobs=serve({}, status=401), source=Source.usajobs)
     assert e.value.source == Source.usajobs
 
     with pytest.raises(SourceRejected) as e:
@@ -838,7 +868,7 @@ def test_source_rejected_from_one_source_wins_over_a_result_from_the_other():
 
 
 def test_navsea_offices_stay_apart_a_re_announced_ad_collapses_and_faa_pay_plans_stay_apart():
-    out = run_fetch(empty_adzuna(), usajobs=serve(fixture_body("usajobs_search")))
+    out = run_fetch(empty_adzuna(), usajobs=serve(fixture_body("usajobs_search")), source=Source.usajobs)
     ids = {p.source_id for p in out.postings}
     # Same title, employer and pay, but each office writes its own duties, so these are different jobs.
     assert {"889483500", "889352000"} <= ids
@@ -850,7 +880,7 @@ def test_navsea_offices_stay_apart_a_re_announced_ad_collapses_and_faa_pay_plans
     twin = usajobs_item(
         "889352000", details={"MajorDuties": ad["UserArea"]["Details"]["MajorDuties"]}, QualificationSummary=ad["QualificationSummary"]
     )
-    out = run_fetch(empty_adzuna(), usajobs=serve(usajobs_page([usajobs_item("889483500"), twin])))
+    out = run_fetch(empty_adzuna(), usajobs=serve(usajobs_page([usajobs_item("889483500"), twin])), source=Source.usajobs)
     (kept,) = out.postings
     assert sorted([kept.source_id, *(k.split(":")[1] for k in out.merged[kept.key])]) == ["889352000", "889483500"]
 
@@ -866,12 +896,12 @@ def usajobs_rows():
 
 def test_expired_postings_are_filtered_on_hits_and_fresh_responses_and_not_counted_as_dropped(set_today):
     handler, usajobs = empty_adzuna(), serve(fixture_body("usajobs_search"))
-    first = run_fetch(handler, usajobs=usajobs)
+    first = run_fetch(handler, usajobs=usajobs, source=Source.usajobs)
     assert len(first.postings) + sum(len(v) for v in first.merged.values()) == 25  # nothing has closed on the recording day
 
     set_today(date(2026, 11, 3))
-    hit = run_fetch_keeping_db(handler, usajobs=usajobs)
-    fresh = run_fetch(handler, usajobs=usajobs)
+    hit = run_fetch_keeping_db(handler, usajobs=usajobs, source=Source.usajobs)
+    fresh = run_fetch(handler, usajobs=usajobs, source=Source.usajobs)
     for out, cache in ((hit, CacheStatus.hit), (fresh, CacheStatus.miss)):
         outcome = out.sources[Source.usajobs]
         assert outcome.cache == cache and outcome.dropped == 0
@@ -885,23 +915,23 @@ def test_purge_after_a_live_write_deletes_only_rows_whose_postings_have_all_clos
     later = usajobs_item("889536100", ApplicationCloseDate="2027-01-01T23:59:59.9970")
     all_closed, mixed, all_open = (make_fetch(page=n) for n in (1, 2, 3))
 
-    run_fetch(handler, all_closed, usajobs=serve(usajobs_page([closing])))
-    run_fetch_keeping_db(handler, mixed, usajobs=serve(usajobs_page([closing, later])))
+    run_fetch(handler, all_closed, usajobs=serve(usajobs_page([closing])), source=Source.usajobs)
+    run_fetch_keeping_db(handler, mixed, usajobs=serve(usajobs_page([closing, later])), source=Source.usajobs)
     assert len(usajobs_rows()) == 2  # still open on the day they were written
 
     set_today(date(2026, 11, 1))
-    run_fetch_keeping_db(handler, all_open, usajobs=serve(usajobs_page([later])))
+    run_fetch_keeping_db(handler, all_open, usajobs=serve(usajobs_page([later])), source=Source.usajobs)
     assert usajobs_rows() == [(mixed.model_dump_json(),), (all_open.model_dump_json(),)]
 
 
 def test_replay_row_skips_the_close_date_filter_and_the_purge(set_today, tmp_path):
     s = replay_settings(tmp_path)
     usajobs = serve(fixture_body("usajobs_search"))
-    run_fetch(empty_adzuna(), settings=s, usajobs=usajobs)
+    run_fetch(empty_adzuna(), settings=s, usajobs=usajobs, source=Source.usajobs)
     db_exec("UPDATE l1 SET expires_at = '2026-10-01'")  # a row that a purge would delete
 
     set_today(date(2026, 11, 3))
-    out = run_fetch_keeping_db(empty_adzuna(), settings=s, usajobs=serve({}, status=500))
+    out = run_fetch_keeping_db(empty_adzuna(), settings=s, usajobs=serve({}, status=500), source=Source.usajobs)
     assert out.sources[Source.usajobs].cache == CacheStatus.replay
     assert len(out.postings) + sum(len(v) for v in out.merged.values()) == 25  # closed Postings included
     assert len(usajobs_rows()) == 1
@@ -1041,16 +1071,16 @@ def test_serving_from_l2_leaves_last_seen_alone_and_reports_the_oldest():
 @pytest.mark.parametrize("status", [500, 429])
 def test_failed_live_call_falls_back_to_l2s_partial_page_and_still_reports_the_failure(status):
     store_page(adzuna_batch(10))
-    out = run_fetch_keeping_db(serve({}, status=status), make_fetch(max_days_old=45), usajobs=serve(usajobs_page([])))
+    out = run_fetch_keeping_db(serve({}, status=status), make_fetch(max_days_old=45))
     o = out.sources[Source.adzuna]
     assert (o.cache, o.total, o.dropped, len(out.postings)) == (CacheStatus.store, 10, 0, 10)
-    assert set(out.failures) == {Source.adzuna} and set(out.sources) == {Source.adzuna, Source.usajobs}
+    assert set(out.failures) == {Source.adzuna} and set(out.sources) == {Source.adzuna}
 
 
-def test_failed_live_call_with_no_l2_matches_only_reports_the_failure():
+def test_failed_live_call_with_no_l2_matches_raises_the_failure():
     store_page(adzuna_batch(10))
-    out = run_fetch_keeping_db(serve({}, status=500), make_fetch(title="nurse"), usajobs=serve(usajobs_page([])))
-    assert set(out.sources) == {Source.usajobs} and set(out.failures) == {Source.adzuna}
+    with pytest.raises(GatewayError, match="adzuna"):
+        run_fetch_keeping_db(serve({}, status=500), make_fetch(title="nurse"))
 
 
 def test_a_rejected_call_is_not_covered_for_by_l2():
@@ -1079,15 +1109,17 @@ def test_replay_hit_returns_before_l2(tmp_path):
 
 
 def test_usajobs_postings_are_never_stored_in_l2():
-    out = run_fetch(serve(adzuna_page(adzuna_batch(3))), usajobs=serve(fixture_body("usajobs_search")))
-    assert {p.source for p in out.postings} == {Source.adzuna, Source.usajobs}
+    adzuna, usajobs = serve(adzuna_page(adzuna_batch(3))), serve(fixture_body("usajobs_search"))
+    run_fetch(adzuna, usajobs=usajobs)
+    out = run_fetch_keeping_db(adzuna, usajobs=usajobs, source=Source.usajobs)
+    assert {p.source for p in out.postings} == {Source.usajobs}
     assert {key.split(":")[0] for key, *_ in l2_rows()} == {"adzuna"}
 
 
 def test_l2_row_that_no_longer_validates_is_skipped():
     store_page(adzuna_batch(50))
     db_exec("UPDATE l2_postings SET posting = ? WHERE key = 'adzuna:0007'", '{"title": "old shape"}')
-    out = run_fetch_keeping_db(serve({}, status=500), make_fetch(max_days_old=45), usajobs=serve(usajobs_page([])))
+    out = run_fetch_keeping_db(serve({}, status=500), make_fetch(max_days_old=45))
     assert out.sources[Source.adzuna].total == 49 and Source.adzuna in out.failures  # a short page, so the call was tried
 
 
@@ -1098,3 +1130,23 @@ def test_l2_rows_past_the_fresh_window_are_hidden_on_read_and_deleted_after_the_
     out = run_fetch_keeping_db(serve(adzuna_page(adzuna_batch(3, 900)), seen=seen), make_fetch(max_days_old=45, **GB))
     assert len(seen) == 1 and out.sources[Source.adzuna].cache == CacheStatus.miss  # 50 stale rows would have filled the page
     assert [key for key, *_ in l2_rows()] == ["adzuna:0900", "adzuna:0901", "adzuna:0902"]
+
+
+def test_fetch_emits_one_api_called_per_call_inside_a_graph_including_a_failed_one():
+    async def go():
+        async with make_gateway(gateway_settings(), transport=httpx.MockTransport(route(serve(adzuna_page(adzuna_batch(3)))))) as gw:
+            async def node(state):
+                await gw.fetch(make_fetch(), Source.adzuna)  # a miss
+                await gw.fetch(make_fetch(), Source.adzuna)  # a hit
+                with pytest.raises(GatewayError):
+                    await gw.fetch(make_fetch(), Source.usajobs)  # route() answers USAJOBS with a 503
+                return {}
+
+            graph = StateGraph(State).add_node("fetch_agent", node).add_edge(START, "fetch_agent").add_edge("fetch_agent", END).compile()
+            return [chunk async for chunk in graph.astream({"request_text": "x"}, stream_mode="custom")]
+
+    assert asyncio.run(go()) == [
+        {"type": "api_called", "source": Source.adzuna, "cached": False, "count": 3, "failed": False},
+        {"type": "api_called", "source": Source.adzuna, "cached": True, "count": 3, "failed": False},
+        {"type": "api_called", "source": Source.usajobs, "cached": False, "count": 0, "failed": True},
+    ]

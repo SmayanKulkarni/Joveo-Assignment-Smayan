@@ -48,7 +48,10 @@ async def _plan_review(state: State) -> dict:
 
 
 async def _low_data_review(state: State) -> dict:
-    answer = interrupt(LowDataPause(payload=LowDataPayload(count=0, target=_PLAN.target_postings)))
+    payload = LowDataPayload(
+        count=0, target=_PLAN.target_postings, attempts=1, plans=[_PLAN], fetched=0, rejected=0, calls_left=None, blocked=None
+    )
+    answer = interrupt(LowDataPause(payload=payload))
     return log(state, "low_data_review", LogKind.pause, answer.action)
 
 
@@ -71,6 +74,10 @@ def stub_nodes() -> dict[str, Node]:
         "critic": _stub("critic"),
         "render": _stub("render", brief=MarketBrief(), brief_markdown="# Stub brief"),
     }
+
+
+def stub_fan_out(state: State) -> str:
+    return "stats"
 
 
 # Walks one path, the one that visits all three Pauses.

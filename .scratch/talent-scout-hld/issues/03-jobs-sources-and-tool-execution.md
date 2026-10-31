@@ -18,3 +18,5 @@ Resolved during charting.
 - Tools never call the APIs directly; they go through the Jobs Data Gateway (see [Jobs Data Gateway caching and expiry](04-jobs-data-gateway-caching-and-expiry.md)).
 
 **Update from [Gateway query interface](../../gateway-lld/issues/02-gateway-query-interface.md) (2026-10-30):** the two source tools become one `search_jobs` tool. The Gateway picks sources by rule (Adzuna always, USAJOBS when the country is `us`), fans out, merges and collapses Duplicates, so the model no longer chooses the source.
+
+**Update (2026-10-31), reversing the update above:** back to two tools, `search_adzuna` and `search_usajobs`, because the spec evaluates tool calling and a router inside one tool hides the model's choice. See the [Collection LLD](../../../docs/lld/collection.md) §5.
