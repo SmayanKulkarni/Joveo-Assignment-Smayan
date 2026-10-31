@@ -236,3 +236,18 @@ def test_a_graph_loops_fetch_agent_tools_fetch_agent_then_collect():
     assert [type(m).__name__ for m in final["messages"]] == ["SystemMessage", "HumanMessage", "AIMessage", "ToolMessage", "AIMessage"]
     assert len(final["fetches"]) == 1
 
+
+
+def test_tools_emits_tool_called_and_tool_returned_for_a_good_call_and_a_failed_one():
+    deps, *_ = make_deps(results=[result([posting("1"), posting("2")]), SourceUnavailable("adzuna is down")])
+    graph = StateGraph(State).add_node("tools", make_nodes(deps)["tools"]).add_edge(START, "tools").add_edge("tools", END).compile()
+    state = asked(search_call("Data Analyst", id="a"), search_call("Analyst", page=2, id="b"))
+
+    async def go():
+        return [c async for c in graph.astream(state.model_dump(), stream_mode="custom")]
+
+    events = asyncio.run(go())
+
+    assert sorted(e["summary"] for e in events if e["type"] == "tool_called") == ['"Analyst" page 2', '"Data Analyst" page 1']
+    assert [e["summary"] for e in events if e["type"] == "tool_returned"] == ["2 Postings, 2 new", "adzuna is down"]
+    assert {e["name"] for e in events} == {"search_adzuna"}
