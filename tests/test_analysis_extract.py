@@ -16,11 +16,10 @@ from talent_scout.analysis.nodes import (
     MAX_BATCH_POSTINGS,
     _batches,
     _grounded,
-    _mentions,
     fan_out,
-    fold,
     make_nodes,
 )
+from talent_scout.analysis.stats import fold, mentions
 from talent_scout.analysis.types import (
     EmployerType,
     ExtractBatch,
@@ -116,10 +115,10 @@ def ground(skills: list[str], text: str, years: int | None = None, title: str = 
 
 
 def test_c_is_not_grounded_by_cpp_and_r_is_not_found_inside_a_word():
-    assert not _mentions(fold("C"), fold("We use C++ and C#"))
-    assert _mentions(fold("C++"), fold("We use C++ and C#"))
-    assert not _mentions(fold("R"), fold("Strong reporting skills"))
-    assert _mentions(fold("R"), fold("Experience with R, Python"))
+    assert not mentions(fold("C"), fold("We use C++ and C#"))
+    assert mentions(fold("C++"), fold("We use C++ and C#"))
+    assert not mentions(fold("R"), fold("Strong reporting skills"))
+    assert mentions(fold("R"), fold("Experience with R, Python"))
 
 
 def test_an_invented_skill_is_dropped_and_counted_but_case_and_title_still_match():

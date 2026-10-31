@@ -4,9 +4,10 @@ from collections import Counter
 from langgraph.types import Send
 
 from talent_scout.analysis.prompts import EXTRACT_SYSTEM, MERGE_SYSTEM
+from talent_scout.analysis.stats import compute_stats, fold, mentions
 from talent_scout.analysis.types import BatchFacts, ExtractBatch, Extraction, PostingFacts, SkillGroup, SkillGroups
 from talent_scout.kernel.llm import LLMExhausted
-from talent_scout.kernel.state import LogKind, State, log
+from talent_scout.kernel.state import LogKind, RunLogEntry, State, log
 from talent_scout.kernel.types import Posting
 from talent_scout.runtime.deps import Deps, Node, Router
 
@@ -35,21 +36,11 @@ def fan_out(state: State) -> str | list[Send]:
     return [Send("batch_extract", ExtractBatch(postings=b)) for b in _batches(state.sample_postings)]
 
 
-def fold(s: str) -> str:
-    # Keeps + and # so C, C++ and C# stay three skills.
-    return " ".join(re.sub(r"[^\w+#]+", " ", s.casefold()).split())
-
-
-def _mentions(term: str, text: str) -> bool:
-    # An empty term would match between any two words.
-    return bool(term) and re.search(rf"(?<![\w+#]){re.escape(term)}(?![\w+#])", text) is not None
-
-
 def _grounded(item: PostingFacts, p: Posting) -> Extraction:
     """Keeps only what the Posting's own text supports, so every number traces to real Postings."""
     text = f"{p.title} {p.description}"
     folded = fold(text)
-    skills = [s for s in item.skills if _mentions(fold(s.name), folded)]
+    skills = [s for s in item.skills if mentions(fold(s.name), folded)]
     years = item.years_min
     if years is not None and not (years <= MAX_YEARS and re.search(rf"\b{years}\b", text)):
         years = None
@@ -129,7 +120,17 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         message = f"Merged {len(aliases)} spellings: {merges}" if aliases else "No spellings merged"
         return {"skill_aliases": aliases, **log(state, "normalise_skills", LogKind.note, message, merged=len(aliases))}
 
-    return {"batch_extract": batch_extract, "normalise_skills": normalise_skills}
+    async def stats(state: State) -> dict:
+        market, caveats, summary = compute_stats(state)
+        entries = [RunLogEntry(node="stats", kind=LogKind.caveat, message=m, data={}) for m in caveats]
+        note = (
+            f"{summary['sample_size']} Postings, {summary['extracted']} extracted, {summary['stats']} Stats produced, "
+            f"{summary['ungrounded']} skills dropped as ungrounded"
+        )
+        entries.append(RunLogEntry(node="stats", kind=LogKind.note, message=note, data=summary))
+        return {"stats": market, "run_log": [*state.run_log, *entries]}
+
+    return {"batch_extract": batch_extract, "normalise_skills": normalise_skills, "stats": stats}
 
 
 ROUTERS: dict[str, Router] = {}
