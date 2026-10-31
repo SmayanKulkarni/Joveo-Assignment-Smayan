@@ -2,6 +2,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
+from talent_scout.analysis.types import EmployerType, ExtractBatch, Extraction, Requirement, Seniority
 from talent_scout.collection.types import FetchRecord, LowDataAnswer, LowDataPayload
 from talent_scout.gateway.types import CacheStatus
 from talent_scout.kernel.types import Model, PayPeriod, RequestField, Source, WorkMode
@@ -39,6 +40,6 @@ ALLOWED_MSGPACK = [
     (cls.__module__, cls.__name__)
     for cls in (
         ClarifyPause, PlanReviewPause, LowDataPause, *ANSWERS.values(), PlanAction, RequestField, RequestDraft, WorkMode,
-        FetchRecord, CacheStatus, Source, PayPeriod,
+        FetchRecord, CacheStatus, Source, PayPeriod, ExtractBatch, Extraction, Seniority, EmployerType, Requirement,
     )
 ]

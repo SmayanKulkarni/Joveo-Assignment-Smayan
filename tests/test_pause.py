@@ -2,6 +2,14 @@ import pytest
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from pydantic import TypeAdapter, ValidationError
 
+from talent_scout.analysis.types import (
+    EmployerType,
+    ExtractBatch,
+    Extraction,
+    Requirement,
+    Seniority,
+    SkillMention,
+)
 from talent_scout.collection.testing import posting, record
 from talent_scout.collection.types import LowDataAnswer, LowDataPayload
 from talent_scout.kernel.types import ClarifyingQuestion, RequestField, SearchPlan, WorkMode
@@ -48,6 +56,12 @@ VALUES = [
     # Source-keyed dicts and enums inside a record must survive too.
     record([posting("1")]),
     DRAFT,
+    # Enums inside nested models must come back typed, so they are checked by equality of the whole value.
+    Extraction(
+        skills=[SkillMention(name="Python", requirement=Requirement.must)], seniority=Seniority.senior,
+        years_min=5, employer_type=EmployerType.agency, ungrounded=1,
+    ),
+    ExtractBatch(postings=[posting("1"), posting("2")]),
 ]
 
 

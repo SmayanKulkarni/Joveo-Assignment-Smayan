@@ -97,6 +97,21 @@ def test_chain_running_out_raises_exhausted():
         run_structured(t)
     assert (e.value.tier, e.value.name, e.value.attempts) == ("cheap", "t", 4)
     assert e.value.__cause__ is not None
+    assert e.value.bad_output
+
+
+def test_bad_output_follows_the_last_failure_in_the_chain():
+    down = [httpx.ConnectError("down")] * 3
+    bad = ["bad", "bad"]
+    for scripts, expected in (
+        ((down, down), False),
+        ((bad, bad), True),
+        ((bad, down), False),
+        ((down, bad), True),
+    ):
+        with pytest.raises(LLMExhausted) as e:
+            run_structured(tiers(*(model(*s) for s in scripts)))
+        assert e.value.bad_output is expected
 
 
 @pytest.mark.parametrize(

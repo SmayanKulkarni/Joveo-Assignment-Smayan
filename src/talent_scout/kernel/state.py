@@ -80,6 +80,7 @@ class State(Model):
     low_data_guidance: str | None = _owned_by(Owner.collection, default=None)
 
     extractions: Annotated[dict[str, Extraction], merge] = _owned_by(Owner.analysis, default_factory=dict)
+    skill_aliases: dict[str, str] = _owned_by(Owner.analysis, default_factory=dict)  # folded name -> canonical name
     stats: MarketStats | None = _owned_by(Owner.analysis, default=None)
 
     brief: MarketBrief | None = _owned_by(Owner.brief, default=None)

@@ -6,6 +6,7 @@ from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
+from talent_scout.analysis.types import ExtractBatch
 from talent_scout.collection.nodes import MAX_BROADENS, after_relevance, make_nodes
 from talent_scout.collection.testing import make_deps, plan, posting, record, result, search_call, ai_calls, state_with
 from talent_scout.gateway.types import CacheStatus
@@ -13,7 +14,6 @@ from talent_scout.kernel.state import LogKind, State
 from talent_scout.kernel.testing import FakeClassifier
 from talent_scout.kernel.types import Source
 from talent_scout.runtime.graph import _with_fan_out
-from talent_scout.runtime.testing import stub_fan_out
 
 
 def run(node, state: State) -> dict:
@@ -169,17 +169,21 @@ def test_a_sufficient_first_attempt_goes_from_fetch_agent_to_stats():
     builder = StateGraph(State)
     for name in ("fetch_agent", "tools", "collect", "relevance"):
         builder.add_node(name, nodes[name])
+    async def batch_extract(batch: ExtractBatch):
+        return {}
+
     builder.add_node("stats", stats)
+    builder.add_node("batch_extract", batch_extract)
     builder.add_edge(START, "fetch_agent")
     builder.add_edge("tools", "fetch_agent")
     builder.add_edge("collect", "relevance")
+    builder.add_edge("batch_extract", "stats")
     builder.add_edge("stats", END)
     builder.add_conditional_edges("fetch_agent", lambda s: "tools" if s.messages[-1].tool_calls else "collect", ["tools", "collect"])
-    # The same wrapper build_graph applies, with the Analysis stub returning stats.
-    builder.add_conditional_edges("relevance", _with_fan_out(after_relevance), ["stats"])
+    # The same wrapper build_graph applies, with Analysis's real fan_out and a stub branch.
+    builder.add_conditional_edges("relevance", _with_fan_out(after_relevance), ["batch_extract", "stats"])
     graph = builder.compile(checkpointer=InMemorySaver())
 
     final = asyncio.run(graph.ainvoke(state_with(search_plan=plan(target_postings=20)).model_dump(), {"configurable": {"thread_id": "t"}}))
 
     assert visited == ["stats"] and len(final["sample"]) == 20
-    assert stub_fan_out(state_with()) == "stats"

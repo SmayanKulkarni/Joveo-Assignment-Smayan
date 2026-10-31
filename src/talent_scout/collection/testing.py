@@ -19,7 +19,7 @@ FETCHED_AT = datetime(2026, 1, 20, tzinfo=UTC)
 
 
 class Scripted(FakeToolChatModel):
-    """Replays AIMessages (or JSON strings) in order and keeps every prompt it was sent."""
+    """Replays AIMessages (or JSON strings) in order and keeps every prompt it was sent. An Exception item is raised."""
 
     script: list = Field(default_factory=list)
     seen: list = Field(default_factory=list)
@@ -27,6 +27,8 @@ class Scripted(FakeToolChatModel):
     async def _agenerate(self, messages, stop=None, run_manager=None, **kwargs):
         self.seen.append(messages)
         reply = self.script.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
         return ChatResult(generations=[ChatGeneration(message=AIMessage(content=reply) if isinstance(reply, str) else reply)])
 
 

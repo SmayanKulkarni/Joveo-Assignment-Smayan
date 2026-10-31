@@ -60,9 +60,11 @@ _BACKOFF = True
 
 
 class LLMExhausted(Exception):
-    def __init__(self, tier: str, name: str, attempts: int):
+    def __init__(self, tier: str, name: str, attempts: int, bad_output: bool):
         super().__init__(f"{tier} chain for '{name}' exhausted after {attempts} attempts")
         self.tier, self.name, self.attempts = tier, name, attempts
+        # Bad output would repeat on a rerun, a transient failure might not, so callers treat them differently.
+        self.bad_output = bad_output
 
 
 class BalanceTooLow(Exception):
@@ -207,7 +209,7 @@ class Tiers:
                 except _FALLBACK_ON as err:
                     attempts += getattr(err, "attempts", RETRIES)
                     last = err
-            raise LLMExhausted(tier, name, attempts) from last
+            raise LLMExhausted(tier, name, attempts, isinstance(last, _BadOutput)) from last
 
         return RunnableLambda(run).with_config(
             run_name=f"llm:{name}", metadata={"tier": tier, "name": name}

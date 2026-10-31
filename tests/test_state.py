@@ -86,7 +86,7 @@ def build_graph(checkpointer):
         return [Send("extract", Item(key=f"adzuna:{i}")) for i in range(3)]
 
     def extract(item: Item):
-        return {"extractions": {item.key: Extraction()}}
+        return {"extractions": {item.key: Extraction(skills=[], seniority="unknown", years_min=None, employer_type="unknown", ungrounded=0)}}
 
     g = StateGraph(State)
     g.add_node("start", owned("start", "request_plan")(start))

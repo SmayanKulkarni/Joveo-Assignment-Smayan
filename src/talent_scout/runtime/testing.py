@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from langgraph.types import interrupt
 
-from talent_scout.analysis.types import Extraction
+from talent_scout.analysis.types import EmployerType, Extraction, Seniority
 from talent_scout.brief.types import MarketBrief
 from talent_scout.collection.types import LowDataPayload
 from talent_scout.gateway.testing import FakeGateway
@@ -25,6 +25,7 @@ _PLAN = SearchPlan(
     titles=["Stub role"], country="us", location="Stub city", radius_km=0,
     max_days_old=30, target_postings=20, category=None,
 )
+_EXTRACTION = Extraction(skills=[], seniority=Seniority.unknown, years_min=None, employer_type=EmployerType.unknown, ungrounded=0)
 _QUESTION = ClarifyingQuestion(about=RequestField.role, text="Which role?", options=["Stub role"], answer=None)
 
 
@@ -68,16 +69,13 @@ def stub_nodes() -> dict[str, Node]:
         "relevance": _stub("relevance", sample=[]),
         "broaden": _stub("broaden", broadened_plans=[_PLAN]),
         "low_data_review": _low_data_review,
-        "batch_extract": _stub("batch_extract", extractions={"stub": Extraction()}),
+        "batch_extract": _stub("batch_extract", extractions={"stub": _EXTRACTION}),
+        "normalise_skills": _stub("normalise_skills", skill_aliases={}),
         "stats": _stub("stats", stats=MarketStats(sample_size=0, stats=[])),
         "write_brief": _stub("write_brief"),
         "critic": _stub("critic"),
         "render": _stub("render", brief=MarketBrief(), brief_markdown="# Stub brief"),
     }
-
-
-def stub_fan_out(state: State) -> str:
-    return "stats"
 
 
 # Walks one path, the one that visits all three Pauses.

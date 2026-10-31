@@ -8,6 +8,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
 
+from talent_scout.analysis.types import ExtractBatch
 from talent_scout.collection.nodes import MAX_BROADENS, after_low_data, after_relevance, make_nodes
 from talent_scout.collection.testing import ai_calls, make_deps, plan, posting, record, result, search_call, state_with
 from talent_scout.collection.types import LowDataAnswer
@@ -144,15 +145,20 @@ def collection_graph(deps, visited):
     builder = StateGraph(State)
     for name in ("fetch_agent", "tools", "collect", "relevance", "broaden", "low_data_review"):
         builder.add_node(name, nodes[name])
+    async def batch_extract(batch: ExtractBatch):
+        return {}
+
     builder.add_node("stats", stats)
+    builder.add_node("batch_extract", batch_extract)
     builder.add_edge(START, "fetch_agent")
     builder.add_edge("tools", "fetch_agent")
     builder.add_edge("collect", "relevance")
     builder.add_edge("broaden", "fetch_agent")
+    builder.add_edge("batch_extract", "stats")
     builder.add_edge("stats", END)
     builder.add_conditional_edges("fetch_agent", lambda s: "tools" if s.messages[-1].tool_calls else "collect", ["tools", "collect"])
-    builder.add_conditional_edges("relevance", _with_fan_out(after_relevance), ["stats", "broaden", "low_data_review"])
-    builder.add_conditional_edges("low_data_review", _with_fan_out(after_low_data), ["stats", "broaden", END])
+    builder.add_conditional_edges("relevance", _with_fan_out(after_relevance), ["batch_extract", "stats", "broaden", "low_data_review"])
+    builder.add_conditional_edges("low_data_review", _with_fan_out(after_low_data), ["batch_extract", "stats", "broaden", END])
     return builder.compile(checkpointer=InMemorySaver())
 
 
