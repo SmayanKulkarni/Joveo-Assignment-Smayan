@@ -11,6 +11,7 @@ import aiosqlite
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.store.sqlite.aio import AsyncSqliteStore
 from langgraph.types import Command
 from pydantic import ValidationError
 
@@ -68,11 +69,11 @@ async def open_deps(settings: Settings) -> AsyncIterator[Deps]:
         yield Deps(tiers, make_jev(settings, tiers), gateway, settings)
 
 
-async def _setup_saver(saver: AsyncSqliteSaver) -> None:
+async def _setup_with_retry(target: AsyncSqliteSaver | AsyncSqliteStore) -> None:
     # Two processes racing setup() on a fresh file fail, and a retry clears it.
     for attempt in range(SETUP_ATTEMPTS):
         try:
-            return await saver.setup()
+            return await target.setup()
         except sqlite3.OperationalError:
             if attempt == SETUP_ATTEMPTS - 1:
                 raise
@@ -163,13 +164,19 @@ class RunController:
         settings.runs_db.parent.mkdir(parents=True, exist_ok=True)
         async with open_deps(settings) as deps, aiosqlite.connect(settings.runs_db) as saver_conn:
             saver = AsyncSqliteSaver(saver_conn, serde=JsonPlusSerializer(allowed_msgpack_modules=ALLOWED_MSGPACK))
-            await _setup_saver(saver)
+            await _setup_with_retry(saver)
             # Autocommit: each transition is one statement, so a cancel can't strand an open
             # write transaction that would block the saver on the same file.
-            async with aiosqlite.connect(settings.runs_db, timeout=BUSY_TIMEOUT_S, isolation_level=None) as registry_conn:
+            async with (
+                aiosqlite.connect(settings.runs_db, timeout=BUSY_TIMEOUT_S, isolation_level=None) as registry_conn,
+                # Autocommit too: on a default connection setup() leaves a transaction open and the next write fails.
+                aiosqlite.connect(settings.runs_db, timeout=BUSY_TIMEOUT_S, isolation_level=None) as store_conn,
+            ):
                 registry = Registry(registry_conn)
                 await registry.setup()
-                controller = cls(settings, build_graph(deps, saver), registry)
+                store = AsyncSqliteStore(store_conn)
+                await _setup_with_retry(store)
+                controller = cls(settings, build_graph(deps, saver, store), registry)
                 try:
                     yield controller
                 finally:

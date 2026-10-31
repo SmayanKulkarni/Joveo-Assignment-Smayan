@@ -1,6 +1,7 @@
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.store.base import BaseStore
 
 from talent_scout.analysis.nodes import ROUTERS as ANALYSIS_ROUTERS
 from talent_scout.analysis.nodes import fan_out
@@ -49,7 +50,7 @@ def _with_fan_out(router: Router) -> Router:
     return routed
 
 
-def build_graph(deps: Deps, saver: BaseCheckpointSaver | None) -> CompiledStateGraph:
+def build_graph(deps: Deps, saver: BaseCheckpointSaver | None, store: BaseStore | None = None) -> CompiledStateGraph:
     # A landed stage's make_nodes(deps) and ROUTERS go here and override its stubs.
     real_nodes: dict[str, Node] = {}
     real_routers: dict[str, Router] = {}
@@ -72,4 +73,4 @@ def build_graph(deps: Deps, saver: BaseCheckpointSaver | None) -> CompiledStateG
         builder.add_edge(source, target)
     for source, targets in CONDITIONAL.items():
         builder.add_conditional_edges(source, owned(source, _OWNER_OF[source])(routers[source]), targets)
-    return builder.compile(checkpointer=saver)
+    return builder.compile(checkpointer=saver, store=store)

@@ -1,14 +1,17 @@
 import asyncio
 import json
+import sqlite3
 
 import aiosqlite
 import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage, HumanMessage
+from langgraph.runtime import Runtime
+from langgraph.store.sqlite.aio import AsyncSqliteStore
 
 from talent_scout.kernel.llm import BalanceTooLow
 from talent_scout.kernel.testing import make_settings
-from talent_scout.kernel.types import Dimension
+from talent_scout.kernel.types import ClarifyingQuestion, Dimension, RequestField
 from talent_scout.runtime import controller as controller_module
 from talent_scout.runtime import graph as graph_module
 from talent_scout.runtime.controller import InvalidAnswer, NotResumable, RunController, UnknownRun
@@ -398,3 +401,56 @@ def test_tokens_come_only_from_fetch_agent_and_never_reach_the_replay_buffer(set
     assert tokens and {e.node for e in tokens} == {"fetch_agent"}
     assert "".join(e.text for e in tokens) == "alpha beta"
     assert not any(isinstance(e, (Token, Reasoning)) for e in replayed)
+
+
+def test_a_value_written_through_the_store_is_read_by_another_thread_after_reopening(settings, monkeypatch):
+    question = ClarifyingQuestion(about=RequestField.role, text="Which role?", options=["A"], answer=None)
+    seen = []
+
+    async def stats(state, runtime: Runtime):
+        # Plain JSON in, model back out: the msgpack allowlist never sees it.
+        if not seen:
+            await runtime.store.aput(("prefs",), "q", question.model_dump(mode="json"))
+        item = await runtime.store.aget(("prefs",), "q")
+        seen.append(ClarifyingQuestion.model_validate(item.value))
+        return {}
+
+    patch_node(monkeypatch, "stats", stats)
+
+    async def run_once():
+        async with RunController.open(settings) as controller:
+            handle = await controller.start("Engineer, Texas")
+            _, terminal = await to_terminal(controller, handle)
+            return terminal
+
+    # Pauses resume with the Store open, and the second Controller gets a fresh connection.
+    assert asyncio.run(run_once()).status == "done"
+    assert asyncio.run(run_once()).status == "done"
+    assert seen == [question, question]
+
+
+def test_the_store_runs_on_an_autocommit_connection(settings):
+    async def go():
+        async with RunController.open(settings) as controller:
+            return controller._graph.store.conn.isolation_level
+
+    assert asyncio.run(go()) is None
+
+
+def test_store_setup_is_retried_like_the_savers(settings, monkeypatch):
+    real_setup, calls = AsyncSqliteStore.setup, []
+
+    async def flaky(self):
+        calls.append(1)
+        if len(calls) == 1:
+            raise sqlite3.OperationalError("database is locked")
+        await real_setup(self)
+
+    monkeypatch.setattr(AsyncSqliteStore, "setup", flaky)
+
+    async def go():
+        async with RunController.open(settings):
+            pass
+
+    asyncio.run(go())
+    assert len(calls) == 2
