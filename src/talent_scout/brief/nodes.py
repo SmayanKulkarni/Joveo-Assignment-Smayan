@@ -1,8 +1,8 @@
 from collections import Counter
 
 from talent_scout.brief.markdown import render_markdown
-from talent_scout.brief.rules import build_insights, default_outlook, empty_draft, match_totals, rule_draft
-from talent_scout.brief.types import ClientRecommendations, Confidence, MarketBrief, RunNotes
+from talent_scout.brief.rules import build_insights, empty_draft, match_totals, outlook, recommendations, rule_draft
+from talent_scout.brief.types import Confidence, MarketBrief, RunNotes
 from talent_scout.gateway.types import ATTRIBUTION
 from talent_scout.kernel.state import LogKind, State, log
 from talent_scout.kernel.types import Evidence, Source
@@ -51,8 +51,8 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
             summary=draft.summary,
             summary_stat_ids=draft.summary_stat_ids,
             insights=build_insights(state.stats, state.sample_postings, draft.insights, [v.supported for v in state.critic_verdicts]),
-            recommendations=ClientRecommendations(job_title=None, salary_band=None, top_skills=None),
-            outlook=default_outlook(state.stats.sample_size),
+            recommendations=recommendations(state.stats, state.hiring_request, state.sample_postings),
+            outlook=outlook(state.stats, state.hiring_request),
             run_notes=_run_notes(state),
             stats=state.stats,
         )

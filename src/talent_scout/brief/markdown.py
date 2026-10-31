@@ -2,7 +2,7 @@ from collections import Counter
 from urllib.parse import quote, urlparse
 
 from talent_scout.brief.rules import SOURCE_NAMES
-from talent_scout.brief.types import Insight, MarketBrief
+from talent_scout.brief.types import ClientRecommendations, HiringOutlook, Insight, MarketBrief
 from talent_scout.kernel.text import plural
 from talent_scout.kernel.types import Evidence, Posting, SearchPlan
 
@@ -80,36 +80,52 @@ def _link(url: str) -> str:
     return f"[link](<{quote(url, safe=':/?#[]@!$&()*+,;=%~-._')}>)"
 
 
-def _insights(insights: list[Insight], refs: dict[tuple[str, ...], int]) -> str:
-    def evidence_line(evidence: Evidence) -> str:
-        n = refs.setdefault(tuple(evidence.posting_keys), len(refs) + 1)
-        return f"Evidence: {plural(evidence.count, 'Posting')} [E{n}]"
+def _evidence_line(evidence: Evidence, refs: dict[tuple[str, ...], int]) -> str:
+    n = refs.setdefault(tuple(evidence.posting_keys), len(refs) + 1)
+    return f"Evidence: {plural(evidence.count, 'Posting')} [E{n}]"
 
+
+def _outlook(outlook: HiringOutlook, refs: dict[tuple[str, ...], int]) -> str:
+    text = f"## Hiring Outlook\n\n**{outlook.rating.value.replace('_', ' ').capitalize()}**\n\n{outlook.reason}"
+    # The default rests on no Stats, so it has no Evidence to show.
+    return f"{text} {_evidence_line(outlook.evidence, refs)}" if outlook.stat_ids else text
+
+
+def _recommendations(recs: ClientRecommendations, refs: dict[tuple[str, ...], int]) -> str:
+    band = recs.salary_band
+    shown = (
+        ("Job title", recs.job_title and recs.job_title.title),
+        ("Salary band", band and f"{band.low:,.0f} to {band.high:,.0f} {band.unit}"),
+        ("Top skills", recs.top_skills and ", ".join(recs.top_skills.skills)),
+    )
+    lines = []
+    for (label, value), rec, missing in zip(shown, (recs.job_title, band, recs.top_skills), NO_RECOMMENDATIONS):
+        lines.append(f"- **{label}:** {value}. {rec.reason} {_evidence_line(rec.evidence, refs)}" if rec else f"- {missing}")
+    return "## Client Recommendations\n\n" + "\n".join(lines)
+
+
+def _insights(insights: list[Insight], refs: dict[tuple[str, ...], int]) -> str:
     if not insights:
         return "## Insights\n\nNone: this Brief has no findings."
-    items = [f"**[{i.confidence.value.capitalize()}]** {i.text}\n\n{i.confidence_reason}. {evidence_line(i.evidence)}" for i in insights]
+    items = [f"**[{i.confidence.value.capitalize()}]** {i.text}\n\n{i.confidence_reason}. {_evidence_line(i.evidence, refs)}" for i in insights]
     return "## Insights\n\n" + "\n\n".join(items) + "\n\n" + CONFIDENCE_KEY
 
 
 def render_markdown(brief: MarketBrief, postings: list[Posting]) -> str:
-    if any(brief.recommendations.model_dump().values()) or brief.outlook.stat_ids:
-        raise NotImplementedError("Markdown for recommendations and a rated Outlook is not built yet")
-
-    request, outlook = brief.hiring_request, brief.outlook
+    request = brief.hiring_request
     summary = brief.summary
     target = brief.run_notes.final_plan.target_postings
     if brief.stats.sample_size < target:
         summary += f"\n\nWeak Sample: {brief.stats.sample_size} Postings against a target of {target}. Treat this Brief as directional."
 
     parts = [f"> {REPLAY_BANNER}"] if brief.replayed else []
-    refs: dict[tuple[str, ...], int] = {}  # Posting keys -> E number, by first appearance
-    insights = _insights(brief.insights, refs)
+    refs: dict[tuple[str, ...], int] = {}  # Posting keys -> E number, by first appearance, so these run in page order
     parts += [
         f"# Market Brief: {request.role}, {request.location}",
         f"## Summary\n\n{summary}",
-        f"## Hiring Outlook\n\n**{outlook.rating.value.replace('_', ' ').capitalize()}**\n\n{outlook.reason}",
-        "## Client Recommendations\n\n" + "\n".join(f"- {line}" for line in NO_RECOMMENDATIONS),
-        insights,
+        _outlook(brief.outlook, refs),
+        _recommendations(brief.recommendations, refs),
+        _insights(brief.insights, refs),
         _run_notes(brief, postings),
         _evidence(refs),
         _postings_table(postings),
