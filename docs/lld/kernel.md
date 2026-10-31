@@ -338,7 +338,7 @@ await jev.judge(placement, state: dict, questions: dict[str, Noul]) -> dict[str,
   - A Judgement with `source="llm_fallback"` or `truncated=True` was made with less information, so the calling stage logs a Caveat for it.
   - It never falls back on 400/422 (our bug) or 402 (same OpenRouter account). Those propagate.
 - **32 KB guard:** measure the compact JSON size against 30,000 bytes. Over budget, truncate the longest string field with `…[truncated]` until it fits, and set `truncated=True`. Never raise.
-- **Concurrency:** one `asyncio.Semaphore(8)` for the whole process, set from settings.
+- **Concurrency:** one `asyncio.Semaphore(64)` for the whole process, set from settings.
 - **Tracing:** LangSmith already traces and prices Jev, so there's no `@traceable` and no HTTP hook. Each call passes `run_name=f"jev:{placement}"`, tags, and the cut and model as metadata.
 - **Tests:** constructor injection, `Jev(classifier, cuts)`. `make_jev(settings)` builds the real chain, and `fake_classifier({...})` returns canned answers.
 - **Replay:** when `REPLAY_CACHE` is set, `judge` looks up (model chain, sha256 of the request JSON) in the replay cache before calling, and stores the response after (§14).
@@ -386,7 +386,7 @@ One `Settings(BaseSettings)` (`pydantic-settings`) read from the root `.env`. `g
 | `llm_cheap`, `llm_strong` (comma list in `.env`) | `deepseek/deepseek-v4.1-flash,minimax/minimax-m3.1-flash` |
 | `reasoning_cheap`, `reasoning_strong` | `low`, `medium` |
 | `max_tokens_cheap`, `max_tokens_strong` (each ≥ 1,000) | 2,048, 8,192 |
-| `llm_concurrency`, `jev_concurrency` | 20, 8 |
+| `llm_concurrency`, `jev_concurrency` | 20, 64 |
 | `balance_floor_usd` | 0.25 |
 | `replay_cache` (path) | unset = off |
 | `gateway_db` (path) | `.cache/gateway.sqlite` |

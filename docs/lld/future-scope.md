@@ -41,7 +41,7 @@ Work deliberately left out of an LLD, with why and what would bring it back. One
 | A cap on the Sample | Extra Postings make Stats better, and batching is Analysis's job | Analysis cost on large Samples proving a problem |
 | Judging seniority in Relevance | It would empty the Sample of unlevelled Postings and bias the seniority mix | A client needing one level's market alone |
 | Sufficiency below the target, such as 80% | One rule against the Search Plan's target is simple to explain | First-Attempt broadens proving common even with the 1.5× raw goal |
-| Several Postings per Jev request | Saves under a cent per Run, and a shared request has to fit 32 KB | Per-request latency becoming the bottleneck |
+| Several Postings per Jev request | Measured on 200 stored Postings: one shared request judged 25 relevant Postings not relevant and 1 the other way, while one request per Posting repeated with no flips. Raising concurrency gives similar speed with no such shift | A labelled set showing shared-request verdicts are better, with the cut re-tuned for them |
 | A Caveat on normal L2 reads | Up to 7 days old is within the data's expected freshness | `l2_fresh_days` being raised |
 
 ## Analysis

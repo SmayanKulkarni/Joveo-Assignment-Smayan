@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     max_tokens_cheap: int = Field(2048, ge=1000)
     max_tokens_strong: int = Field(8192, ge=1000)
     llm_concurrency: int = 20
-    jev_concurrency: int = 8
+    jev_concurrency: int = 64
     balance_floor_usd: float = 0.25
     replay_cache: Path | None = None
     gateway_db: Path = Path(".cache/gateway.sqlite")
