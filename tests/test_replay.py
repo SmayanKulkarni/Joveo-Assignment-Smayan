@@ -2,12 +2,13 @@ import asyncio
 
 import pytest
 from langchain_core.globals import get_llm_cache, set_llm_cache
+from langchain_core.messages import AIMessage
 from langchain_typesafe import Noul
 from pydantic import Field
 
 from talent_scout.kernel import llm
 from talent_scout.kernel.jev import Jev
-from talent_scout.kernel.llm import make_tiers
+from talent_scout.kernel.llm import LLMExhausted, make_tiers
 from talent_scout.kernel.replay import Replay, install_llm_cache
 from talent_scout.kernel.testing import fake_classifier
 from talent_scout.kernel.thresholds import CUTS
@@ -66,6 +67,15 @@ def test_feedback_retry_misses_the_cache(replay):
     first = named("a", "bad", http_error(BadRequestResponseError, 400))
     with pytest.raises(BadRequestResponseError):
         run(tiers(first))
+    second = named("a", GOOD)
+    assert run(tiers(second)) == Out(n=3)
+    assert len(second.seen) == 1
+
+
+def test_a_cut_off_reply_is_not_stored_so_a_rerun_reaches_the_model(replay):
+    cut_off = AIMessage(content='{"n":', response_metadata={"finish_reason": "length"})
+    with pytest.raises(LLMExhausted):
+        run(tiers(named("a", cut_off)))
     second = named("a", GOOD)
     assert run(tiers(second)) == Out(n=3)
     assert len(second.seen) == 1

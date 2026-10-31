@@ -19,6 +19,9 @@ class _LLMCache(BaseCache):
         return loads(row[0], allowed_objects="core") if row else None
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
+        # A cut-off reply is a provider accident; stored, it would fail every rerun without reaching the model.
+        if any(getattr(g, "message", None) and g.message.response_metadata.get("finish_reason") == "length" for g in return_val):
+            return
         self._db.execute("INSERT OR REPLACE INTO llm VALUES (?, ?, ?)", (prompt, llm_string, dumps(list(return_val))))
         self._db.commit()
 
