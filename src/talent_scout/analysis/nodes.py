@@ -1,11 +1,12 @@
 import re
+from collections import Counter
 
 from langgraph.types import Send
 
-from talent_scout.analysis.prompts import EXTRACT_SYSTEM
-from talent_scout.analysis.types import BatchFacts, ExtractBatch, Extraction, PostingFacts
+from talent_scout.analysis.prompts import EXTRACT_SYSTEM, MERGE_SYSTEM
+from talent_scout.analysis.types import BatchFacts, ExtractBatch, Extraction, PostingFacts, SkillGroup, SkillGroups
 from talent_scout.kernel.llm import LLMExhausted
-from talent_scout.kernel.state import State
+from talent_scout.kernel.state import LogKind, State, log
 from talent_scout.kernel.types import Posting
 from talent_scout.runtime.deps import Deps, Node, Router
 
@@ -13,6 +14,8 @@ MAX_BATCH_POSTINGS = 20
 MAX_BATCH_CHARS = 20_000
 EXTRACT_MAX_TOKENS = 8192  # the cheap tier's default 2,048 fails on 10 Postings
 MAX_YEARS = 40
+MERGE_MAX_TOKENS = 8192
+MAX_SKILLS_TO_MERGE = 300  # only 15 are reported, so the tail can't reach them
 
 
 def _batches(postings: list[Posting]) -> list[list[Posting]]:
@@ -66,9 +69,32 @@ def _text(postings: list[Posting]) -> str:
     return "\n\n".join(blocks)
 
 
+def _names_to_merge(extractions: dict[str, Extraction]) -> list[str]:
+    counts = Counter(fold(s.name) for e in extractions.values() for s in e.skills)
+    # Ties break by name so the cut is the same whatever order the branches finished in.
+    top = sorted(counts, key=lambda n: (-counts[n], n))[:MAX_SKILLS_TO_MERGE]
+    return sorted(top)
+
+
+def _aliases(groups: list[SkillGroup], names: set[str]) -> dict[str, str]:
+    aliases: dict[str, str] = {}
+    for g in groups:
+        canonical = g.canonical.strip()
+        if not fold(canonical):
+            continue
+        for variant in map(fold, g.variants):
+            # Only names the model was shown can be aliased, and the first group to claim one keeps it.
+            if variant in names and variant != fold(canonical):
+                aliases.setdefault(variant, canonical)
+    return aliases
+
+
 def make_nodes(deps: Deps) -> dict[str, Node]:
     chain = deps.tiers.structured(
         "cheap", BatchFacts, system=EXTRACT_SYSTEM, name="batch_extract", max_tokens=EXTRACT_MAX_TOKENS
+    )
+    merge_chain = deps.tiers.structured(
+        "cheap", SkillGroups, system=MERGE_SYSTEM, name="normalise_skills", max_tokens=MERGE_MAX_TOKENS
     )
 
     async def batch_extract(batch: ExtractBatch) -> dict:
@@ -85,7 +111,25 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
                 found.setdefault(p.key, _grounded(item, p))
         return {"extractions": found}
 
-    return {"batch_extract": batch_extract}
+    async def normalise_skills(state: State) -> dict:
+        names = _names_to_merge(state.extractions)
+        if not names:
+            return {"skill_aliases": {}, **log(state, "normalise_skills", LogKind.note, "No skills to merge")}
+        try:
+            out = await merge_chain.ainvoke("\n".join(names))
+        except LLMExhausted as e:
+            if not e.bad_output:
+                raise
+            # Folding alone still gives true counts, only more split.
+            message = "Skills merged by spelling only: the model's grouping was unusable"
+            return {"skill_aliases": {}, **log(state, "normalise_skills", LogKind.caveat, message)}
+        aliases = _aliases(out.groups, set(names))
+        # Every merge is listed so a reader of the run log can catch a bad one.
+        merges = ", ".join(f"{variant} → {canonical}" for variant, canonical in aliases.items())
+        message = f"Merged {len(aliases)} spellings: {merges}" if aliases else "No spellings merged"
+        return {"skill_aliases": aliases, **log(state, "normalise_skills", LogKind.note, message, merged=len(aliases))}
+
+    return {"batch_extract": batch_extract, "normalise_skills": normalise_skills}
 
 
 ROUTERS: dict[str, Router] = {}

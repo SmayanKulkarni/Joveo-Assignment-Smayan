@@ -4,16 +4,16 @@
 
 **Blocked by:** 01: Postings become grounded Extractions.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Uses `tiers.structured("cheap", SkillGroups, system=MERGE_SYSTEM, name="normalise_skills", max_tokens=MERGE_MAX_TOKENS)`
-- [ ] Folds every skill name across `extractions`, counts them, and sends the top `MAX_SKILLS_TO_MERGE` as sorted lines
-- [ ] Writes each variant's folded name → `canonical`, for variants in the input only, and the first group wins when a name repeats
-- [ ] A variant equal to its canonical name is skipped
-- [ ] A `note` lists every merge, like "Spark → Apache Spark"
-- [ ] `MERGE_SYSTEM` in `prompts.py` follows every §11 rule, starting from the probed wording in the Prompts design ticket
-- [ ] Transient `LLMExhausted` propagates
-- [ ] Test: no names means no call, and it writes `{}` plus its log entry
-- [ ] Test: a variant not in the input is ignored, and the first group wins
-- [ ] Test: the merge `note` is written
-- [ ] Test: bad output leaves aliases empty and raises the "Skills merged by spelling only" Caveat, and good output doesn't raise it
+- [x] Uses `tiers.structured("cheap", SkillGroups, system=MERGE_SYSTEM, name="normalise_skills", max_tokens=MERGE_MAX_TOKENS)`
+- [x] Folds every skill name across `extractions`, counts them, and sends the top `MAX_SKILLS_TO_MERGE` as sorted lines
+- [x] Writes each variant's folded name → `canonical`, for variants in the input only, and the first group wins when a name repeats
+- [x] A variant equal to its canonical name is skipped
+- [x] A `note` lists every merge, like "Spark → Apache Spark"
+- [x] `MERGE_SYSTEM` in `prompts.py` follows every §11 rule, starting from the probed wording in the Prompts design ticket
+- [x] Transient `LLMExhausted` propagates
+- [x] Test: no names means no call, and it writes `{}` plus its log entry
+- [x] Test: a variant not in the input is ignored, and the first group wins
+- [x] Test: the merge `note` is written
+- [x] Test: bad output leaves aliases empty and raises the "Skills merged by spelling only" Caveat, and good output doesn't raise it
