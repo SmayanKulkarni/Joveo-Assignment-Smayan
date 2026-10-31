@@ -304,7 +304,7 @@ ANNUAL = {PayPeriod.annual: 1, PayPeriod.unknown: 1, PayPeriod.hourly: 2080, Pay
 
 **`comp.disclosed_share`** counts `advertised` over Adzuna Postings. An estimate isn't disclosure, and USAJOBS must publish pay by law, so counting it would flatter any federal-heavy Sample. `comp.estimated_share` is the same over `estimated`.
 
-**Unproven until a live Run:** that advertised Adzuna pay with an `unknown` period is annual. The fixtures have only estimates. The Caveat below states the assumption, and the live smoke checks it.
+**Checked on a live Run (2026-10-31, us and gb):** advertised Adzuna pay with an `unknown` period is annual, since Adzuna annualises hourly pay itself (see ticket 06). Other countries weren't sampled. The Caveat below still says it was assumed, because the response carries no period.
 
 ## 10. Run log and Caveats
 

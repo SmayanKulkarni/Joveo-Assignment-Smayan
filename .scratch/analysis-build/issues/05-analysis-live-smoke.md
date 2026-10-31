@@ -21,4 +21,4 @@ Run on 2026-10-31 with `minimax/minimax-m3.1-flash` on both tiers, replay off, o
 - **Employer types** came out at about 50% direct and 49% agency, with 2 Postings of unknown type. Not checked against the individual employers here.
 - **Reciprocal and chained aliases** (`data analytics → analytics` with `analytics → data analytics`) left a skill split under two keys. `_aliases` now aims each group at the end of any chain, so neither can form; one test covers it.
 - **Remaining weak spot:** `spark pyspark → pyspark` still gets through.
-- **Step 11** (is an `unknown` pay period on advertised Adzuna pay annual) is still unproven: the fixtures have only estimated pay, so it needs the first live Run.
+- **Step 11** (is an `unknown` pay period on advertised Adzuna pay annual) was unproven here because the fixtures have only estimated pay; ticket 06 checked it on a live Run and it is annual.
