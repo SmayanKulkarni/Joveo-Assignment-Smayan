@@ -2,6 +2,7 @@ import asyncio
 
 from talent_scout.analysis.stats import compute_stats
 from talent_scout.brief.nodes import make_nodes
+from talent_scout.brief.rules import rule_draft
 from talent_scout.collection.testing import FETCHED_AT, posting, record, state_with
 from talent_scout.kernel.testing import make_settings
 from talent_scout.runtime.testing import fake_deps
@@ -19,12 +20,8 @@ def sample_state(n=12, edits=None):
 
 def run(state) -> dict:
     nodes = make_nodes(fake_deps(make_settings()))
-
-    async def go():
-        update = await nodes["write_brief"](state)
-        return await nodes["render"](state.model_copy(update=update))
-
-    return asyncio.run(go())
+    # Rendering is the subject here, so the draft is the rule draft instead of a writer's reply.
+    return asyncio.run(nodes["render"](state.model_copy(update={"brief_draft": rule_draft(state.stats)})))
 
 
 def test_a_run_with_postings_gets_tagged_insights_from_the_rule_draft():

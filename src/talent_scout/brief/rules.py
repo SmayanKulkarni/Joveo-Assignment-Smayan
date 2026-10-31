@@ -1,5 +1,7 @@
 import re
 
+from pydantic import model_validator
+
 from talent_scout.brief.types import (
     BandRecommendation, BriefDraft, ClientRecommendations, Confidence, HiringOutlook, Insight, InsightDraft, OutlookRating,
     SkillsRecommendation, TitleRecommendation,
@@ -10,7 +12,7 @@ from talent_scout.kernel.types import Evidence, HiringRequest, MarketStats, Post
 
 SOURCE_NAMES = {Source.adzuna: "Adzuna", Source.usajobs: "USAJOBS"}
 
-THIN_MAX_INSIGHTS = 3
+MAX_INSIGHTS, THIN_MAX_INSIGHTS = 8, 3
 THIN_SAMPLE = 10  # below it no Stat rates above Low, so no Dimension is filled
 HIGH_STAT, MEDIUM_STAT = (30, 10), (10, 5)  # Postings, employers
 OLD_DAYS = 30
@@ -51,13 +53,75 @@ def fill_gaps(stats: MarketStats, insights: list[InsightDraft]) -> list[InsightD
     return [InsightDraft(text=s.label, stat_ids=[s.id]) for dimension, s in first.items() if dimension not in covered]
 
 
+def insight_cap(sample_size: int) -> int:
+    return THIN_MAX_INSIGHTS if sample_size < THIN_SAMPLE else MAX_INSIGHTS
+
+
 def rule_draft(stats: MarketStats) -> BriefDraft:
     summary = f"The Sample holds {plural(stats.sample_size, 'Posting')}. The Insights below state computed figures directly."
     # With nothing written yet, every Dimension with Stats counts as a gap, up to the cap for a thin Sample.
-    insights = fill_gaps(stats, [])
-    if stats.sample_size < THIN_SAMPLE:
-        insights = insights[:THIN_MAX_INSIGHTS]
+    insights = fill_gaps(stats, [])[:insight_cap(stats.sample_size)]
     return BriefDraft(summary=summary, summary_stat_ids=["demand.sample_size"], insights=insights)
+
+
+def fmt_value(value: float | str) -> str:
+    """A whole number gets commas and no ".0", as raw values gave "125.0 Postings" in the writer's text."""
+    return value if isinstance(value, str) else format(value, ",.10g")
+
+
+# `S3` isn't a number, and `$134k` is 134,000.
+_NUMBER = re.compile(r"(?<![\w.])\d[\d,]*(?:\.\d+)?[kKmM]?(?!\w)")
+_SCALE = {"k": 1_000, "m": 1_000_000}
+
+
+def _figures(text: str) -> set[float]:
+    found = set()
+    for raw in _NUMBER.findall(text):
+        scale = _SCALE.get(raw[-1].lower(), 1)
+        found.add(float(raw.rstrip("kKmM").replace(",", "")) * scale)
+    return found
+
+
+def _allowed_figures(stats: MarketStats, known_text: str) -> set[float]:
+    text = " ".join([known_text, *(f"{s.label} {fmt_value(s.value)}" for s in stats.stats)])
+    allowed = _figures(text)
+    # Each also as a whole number, so 38% matches 38.4%.
+    return allowed | {float(round(n)) for n in allowed}
+
+
+def _problems(what: str, text: str, stat_ids: list[str], known: set[str], allowed: set[float]) -> list[str]:
+    problems = []
+    if not text.strip():
+        problems.append(f"{what} is blank")
+    if not stat_ids:
+        problems.append(f"{what} cites no Stat ids")
+    elif unknown := [i for i in stat_ids if i not in known]:
+        problems.append(f"{what} cites unknown Stat ids: {', '.join(unknown)}")
+    # Only inventions are caught here. A figure from a Stat it didn't cite is for the critic.
+    if invented := sorted(_figures(text) - allowed):
+        problems.append(f"{what} states figures found in no Stat, Caveat or the request: {', '.join(f'{n:g}' for n in invented)}")
+    return problems
+
+
+def checked_draft(stats: MarketStats, known_text: str, cap: int) -> type[BriefDraft]:
+    """BriefDraft with this Run's checks, so Kernel's feedback retry makes the model fix a bad reply and the limits stay out of the schema."""
+    known, allowed = {s.id for s in stats.stats}, _allowed_figures(stats, known_text)
+
+    class CheckedDraft(BriefDraft):
+        @model_validator(mode="after")
+        def _check(self):
+            problems = _problems("Summary", self.summary, self.summary_stat_ids, known, allowed)
+            if not self.insights:
+                problems.append("There are no Insights")
+            elif len(self.insights) > cap:
+                problems.append(f"There are {len(self.insights)} Insights, over the maximum of {cap}")
+            for n, insight in enumerate(self.insights, 1):
+                problems += _problems(f"Insight {n}", insight.text, insight.stat_ids, known, allowed)
+            if problems:
+                raise ValueError("; ".join(problems))
+            return self
+
+    return CheckedDraft
 
 
 def _rate(postings: int, employers: int, exempt: bool) -> Confidence:

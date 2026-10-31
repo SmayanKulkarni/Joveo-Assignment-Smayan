@@ -1,0 +1,63 @@
+"""Live smoke test, not run in CI. Spends no job API calls, only cents on the model.
+
+Runs the recorded fixture Postings through Analysis and then the real Brief writer, and prints the Brief, the Outlook and
+how often the writer's checks made the model retry. Run it from the repo root: python scripts/smoke_brief.py [model]
+"""
+import asyncio
+import sys
+from contextvars import ContextVar
+from types import SimpleNamespace
+
+from langchain_core.callbacks import BaseCallbackHandler
+from langchain_core.tracers.context import register_configure_hook
+
+from smoke_analysis import initial_state, run_analysis
+from talent_scout.brief.nodes import make_nodes
+from talent_scout.kernel.llm import make_tiers
+from talent_scout.kernel.settings import get_settings
+from talent_scout.kernel.state import LogKind
+
+sys.stdout.reconfigure(encoding="utf-8")
+
+
+class ModelCalls(BaseCallbackHandler):
+    """Counts model calls, so anything over one is the checks (or a failing model) forcing a retry."""
+
+    def __init__(self):
+        self.count, self.finishes = 0, []
+
+    def on_chat_model_start(self, serialized, messages, **kwargs):
+        self.count += 1
+
+    def on_llm_end(self, response, **kwargs):
+        self.finishes.append(response.generations[0][0].message.response_metadata.get("finish_reason"))
+
+
+# The writer is called without a config, so the counter is hooked in through a context variable.
+_calls: ContextVar[ModelCalls | None] = ContextVar("brief_smoke_calls", default=None)
+register_configure_hook(_calls, inheritable=True)
+
+
+async def main():
+    model = sys.argv[1] if len(sys.argv) > 1 else "minimax/minimax-m3.1-flash"
+    state = await run_analysis(initial_state(), model)
+
+    settings = get_settings().model_copy(update={"llm_cheap": [model], "llm_strong": [model], "replay_cache": None})
+    nodes = make_nodes(SimpleNamespace(tiers=make_tiers(settings), settings=settings))
+
+    calls = ModelCalls()
+    _calls.set(calls)
+    state = state.model_copy(update=await nodes["write_brief"](state))
+    state = state.model_copy(update=await nodes["render"](state))
+
+    # The Postings table is the fixtures again, so it is cut.
+    print(state.brief_markdown.split("## Postings analysed")[0])
+    outlook = state.brief.outlook
+    print(f"\nOutlook: {outlook.rating.value}. {outlook.reason}")
+    note = next(e for e in state.run_log if e.node == "write_brief")
+    print(f"Writer: {note.message}; {calls.count} model call(s), so {calls.count - 1} retried; finish reasons {calls.finishes}")
+    print("Caveats:", *(e.message for e in state.run_log if e.kind == LogKind.caveat), sep="\n  ")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
