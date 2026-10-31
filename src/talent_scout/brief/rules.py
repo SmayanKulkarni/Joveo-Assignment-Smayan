@@ -3,7 +3,7 @@ import re
 from pydantic import model_validator
 
 from talent_scout.brief.types import (
-    BandRecommendation, BriefDraft, ClientRecommendations, Confidence, HiringOutlook, Insight, InsightDraft, OutlookRating,
+    BandRecommendation, BriefDraft, BriefRevision, ClientRecommendations, Confidence, HiringOutlook, Insight, InsightDraft, OutlookRating,
     SkillsRecommendation, TitleRecommendation,
 )
 from talent_scout.kernel.state import LogKind, RunLogEntry
@@ -103,6 +103,13 @@ def _problems(what: str, text: str, stat_ids: list[str], known: set[str], allowe
     return problems
 
 
+def _insight_problems(insights: list[InsightDraft], cap: int, known: set[str], allowed: set[float]) -> list[str]:
+    problems = [f"There are {len(insights)} Insights, over the maximum of {cap}"] if len(insights) > cap else []
+    for n, insight in enumerate(insights, 1):
+        problems += _problems(f"Insight {n}", insight.text, insight.stat_ids, known, allowed)
+    return problems
+
+
 def checked_draft(stats: MarketStats, known_text: str, cap: int) -> type[BriefDraft]:
     """BriefDraft with this Run's checks, so Kernel's feedback retry makes the model fix a bad reply and the limits stay out of the schema."""
     known, allowed = {s.id for s in stats.stats}, _allowed_figures(stats, known_text)
@@ -113,15 +120,26 @@ def checked_draft(stats: MarketStats, known_text: str, cap: int) -> type[BriefDr
             problems = _problems("Summary", self.summary, self.summary_stat_ids, known, allowed)
             if not self.insights:
                 problems.append("There are no Insights")
-            elif len(self.insights) > cap:
-                problems.append(f"There are {len(self.insights)} Insights, over the maximum of {cap}")
-            for n, insight in enumerate(self.insights, 1):
-                problems += _problems(f"Insight {n}", insight.text, insight.stat_ids, known, allowed)
+            problems += _insight_problems(self.insights, cap, known, allowed)
             if problems:
                 raise ValueError("; ".join(problems))
             return self
 
     return CheckedDraft
+
+
+def checked_revision(stats: MarketStats, known_text: str, cap: int) -> type[BriefRevision]:
+    """The same checks on a revision, where `cap` is what the kept Insights leave. No replacements is valid: those claims are dropped."""
+    known, allowed = {s.id for s in stats.stats}, _allowed_figures(stats, known_text)
+
+    class CheckedRevision(BriefRevision):
+        @model_validator(mode="after")
+        def _check(self):
+            if problems := _insight_problems(self.insights, cap, known, allowed):
+                raise ValueError("; ".join(problems))
+            return self
+
+    return CheckedRevision
 
 
 def _rate(postings: int, employers: int, exempt: bool) -> Confidence:
