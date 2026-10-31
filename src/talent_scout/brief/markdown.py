@@ -1,8 +1,9 @@
 from collections import Counter
 from urllib.parse import quote, urlparse
 
-from talent_scout.brief.rules import SOURCE_NAMES, plural
+from talent_scout.brief.rules import SOURCE_NAMES
 from talent_scout.brief.types import Insight, MarketBrief
+from talent_scout.kernel.text import plural
 from talent_scout.kernel.types import Evidence, Posting, SearchPlan
 
 REPLAY_BANNER = "Replayed run: jobs data, LLM and Jev responses came from the replay cache, not live sources"

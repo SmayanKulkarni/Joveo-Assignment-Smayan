@@ -117,3 +117,8 @@ def test_rule_draft_cites_the_sample_size_and_covers_every_dimension():
     draft = rule_draft(stats)
     assert draft.summary_stat_ids == ["demand.sample_size"] and f"{stats.sample_size} Postings" in draft.summary
     assert [i.stat_ids for i in draft.insights] == [["demand.sample_size"], ["skills.a.count"], ["titles.variant.x"]]
+
+
+def test_rule_draft_keeps_a_thin_sample_to_the_thin_cap():
+    stats = MarketStats(sample_size=5, stats=world(*[(i, 5, 5) for i in ("demand.a", "comp.a", "skills.a", "titles.a")])[0].stats)
+    assert len(rule_draft(stats).insights) == 3

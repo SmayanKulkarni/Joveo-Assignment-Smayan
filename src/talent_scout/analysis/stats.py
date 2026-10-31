@@ -6,7 +6,7 @@ from statistics import median, quantiles
 
 from talent_scout.analysis.types import EmployerType, Extraction, Requirement
 from talent_scout.kernel.state import State
-from talent_scout.kernel.text import employer_key, fold
+from talent_scout.kernel.text import employer_key, fold, plural
 from talent_scout.kernel.types import (
     ADZUNA_CURRENCY, Dimension, Evidence, HiringRequest, MarketStats, PayPeriod, Posting, SearchPlan, Source, Stat,
 )
@@ -61,10 +61,6 @@ def _slug(folded: str) -> str:
 
 def _share(n: int, total: int) -> float:
     return round(n / total, 3)
-
-
-def _plural(n: int, word: str) -> str:
-    return f"{n} {word}" if n == 1 else f"{n} {word}s"
 
 
 def _common(spellings: Counter) -> str:
@@ -135,7 +131,7 @@ def _pay_stats(prefix: str, name: str, scope: str, figures: dict[str, float], or
     # Inclusive, since exclusive can land outside the data on small groups.
     p25, mid, p75 = quantiles(figures.values(), n=4, method="inclusive")
     return [
-        _stat(f"{prefix}.{suffix}", Dimension.compensation, f"{name} {wording} pay{scope}, {_plural(len(figures), 'Posting')}, {unit}{note}", float(round(v)), unit, list(figures))
+        _stat(f"{prefix}.{suffix}", Dimension.compensation, f"{name} {wording} pay{scope}, {plural(len(figures), 'Posting')}, {unit}{note}", float(round(v)), unit, list(figures))
         for suffix, wording, v in (("median", "median", mid), ("p25", "25th percentile", p25), ("p75", "75th percentile", p75))
     ]
 
@@ -204,11 +200,11 @@ def _pay(sample: list[Posting], extracted: dict[str, Extraction], request: Hirin
     if not reached:
         caveats.append(f"Too little pay data: no pay group has {MIN_PAY_FIGURES} salaries")
     if assumed := len(unknown_period["advertised"]):
-        caveats.append(f"Pay period assumed: treated as annual for {_plural(assumed, 'advertised figure')} with no pay period")
+        caveats.append(f"Pay period assumed: treated as annual for {plural(assumed, 'advertised figure')} with no pay period")
     if excluded:
-        caveats.append(f"Implausible pay excluded: {_plural(excluded, 'figure')} with no pay period, too low to be annual pay")
+        caveats.append(f"Implausible pay excluded: {plural(excluded, 'figure')} with no pay period, too low to be annual pay")
     if converted := sum(c != currency for c in origin.values()):
-        caveats.append(f"Pay converted: {_plural(converted, 'Posting')} paid in another currency, converted to {currency} at ECB rates of {FX_DATE}")
+        caveats.append(f"Pay converted: {plural(converted, 'Posting')} paid in another currency, converted to {currency} at ECB rates of {FX_DATE}")
     return stats, caveats
 
 
@@ -246,7 +242,7 @@ def _skills(sample: list[Posting], extracted: dict[str, Extraction], aliases: di
     for key, postings in sorted(found.items(), key=rank)[:TOP_SKILLS]:
         name = canonical_names.get(key) or _common(spellings[key])
         employers = len({employer_of[k] for k in postings})
-        label = f"{name}: {len(postings)} of {total} extracted Postings, from {_plural(employers, 'employer')}"
+        label = f"{name}: {len(postings)} of {total} extracted Postings, from {plural(employers, 'employer')}"
         stats.append(_stat(f"skills.{_slug(key)}.count", s, label, len(postings), "postings", list(postings)))
         for level, wording in ((Requirement.must, "required"), (Requirement.nice, "nice to have")):
             keys = [k for k, r in postings.items() if r == level]

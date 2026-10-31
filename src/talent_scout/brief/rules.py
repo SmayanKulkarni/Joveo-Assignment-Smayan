@@ -1,20 +1,17 @@
 from talent_scout.brief.types import BriefDraft, Confidence, HiringOutlook, Insight, InsightDraft, OutlookRating
 from talent_scout.kernel.state import LogKind, RunLogEntry
-from talent_scout.kernel.text import employer_key
-from talent_scout.kernel.types import Evidence, HiringRequest, MarketStats, Posting, Source
+from talent_scout.kernel.text import employer_key, plural
+from talent_scout.kernel.types import Evidence, HiringRequest, MarketStats, Posting, Source, Stat
 
 SOURCE_NAMES = {Source.adzuna: "Adzuna", Source.usajobs: "USAJOBS"}
 
+THIN_MAX_INSIGHTS = 3
 THIN_SAMPLE = 10  # below it no Stat rates above Low, so no Dimension is filled
 HIGH_STAT, MEDIUM_STAT = (30, 10), (10, 5)  # Postings, employers
 OLD_DAYS = 30
 MIN_OUTLOOK_POSTINGS = 20  # the lowest target a Search Plan can have
 
 _WEAKEST_FIRST = (Confidence.low, Confidence.medium, Confidence.high)
-
-
-def plural(n: int, word: str) -> str:
-    return f"{n} {word}" if n == 1 else f"{n} {word}s"
 
 
 def empty_draft(request: HiringRequest) -> BriefDraft:
@@ -36,8 +33,11 @@ def fill_gaps(stats: MarketStats, insights: list[InsightDraft]) -> list[InsightD
 
 def rule_draft(stats: MarketStats) -> BriefDraft:
     summary = f"The Sample holds {plural(stats.sample_size, 'Posting')}. The Insights below state computed figures directly."
-    # With nothing written yet, every Dimension with Stats counts as a gap.
-    return BriefDraft(summary=summary, summary_stat_ids=["demand.sample_size"], insights=fill_gaps(stats, []))
+    # With nothing written yet, every Dimension with Stats counts as a gap, up to the cap for a thin Sample.
+    insights = fill_gaps(stats, [])
+    if stats.sample_size < THIN_SAMPLE:
+        insights = insights[:THIN_MAX_INSIGHTS]
+    return BriefDraft(summary=summary, summary_stat_ids=["demand.sample_size"], insights=insights)
 
 
 def _rate(postings: int, employers: int, exempt: bool) -> Confidence:
@@ -47,8 +47,7 @@ def _rate(postings: int, employers: int, exempt: bool) -> Confidence:
     return Confidence.low
 
 
-def _tag(draft: InsightDraft, stats: MarketStats, by_key: dict[str, Posting], supported: bool | None) -> Insight:
-    by_id = {s.id: s for s in stats.stats}
+def _tag(draft: InsightDraft, by_id: dict[str, Stat], by_key: dict[str, Posting], has_adzuna: bool, supported: bool | None) -> Insight:
     cited = [by_id[i] for i in draft.stat_ids]
 
     # The Insight is only as strong as its thinnest cited Stat. An employer's own count covers one employer by construction.
@@ -63,7 +62,7 @@ def _tag(draft: InsightDraft, stats: MarketStats, by_key: dict[str, Posting], su
     caps = []
     if any(s.id.startswith("comp.estimated.") for s in cited):
         caps.append("pay is estimated")
-    if any(s.id.startswith("skills.") for s in cited) and any(p.source == Source.adzuna for p in by_key.values()):
+    if any(s.id.startswith("skills.") for s in cited) and has_adzuna:
         caps.append("skills come from snippets")
     if (age := by_id.get("demand.median_age_days")) and age.value > OLD_DAYS:
         caps.append("data is old")
@@ -81,9 +80,10 @@ def _tag(draft: InsightDraft, stats: MarketStats, by_key: dict[str, Posting], su
 
 def build_insights(stats: MarketStats, sample: list[Posting], drafts: list[InsightDraft], verdicts: list[bool]) -> list[Insight]:
     """Tags the writer's Insights then the gap fills. `verdicts` line up with `drafts` by position, and fills are never judged."""
-    by_key = {p.key: p for p in sample}
+    by_id, by_key = {s.id: s for s in stats.stats}, {p.key: p for p in sample}
+    has_adzuna = any(p.source == Source.adzuna for p in sample)
     everything = [*drafts, *fill_gaps(stats, drafts)]
-    return [_tag(d, stats, by_key, verdicts[i] if i < len(verdicts) else None) for i, d in enumerate(everything)]
+    return [_tag(d, by_id, by_key, has_adzuna, verdicts[i] if i < len(verdicts) else None) for i, d in enumerate(everything)]
 
 
 def default_outlook(sample_size: int) -> HiringOutlook:
