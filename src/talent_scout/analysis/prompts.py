@@ -24,6 +24,7 @@ Rules:
 - A variant must be usable in place of the canonical name in any sentence without changing the meaning.
 - If unsure, leave it out. A missed merge only splits a count, while a wrong merge inflates one.
 - Never group a tool with a related tool, a component, a platform it runs on or a broader skill. SQL and T-SQL, AWS and S3, Git and GitLab, Spark and Databricks stay apart.
+- Most names belong to no group, so expect only a handful of groups. A name that is longer, more specific or a different discipline than another ("pl sql" and "sql", "flight dynamics" and "statics", "aws" and "aws cloud services") is not a spelling of it.
 - Return only groups of two or more names. Each variant is a name from the input, copied exactly, and canonical is the best name for the group, chosen from its variants.
 - Leave every other name out.
 """
