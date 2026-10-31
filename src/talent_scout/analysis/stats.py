@@ -2,14 +2,18 @@ import re
 from collections import Counter, defaultdict
 from collections.abc import Callable
 from datetime import date
-from statistics import median
+from statistics import median, quantiles
 
 from talent_scout.analysis.types import EmployerType, Extraction, Requirement
 from talent_scout.kernel.state import State
-from talent_scout.kernel.types import Dimension, Evidence, MarketStats, Posting, Source, Stat
+from talent_scout.kernel.types import (
+    ADZUNA_CURRENCY, Dimension, Evidence, HiringRequest, MarketStats, PayPeriod, Posting, SearchPlan, Source, Stat,
+)
 
 TOP_SKILLS, TOP_EMPLOYERS, TOP_TITLES = 15, 10, 10
 MIN_YEARS_FIGURES = 5
+MIN_PAY_FIGURES = 5
+MIN_ANNUAL_USD = 1000
 TREND_DAYS = 14
 MIN_TREND_POSTINGS = 20
 TREND_NOTE = "Ads still live, which tilts recent because filled ads disappear."
@@ -19,7 +23,22 @@ KNOWN_AGENCIES = frozenset({
     "randstad", "adecco", "manpowergroup", "robert half", "kforce", "insight global", "teksystems", "hays",
     "michael page", "kelly services", "aerotek", "allegis",
 })
-_REQUIREMENT_RANK = {Requirement.unstated: 0, Requirement.nice: 1, Requirement.must: 2}
+
+# Units of each currency per USD, from ECB reference rates. Refresh both by hand.
+FX_DATE = "2026-10-30"
+UNITS_PER_USD = {
+    "AUD": 1.4236, "BRL": 5.4325, "CAD": 1.3969, "CHF": 0.8230, "EUR": 0.8951, "GBP": 0.7463, "INR": 94.9552,
+    "MXN": 18.9077, "NZD": 1.7743, "PLN": 3.9418, "SGD": 1.2784, "USD": 1.0, "ZAR": 16.6895,
+}
+ANNUAL = {
+    PayPeriod.annual: 1, PayPeriod.unknown: 1, PayPeriod.hourly: 2080, PayPeriod.daily: 260,
+    PayPeriod.weekly: 52, PayPeriod.biweekly: 26, PayPeriod.monthly: 12,
+}
+# Groups are never pooled; only the first two get seniority slices.
+PAY_GROUPS = {"advertised": "Advertised", "estimated": "Adzuna-estimated", "federal": "Federal"}
+SLICED_GROUPS = ("advertised", "estimated")
+
+_REQUIREMENT_RANK ={Requirement.unstated: 0, Requirement.nice: 1, Requirement.must: 2}
 _EMPLOYER_TYPE_NAME = {
     EmployerType.direct: "direct employers",
     EmployerType.agency: "staffing agencies",
@@ -110,6 +129,99 @@ def _demand(sample: list[Posting], now: date | None, max_days_old: int | None) -
         label = f"Posting trend, newest {TREND_DAYS} days ({newer} Postings) against the {TREND_DAYS} before ({older}). {TREND_NOTE}"
         stats.append(_stat("demand.trend", d, label, direction, None, keys))
     return stats
+
+
+# compensation
+
+
+def _pay_group(p: Posting) -> str:
+    if p.source == Source.usajobs:
+        return "federal"
+    return "estimated" if p.salary.predicted else "advertised"
+
+
+def _pay_stats(prefix: str, name: str, scope: str, figures: dict[str, float], origin: dict[str, str], currency: str) -> list[Stat]:
+    unit = f"{currency}/year"
+    converted = sorted({origin[k] for k in figures} - {currency})
+    note = f", converted from {', '.join(converted)}" if converted else ""
+    # Inclusive, since exclusive can land outside the data on small groups.
+    p25, mid, p75 = quantiles(figures.values(), n=4, method="inclusive")
+    return [
+        _stat(f"{prefix}.{suffix}", Dimension.compensation, f"{name} {wording} pay{scope}, {_plural(len(figures), 'Posting')}, {unit}{note}", float(round(v)), unit, list(figures))
+        for suffix, wording, v in (("median", "median", mid), ("p25", "25th percentile", p25), ("p75", "75th percentile", p75))
+    ]
+
+
+def _pay(sample: list[Posting], extracted: dict[str, Extraction], request: HiringRequest | None, plan: SearchPlan | None) -> tuple[list[Stat], list[str]]:
+    if plan is None:
+        return [], []
+    caveats = []
+    asked = request.currency if request else None
+    if asked in UNITS_PER_USD:
+        currency = asked
+    else:
+        currency = ADZUNA_CURRENCY[plan.country]
+        if asked:
+            caveats.append(f"Currency unavailable: {asked} has no exchange rate, so pay is shown in {currency}")
+    per_usd = UNITS_PER_USD[currency]
+
+    # Per group: Posting key -> annual figure in the Stat currency, plus each figure's own currency and period.
+    figures: dict[str, dict[str, float]] = {g: {} for g in PAY_GROUPS}
+    origin: dict[str, str] = {}
+    unknown_period: dict[str, set[str]] = {g: set() for g in PAY_GROUPS}
+    for p in (p for p in sample if p.salary):
+        s = p.salary
+        bounds = [b for b in (s.min, s.max) if b is not None]
+        group = _pay_group(p)
+        figures[group][p.key] = sum(bounds) / len(bounds) * ANNUAL[s.period] / UNITS_PER_USD[s.currency] * per_usd
+        origin[p.key] = s.currency
+        if s.period == PayPeriod.unknown:
+            unknown_period[group].add(p.key)
+
+    stats, reached, excluded = [], set(), 0
+    for group, name in PAY_GROUPS.items():
+        group_figures = figures[group]
+        if not group_figures:
+            continue
+        # Only a figure with no period can be hourly or monthly, so only those are held to the plausibility rules.
+        cutoff = max(MIN_ANNUAL_USD * per_usd, median(group_figures.values()) / 6)
+        implausible = {k for k in unknown_period[group] if group_figures[k] < cutoff}
+        excluded += len(implausible)
+        kept = {k: v for k, v in group_figures.items() if k not in implausible}
+        if len(kept) < MIN_PAY_FIGURES:
+            continue
+        reached.add(group)
+        stats += _pay_stats(f"comp.{group}", name, "", kept, origin, currency)
+        if group not in SLICED_GROUPS:
+            continue
+        by_level: dict[str, dict[str, float]] = defaultdict(dict)
+        for k, v in kept.items():
+            if k in extracted:
+                by_level[extracted[k].seniority][k] = v
+        for level, level_figures in sorted(by_level.items()):
+            if len(level_figures) >= MIN_PAY_FIGURES:
+                stats += _pay_stats(f"comp.{group}.{level}", name, f" at {level} level", level_figures, origin, currency)
+
+    # An estimate isn't disclosure and USAJOBS must publish pay, so only Adzuna Postings are counted.
+    adzuna = [p.key for p in sample if p.source == Source.adzuna]
+    for group, id, wording in (("advertised", "disclosed", "advertised"), ("estimated", "estimated", "Adzuna-estimated")):
+        if adzuna:
+            n = len(figures[group])
+            share = _share(n, len(adzuna))
+            label = f"Adzuna Postings with {wording} pay: {share:.1%} ({n} of {len(adzuna)})"
+            stats.append(_stat(f"comp.{id}_share", Dimension.compensation, label, share, "share", adzuna))
+
+    if "estimated" in reached and "advertised" not in reached:
+        caveats.append("Pay is estimated: no advertised pay reached 5 figures, so pay comes from Adzuna's own estimates")
+    if not reached:
+        caveats.append(f"Too little pay data: no pay group reached {MIN_PAY_FIGURES} figures")
+    if assumed := len(unknown_period["advertised"]):
+        caveats.append(f"Pay period assumed: treated as annual for {_plural(assumed, 'advertised figure')} with no pay period")
+    if excluded:
+        caveats.append(f"Implausible pay excluded: {_plural(excluded, 'figure')} with no pay period, too low to be annual pay")
+    if converted := sum(c != currency for c in origin.values()):
+        caveats.append(f"Pay converted: {_plural(converted, 'Posting')} paid in another currency, converted to {currency} at ECB rates of {FX_DATE}")
+    return stats, caveats
 
 
 # skills
@@ -240,8 +352,10 @@ def compute_stats(state: State) -> tuple[MarketStats, list[str], dict]:
         return MarketStats(sample_size=0, stats=[]), [], {"sample_size": 0, "extracted": 0, "stats": 0, "ungrounded": 0}
 
     plan = state.current_plan
+    pay_stats, pay_caveats = _pay(sample, extracted, state.hiring_request, plan)
     stats = [
         *_demand(sample, _now(state), plan.max_days_old if plan else None),
+        *pay_stats,
         *_skills(sample, extracted, state.skill_aliases),
         *_competition(sample, extracted),
         *_titles(sample, extracted),
@@ -252,6 +366,7 @@ def compute_stats(state: State) -> tuple[MarketStats, list[str], dict]:
         caveats.append(f"Postings not extracted: {missing} of {len(sample)} Postings have no Extraction")
     if snippets := sum(p.source == Source.adzuna for p in sample):
         caveats.append(f"Skills from snippets: {snippets} Adzuna Postings give 500-character snippets, which undercount skills")
+    caveats += pay_caveats
     summary = {
         "sample_size": len(sample), "extracted": len(extracted), "stats": len(stats),
         "ungrounded": sum(e.ungrounded for e in extracted.values()),

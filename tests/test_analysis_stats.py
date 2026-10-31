@@ -255,6 +255,6 @@ def test_the_node_writes_stats_caveats_and_one_note_with_the_summary():
 
     assert update["stats"] == compute_stats(s)[0]
     log = update["run_log"]
-    assert [e.kind for e in log] == [LogKind.caveat, LogKind.caveat, LogKind.note]
+    assert [e.kind for e in log] == [LogKind.caveat, LogKind.caveat, LogKind.caveat, LogKind.note]
     note = log[-1]
     assert note.node == "stats" and note.data == {"sample_size": 2, "extracted": 1, "stats": len(update["stats"].stats), "ungrounded": 2}
