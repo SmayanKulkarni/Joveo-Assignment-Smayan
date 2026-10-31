@@ -6,12 +6,15 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command
 
 from talent_scout.collection.nodes import MAX_BROADENS, after_low_data, after_relevance, make_nodes
 from talent_scout.collection.testing import ai_calls, make_deps, plan, posting, record, result, search_call, state_with
+from talent_scout.collection.types import LowDataAnswer
 from talent_scout.gateway.types import CacheStatus, SourceUnavailable
 from talent_scout.kernel.state import LogKind, State
 from talent_scout.kernel.testing import fake_classifier
+from talent_scout.kernel.types import Source
 from talent_scout.runtime.graph import _with_fan_out
 
 
@@ -81,12 +84,51 @@ def test_after_low_data_outcomes(decision, expected):
     assert after_low_data(state_with(low_data_decision=decision)) == expected
 
 
-def test_low_data_review_doesnt_interrupt_leaves_the_decision_null_and_logs_closing_caveats():
-    deps, *_ = make_deps()
-    update = run(make_nodes(deps)["low_data_review"], state_with())
+# low_data_review
 
-    assert "low_data_decision" not in update
-    assert "Too few Postings: 0 relevant of a target of 20" in caveats(update["run_log"])
+
+def review(state: State, *answers: LowDataAnswer):
+    """Runs the node alone in a checkpointed graph; returns the Pause payload and the state after each answer."""
+    deps, _, _, gateway = make_deps()
+    gateway.left[Source.adzuna] = 7
+    builder = StateGraph(State)
+    builder.add_node("low_data_review", make_nodes(deps)["low_data_review"])
+    builder.add_edge(START, "low_data_review")
+    graph = builder.compile(checkpointer=InMemorySaver())
+    config = {"configurable": {"thread_id": "t"}}
+    out = asyncio.run(graph.ainvoke(state.model_dump(), config))
+    payload = out["__interrupt__"][0].value.payload
+    return payload, [asyncio.run(graph.ainvoke(Command(resume=a), config)) for a in answers]
+
+
+def test_the_pause_carries_the_counts_every_plan_tried_and_the_block_reason():
+    first, second = plan(), plan(radius_km=60)
+    a, b = posting("1"), posting("2", title="Data Entry")
+    state = state_with(
+        postings={a.key: a, b.key: b}, relevance_verdicts={a.key: True, b.key: False}, sample=[a.key],
+        broadened_plans=[second], fetch_blocked="Adzuna is down",
+    )
+
+    payload, _ = review(state)
+
+    assert (payload.count, payload.target, payload.attempts) == (1, 20, 2)
+    assert (payload.fetched, payload.rejected, payload.calls_left, payload.blocked) == (2, 1, 7, "Adzuna is down")
+    assert payload.plans == [first, second]
+
+
+@pytest.mark.parametrize("action", ["broaden", "continue", "abort"])
+def test_each_action_is_written_with_its_guidance_and_logged(action):
+    _, (final,) = review(state_with(), LowDataAnswer(action=action, guidance="try BI roles"))
+
+    assert (final["low_data_decision"], final["low_data_guidance"]) == (action, "try BI roles")
+    assert any(e.kind == LogKind.pause for e in State.model_validate(final).run_log)
+
+
+def test_closing_caveats_fire_only_on_continue():
+    short = state_with(broadened_plans=[plan(radius_km=60)])
+    for action, fires in (("continue", True), ("broaden", False), ("abort", False)):
+        _, (final,) = review(short, LowDataAnswer(action=action))
+        assert bool(caveats(State.model_validate(final).run_log)) is fires
 
 
 # graph runs with the later stages stubbed
@@ -118,6 +160,11 @@ def invoke(graph, **state):
     return asyncio.run(graph.ainvoke(state_with(**state).model_dump(), {"configurable": {"thread_id": "t"}}))
 
 
+def answer(graph, action: str, guidance: str | None = None):
+    config = {"configurable": {"thread_id": "t"}}
+    return asyncio.run(graph.ainvoke(Command(resume=LowDataAnswer(action=action, guidance=guidance)), config))
+
+
 def attempt(title: str):
     return [ai_calls(search_call(title)), AIMessage(content="Enough.")]
 
@@ -143,7 +190,7 @@ def test_too_few_postings_broadens_then_reaches_sufficiency():
 
 
 @pytest.mark.parametrize(("relevant", "expected"), [(1.0, 5), (0.0, 0)])
-def test_a_run_that_stays_short_gets_three_attempts_then_passes_through_to_stats(relevant, expected):
+def test_a_run_that_stays_short_gets_three_attempts_then_pauses_and_continue_reaches_stats(relevant, expected):
     deps, *_ = make_deps(
         cheap=[*attempt("a"), *attempt("b"), *attempt("c")],
         strong=[plan().model_dump_json()] * MAX_BROADENS,
@@ -151,23 +198,46 @@ def test_a_run_that_stays_short_gets_three_attempts_then_passes_through_to_stats
         classifier=fake_classifier({"relevant": relevant}),
     )
     visited = []
+    graph = collection_graph(deps, visited)
 
-    final = invoke(collection_graph(deps, visited))
+    paused = invoke(graph)
+    assert visited == [] and len(paused["broadened_plans"]) == MAX_BROADENS
+    assert paused["__interrupt__"][0].value.payload.count == expected
 
-    assert visited == [expected] and len(final["broadened_plans"]) == MAX_BROADENS
-    log = State.model_validate(final).run_log
-    assert any(e.node == "low_data_review" and e.kind == LogKind.note for e in log)
+    log = State.model_validate(answer(graph, "continue")).run_log
+    assert visited == [expected]
     assert f"Too few Postings: {expected} relevant of a target of 20" in caveats(log)
+
+
+def test_a_broaden_past_the_cap_returns_to_the_pause_and_its_guidance_reaches_the_broaden():
+    deps, _, strong, _ = make_deps(
+        cheap=[*attempt("a"), *attempt("b"), *attempt("c"), *attempt("d")],
+        strong=[plan().model_dump_json()] * (MAX_BROADENS + 1),
+        results=[result([])] * 4,
+    )
+    visited = []
+    graph = collection_graph(deps, visited)
+    invoke(graph)
+
+    again = answer(graph, "broaden", "try BI roles")
+
+    assert len(again["broadened_plans"]) == MAX_BROADENS + 1 and visited == []
+    assert again["__interrupt__"][0].value.payload.attempts == MAX_BROADENS + 2
+    assert "User guidance: try BI roles" in strong.seen[-1][1].content
 
 
 def test_fetch_blocked_skips_straight_to_low_data_review_with_broadens_left():
     deps, _, strong, _ = make_deps(cheap=attempt("Data Analyst"), results=[SourceUnavailable("Adzuna is down")])
     visited = []
+    graph = collection_graph(deps, visited)
 
-    final = invoke(collection_graph(deps, visited))
+    paused = invoke(graph)
 
-    assert visited == [0] and final["broadened_plans"] == [] and strong.seen == []
-    assert final["fetch_blocked"] == "Every search in this Attempt failed: Adzuna is down"
+    assert visited == [] and paused["broadened_plans"] == [] and strong.seen == []
+    assert paused["fetch_blocked"] == "Every search in this Attempt failed: Adzuna is down"
+    assert paused["__interrupt__"][0].value.payload.blocked == paused["fetch_blocked"]
+    answer(graph, "continue")
+    assert visited == [0]
 
 
 # Caveats
@@ -204,17 +274,34 @@ def test_jev_degraded_caveat_fires_on_a_truncated_verdict_and_not_on_a_normal_on
     assert not any(m.startswith("Jev degraded") for m in caveats(update["run_log"]))
 
 
-def closing(posted: date, *, count: int = 20, **state):
-    deps, *_ = make_deps()
-    postings = {p.key: p for p in (posting(str(i), posted=posted, company=f"Co {i}") for i in range(count))}
-    node = make_nodes(deps)["low_data_review"]
-    return caveats(run(node, state_with(postings=postings, sample=list(postings), fetches=[record(fetched_at=datetime(2026, 1, 20, tzinfo=UTC))], **state))["run_log"])
+def closing(posted: date, *, count: int = 20, source: Source = Source.adzuna, **state):
+    postings = {p.key: p for p in (posting(str(i), posted=posted, source=source, company=f"Co {i}") for i in range(count))}
+    start = state_with(postings=postings, sample=list(postings), fetches=[record(fetched_at=datetime(2026, 1, 20, tzinfo=UTC))], **state)
+    _, (final,) = review(start, LowDataAnswer(action="continue"))
+    return caveats(State.model_validate(final).run_log)
 
 
 def test_old_data_caveat_counts_over_half_older_than_30_days_from_the_newest_fetch_not_today():
     # Today is months after both fetch dates, so a clock-based rule would flag the second case too.
     assert closing(date(2025, 12, 1)) == ["Old data: 20 of 20 Postings are over 30 days old"]
     assert closing(date(2026, 1, 15)) == []
+
+
+def test_mostly_federal_caveat_fires_over_half_usajobs_and_not_for_private_postings():
+    assert closing(date(2026, 1, 15), source=Source.usajobs) == ["Mostly federal: 20 of 20 Postings are from USAJOBS"]
+    assert closing(date(2026, 1, 15)) == []
+
+
+def test_one_source_failed_fires_on_a_partial_l2_page_or_a_failed_call_beside_an_answered_one():
+    partial = record([posting("1")], failures={Source.usajobs: "USAJOBS is down"})
+    assert caveats(collected([partial])) == ["One source failed: usajobs"]
+
+    mixed = [record([posting("1")]), record(title="b", source=Source.usajobs, error="USAJOBS is down")]
+    assert caveats(collected(mixed)) == ["One source failed: usajobs"]
+
+    # Nothing failed, or everything failed: the second is a block for the Pause, not a Caveat.
+    assert caveats(collected([record([posting("1")])])) == []
+    assert caveats(collected([record(error="Adzuna is down")])) == []
 
 
 def test_broadened_and_too_few_caveats_fire_only_when_true():

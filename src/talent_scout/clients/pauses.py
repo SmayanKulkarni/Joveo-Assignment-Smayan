@@ -29,7 +29,22 @@ def _plan_review(payload: PlanReviewPayload) -> str:
 
 
 def _low_data(payload: LowDataPayload) -> str:
-    return f"Only {payload.count} relevant Postings found, the target is {payload.target}."
+    lines = [
+        f"Only {payload.count} relevant Postings found, the target is {payload.target}.",
+        f"Fetched {payload.fetched}, rejected {payload.rejected} as not the role, over {payload.attempts} Attempt(s).",
+    ]
+    if payload.blocked:
+        lines.append(f"Blocked: {payload.blocked}")
+    if payload.calls_left is not None:
+        lines.append(f"Adzuna calls left today: {payload.calls_left}")
+    for number, plan in enumerate(payload.plans, 1):
+        lines.append(f"Attempt {number}: " + render_plan(plan).replace("\n", "\n  "))
+    return "\n".join(lines)
+
+
+def low_data_answer(action: str, guidance: str | None) -> dict:
+    """Guidance only feeds a broaden, so any other action sends null; blank counts as skipped."""
+    return {"action": action, "guidance": (guidance or "").strip() or None if action == "broaden" else None}
 
 
 def render_pause(pause: Pause) -> str:

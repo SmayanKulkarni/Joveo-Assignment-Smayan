@@ -14,7 +14,7 @@ from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
 
-from talent_scout.clients.pauses import render_pause
+from talent_scout.clients.pauses import low_data_answer, render_pause
 from talent_scout.kernel.llm import BalanceTooLow
 from talent_scout.kernel.settings import Settings, get_settings
 from talent_scout.kernel.types import Dimension, SearchPlan
@@ -229,7 +229,8 @@ def prompt(pause) -> dict:
         case "plan_review":
             return _ask_plan_review(pause.payload.plan)
         case "low_data_review":
-            return {"action": _choose(LOW_DATA_CHOICES)}
+            action = _choose(LOW_DATA_CHOICES)
+            return low_data_answer(action, input("Guidance for the broaden (Enter to skip): ") if action == "broaden" else None)
 
 
 def _ago(moment: datetime) -> str:

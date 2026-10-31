@@ -307,7 +307,7 @@ async def low_data_review(state):
 
 **CLI:** `broaden`, `continue` or `abort`. On `broaden`, it asks for optional guidance, where Enter skips.
 
-**Pass 1:** `make_nodes` exports a pass-through that doesn't interrupt. `low_data_decision` stays null, the router treats null as `continue`, and it still logs the closing Caveats.
+**Pass 1** shipped a pass-through that didn't interrupt, with a null decision read as `continue`. Pass 2 replaced it with the Pause above; the router still treats null as `continue`.
 
 ## 11. Run log and Caveats
 

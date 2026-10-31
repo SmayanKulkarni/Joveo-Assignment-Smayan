@@ -5,6 +5,9 @@ import pytest
 from langgraph.graph import END
 
 from talent_scout.clients import cli
+from talent_scout.clients.pauses import low_data_answer, render_pause
+from talent_scout.collection.testing import plan
+from talent_scout.collection.types import LowDataPayload
 from talent_scout.kernel.testing import make_settings
 from talent_scout.kernel.types import Dimension
 from talent_scout.runtime import controller as controller_module
@@ -12,6 +15,7 @@ from talent_scout.runtime import graph as graph_module
 from talent_scout.runtime.controller import InvalidAnswer, RunController
 from talent_scout.runtime.events import Paused
 from talent_scout.runtime.guard import take_lock
+from talent_scout.runtime.pause import LowDataPause
 from talent_scout.runtime.registry import Registry, RunStatus
 from talent_scout.runtime.testing import (
     ANSWER_FOR,
@@ -212,3 +216,28 @@ def test_edit_reopens_the_editor_with_the_error_on_top_until_the_plan_validates(
 
     assert edited.radius_km == 25
     assert not seen[0].startswith("//") and seen[1].startswith("// ")
+
+
+def test_low_data_answers_send_guidance_only_on_broaden_and_leave_it_null_when_skipped(monkeypatch):
+    pause = LowDataPause(payload=LowDataPayload(
+        count=3, target=20, attempts=2, plans=[plan(), plan(radius_km=60)], fetched=9, rejected=6, calls_left=4, blocked="Adzuna is down",
+    ))
+    for replies, expected in [
+        (("b", "try BI roles"), {"action": "broaden", "guidance": "try BI roles"}),
+        (("b", ""), {"action": "broaden", "guidance": None}),
+        (("c",), {"action": "continue", "guidance": None}),
+    ]:
+        type_replies(monkeypatch, *replies)
+        assert cli.prompt(pause) == expected
+    # The Streamlit form builds its answer with the same helper.
+    assert low_data_answer("abort", "ignored") == {"action": "abort", "guidance": None}
+
+
+def test_the_low_data_pause_shows_counts_every_plan_and_the_block_reason():
+    text = render_pause(LowDataPause(payload=LowDataPayload(
+        count=3, target=20, attempts=2, plans=[plan(), plan(radius_km=60)], fetched=9, rejected=6, calls_left=4, blocked="Adzuna is down",
+    )))
+
+    assert "Only 3 relevant Postings found, the target is 20." in text
+    assert "Fetched 9, rejected 6" in text and "Blocked: Adzuna is down" in text
+    assert "Attempt 1:" in text and "Attempt 2:" in text and "radius_km: 60" in text

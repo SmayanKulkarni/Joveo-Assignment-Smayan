@@ -5,7 +5,7 @@ import re
 import streamlit as st
 
 from talent_scout.clients.cli import LOW_DATA_CHOICES, REFUSALS, event_line
-from talent_scout.clients.pauses import render_pause
+from talent_scout.clients.pauses import low_data_answer, render_pause
 from talent_scout.clients.streamlit_bridge import Live, get_bridge
 from talent_scout.kernel.types import Dimension
 from talent_scout.request_plan.types import PlanAction
@@ -79,8 +79,9 @@ def _plan_review_form(thread_id: str, pause, problems) -> None:
 def _low_data_form(thread_id: str, problems) -> None:
     with st.form("low_data_review"):
         action = st.radio("Action", LOW_DATA_ACTIONS, horizontal=True)
+        guidance = st.text_input("Guidance for the broaden (optional, used by broaden)")
         if st.form_submit_button("Submit"):
-            _submit(thread_id, {"action": action}, problems)
+            _submit(thread_id, low_data_answer(action, guidance), problems)
 
 
 def _pause_page(thread_id: str, pause) -> None:

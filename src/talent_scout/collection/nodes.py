@@ -4,16 +4,18 @@ from typing import Annotated
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import BaseTool, InjectedToolArg, tool
 from langgraph.graph import END
+from langgraph.types import interrupt
 from pydantic import ValidationError
 
 from talent_scout.collection.prompts import BROADEN_SYSTEM, FETCH_SYSTEM, RELEVANT_NOUL
-from talent_scout.collection.types import FetchRecord
+from talent_scout.collection.types import FetchRecord, LowDataPayload
 from talent_scout.gateway.coalesce import coalesce
 from talent_scout.gateway.types import CacheStatus, Fetch, GatewayError
 from talent_scout.kernel.events import emit
 from talent_scout.kernel.state import LogKind, RunLogEntry, State, log
 from talent_scout.kernel.types import Posting, SearchPlan, Source
 from talent_scout.runtime.deps import Deps, Node, Router
+from talent_scout.runtime.pause import LowDataPause
 
 MAX_FETCHES = 6  # per Attempt; 3 Attempts spend at most 18 of Adzuna's 25 daily calls, retries aside
 MAX_BROADENS = 2  # so 3 Attempts before low_data_review
@@ -182,6 +184,12 @@ def _closing_caveats(state: State, node: str) -> list[RunLogEntry]:
 def _collect_caveats(current: list[FetchRecord]) -> list[RunLogEntry]:
     outcomes = [o for r in current if r.result for o in r.result.sources.values()]
     entries = []
+    # A partial L2 page names its source in `failures`; a failed call is only a failure worth a Caveat when another answered.
+    failed = {s for r in current if r.result for s in r.result.failures}
+    if outcomes:
+        failed |= {r.source for r in current if r.error}
+    if failed:
+        entries.append(_entry("collect", LogKind.caveat, f"One source failed: {', '.join(sorted(failed))}", sources=sorted(failed)))
     if dropped := sum(o.dropped for o in outcomes):
         entries.append(_entry("collect", LogKind.caveat, f"{dropped} Postings were dropped by the source mapper", dropped=dropped))
     if replayed := [o for o in outcomes if o.cache == CacheStatus.replay]:
@@ -320,9 +328,20 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         }
 
     async def low_data_review(state: State) -> dict:
-        # Pass 1: no Pause. The decision stays null, which after_low_data reads as continue.
-        entries = [_entry("low_data_review", LogKind.note, "passing through with too few Postings"), *_closing_caveats(state, "low_data_review")]
-        return {"run_log": [*state.run_log, *entries]}
+        payload = LowDataPayload(
+            count=len(state.sample), target=state.current_plan.target_postings, attempts=_attempt(state) + 1,
+            plans=[state.search_plan, *state.broadened_plans], fetched=len(state.postings),
+            rejected=sum(not v for v in state.relevance_verdicts.values()),
+            calls_left=deps.gateway.calls_left(Source.adzuna),  # information only: it may be stale by the time the user answers
+            blocked=state.fetch_blocked,
+        )
+        answer = interrupt(LowDataPause(payload=payload))
+        entries = [_entry("low_data_review", LogKind.pause, f"user chose {answer.action}")]
+        # Only on continue: a Pause that ends in broaden would repeat them for every round.
+        if answer.action == "continue":
+            entries += _closing_caveats(state, "low_data_review")
+        # Both are written even when null, so a stale guidance never feeds a later broaden.
+        return {"low_data_decision": answer.action, "low_data_guidance": answer.guidance, "run_log": [*state.run_log, *entries]}
 
     return {
         "fetch_agent": fetch_agent,
