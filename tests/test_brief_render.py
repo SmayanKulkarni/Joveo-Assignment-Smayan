@@ -60,6 +60,11 @@ def test_posting_text_cannot_break_the_table_and_only_http_links_appear():
     assert "javascript" not in table and "ftp:" not in table
 
 
+def test_the_default_outlook_only_says_too_few_postings_when_it_is_true():
+    assert "Only 12 Postings, too few" in run(sample_state(12))["brief"].outlook.reason
+    assert "not rated yet" in run(sample_state(25))["brief"].outlook.reason
+
+
 def test_two_renders_give_identical_bytes():
     state = sample_state()
     assert run(state)["brief_markdown"] == run(state)["brief_markdown"]

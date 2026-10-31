@@ -8,6 +8,7 @@ SOURCE_NAMES = {Source.adzuna: "Adzuna", Source.usajobs: "USAJOBS"}
 THIN_SAMPLE = 10  # below it no Stat rates above Low, so no Dimension is filled
 HIGH_STAT, MEDIUM_STAT = (30, 10), (10, 5)  # Postings, employers
 OLD_DAYS = 30
+MIN_OUTLOOK_POSTINGS = 20  # the lowest target a Search Plan can have
 
 _WEAKEST_FIRST = (Confidence.low, Confidence.medium, Confidence.high)
 
@@ -86,7 +87,11 @@ def build_insights(stats: MarketStats, sample: list[Posting], drafts: list[Insig
 
 
 def default_outlook(sample_size: int) -> HiringOutlook:
-    reason = f"Only {sample_size} Postings, too few to judge the talent market, so Competitive is a default rather than a finding."
+    if sample_size >= MIN_OUTLOOK_POSTINGS:
+        # Stand-in until the outlook rules land: the Sample is big enough, so "too few" would be false.
+        reason = "The Hiring Outlook is not rated yet, so Competitive is a placeholder rather than a finding."
+    else:
+        reason = f"Only {sample_size} Postings, too few to judge the talent market, so Competitive is a default rather than a finding."
     return HiringOutlook(rating=OutlookRating.competitive, reason=reason, stat_ids=[], evidence=Evidence(posting_keys=[]))
 
 
