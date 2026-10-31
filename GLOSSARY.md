@@ -74,6 +74,10 @@ _Avoid_: Report, analysis, output
 A single finding in the Market Brief, carrying a Confidence Tag and the Evidence it rests on.
 _Avoid_: Finding, observation
 
+**Client Recommendation**:
+A suggested job title, salary band or set of top skills for the client's job ad, tied to the Evidence behind it.
+_Avoid_: Advice, suggestion
+
 **Evidence**:
 The count and IDs of the Postings an Insight or recommendation is based on.
 _Avoid_: Source, citation
@@ -82,7 +86,7 @@ _Avoid_: Source, citation
 High, Medium or Low, stating how strongly the Evidence supports an Insight.
 
 **Hiring Outlook**:
-Exactly one of Favourable, Competitive or Hard to fill, with a one-line reason.
+Exactly one of Favourable, Competitive or Hard to fill, with a one-line reason. Postings show demand and not candidates, so it estimates the talent market rather than measuring it.
 _Avoid_: Difficulty, rating
 
 **Run Notes**:

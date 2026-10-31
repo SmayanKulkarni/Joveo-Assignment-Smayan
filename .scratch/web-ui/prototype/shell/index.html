@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: app shell and history sidebar</title>
+<!--
+  PROTOTYPE, throwaway. Question: how does the app look and navigate, with earlier Runs in a sidebar like chat history?
+  Three structurally different frames on one page, switched with ?variant=A|B|C (or the ← → keys).
+  Open this file directly. Fake data only; the trace strip/graph here is a placeholder for ticket 05.
+-->
+<style>
+  :root {
+    --bg: #f6f4ef; --panel: #ffffff; --ink: #1d1c1a; --muted: #6e6a62; --line: #e4e0d6;
+    --accent: #2f5d50; --accent-soft: #e3eee9; --warn: #b4540a; --warn-soft: #fbeedd;
+    --bad: #a3262a; --bad-soft: #f9e4e4; --ok: #2f5d50; --live: #1f6feb; --live-soft: #e5eefc;
+    --side: #efece4;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .app { height: 100vh; display: flex; overflow: hidden; }
+  .muted { color: var(--muted); }
+  .scroll { overflow-y: auto; }
+
+  /* status badges */
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; letter-spacing: .02em; padding: 1px 8px; border-radius: 99px; white-space: nowrap; }
+  .b-running { background: var(--live-soft); color: var(--live); }
+  .b-paused { background: var(--warn-soft); color: var(--warn); }
+  .b-failed { background: var(--bad-soft); color: var(--bad); }
+  .b-done { background: var(--accent-soft); color: var(--ok); }
+  .b-aborted { background: #ececec; color: #666; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .b-running .dot { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .25; transform: scale(.7); } }
+
+  /* history list (shared building blocks, each variant places them differently) */
+  .grp { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 14px 12px 4px; }
+  .row { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 7px 12px; border-radius: 8px; }
+  .row:hover { background: rgba(0,0,0,.05); }
+  .row.sel { background: #fff; box-shadow: 0 0 0 1px var(--line); }
+  .row .t { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .m { display: flex; gap: 8px; align-items: center; margin-top: 2px; font-size: 12px; color: var(--muted); }
+  .row.attn .t { font-weight: 600; }
+  .newbtn { margin: 12px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-weight: 600; display: flex; gap: 8px; align-items: center; }
+  .newbtn:hover { border-color: var(--accent); }
+
+  /* main content blocks */
+  .block { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+  .block h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .user { background: var(--accent); color: #fff; border: 0; margin-left: auto; max-width: 80%; border-radius: 14px 14px 4px 14px; }
+  .tool { display: flex; gap: 10px; align-items: center; }
+  .spin { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--live); border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .check { width: 14px; height: 14px; border-radius: 50%; background: var(--ok); color: #fff; font-size: 10px; display: grid; place-items: center; flex: none; }
+  .bar { height: 6px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--live); width: 0; }
+  .think { color: var(--muted); font-style: italic; font-size: 13px; }
+  .caret { display: inline-block; width: 7px; height: 14px; background: var(--ink); vertical-align: -2px; animation: pulse 1s steps(2) infinite; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 3px 11px; font-size: 13px; }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn { border: 1px solid var(--line); background: #fff; padding: 6px 14px; border-radius: 8px; }
+  .btn.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.bad { color: var(--bad); }
+  .composer { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+  .composer textarea { width: 100%; border: 0; outline: 0; resize: none; font: inherit; min-height: 64px; background: transparent; }
+  .composer .bottom { display: flex; justify-content: space-between; align-items: end; gap: 10px; flex-wrap: wrap; }
+  .insight { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+  .insight:first-of-type { border-top: 0; }
+  .conf { font-size: 11px; font-weight: 700; padding: 0 7px; border-radius: 4px; height: 20px; flex: none; margin-top: 2px; }
+  .c-high { background: var(--accent-soft); color: var(--ok); } .c-medium { background: var(--warn-soft); color: var(--warn); } .c-low { background: #ececec; color: #555; }
+  .outlook { display: inline-block; font-weight: 700; padding: 2px 10px; border-radius: 6px; background: var(--warn-soft); color: var(--warn); }
+
+  /* placeholder trace (real design is ticket 05) */
+  .trace { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .tstage { font-size: 12px; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: #fff; color: var(--muted); }
+  .tstage.done { background: var(--accent-soft); color: var(--ok); border-color: transparent; }
+  .tstage.active { background: var(--live-soft); color: var(--live); border-color: var(--live); font-weight: 600; }
+  .tstage.wait { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); font-weight: 600; }
+  .tstage.fail { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); font-weight: 600; }
+  .tarrow { color: var(--line); }
+  .vtrace { display: flex; flex-direction: column; gap: 0; }
+  .vtrace .vn { display: flex; gap: 10px; align-items: center; padding: 6px 0; position: relative; }
+  .vtrace .vn:not(:last-child)::after { content: ""; position: absolute; left: 6px; top: 26px; height: 14px; border-left: 2px solid var(--line); }
+  .vtrace .vd { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); background: #fff; flex: none; }
+  .vn.done .vd { background: var(--ok); border-color: var(--ok); } .vn.active .vd { border-color: var(--live); background: var(--live-soft); animation: pulse 1.2s infinite; }
+  .vn.wait .vd { border-color: var(--warn); background: var(--warn-soft); } .vn.fail .vd { border-color: var(--bad); background: var(--bad); }
+  .vn.idle { color: var(--muted); }
+
+  /* prototype switcher: deliberately unlike the design under test */
+  .switcher { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); background: #111; color: #fff; border-radius: 99px; display: flex; gap: 4px; align-items: center; padding: 4px; z-index: 99; box-shadow: 0 4px 16px rgba(0,0,0,.35); font: 13px system-ui; }
+  .switcher button { background: transparent; border: 0; color: #fff; width: 30px; height: 30px; border-radius: 50%; }
+  .switcher button:hover { background: #333; }
+  .switcher span { padding: 0 10px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ---- fake data: one Run per status, spread over Today / Yesterday / Earlier -------------
+const MIN = 1, H = 60, D = 1440;
+const RUNS = [
+  { id: 'a41f09c2', status: 'running', ago: 1 * MIN, summary: 'Senior data engineer, Austin Texas, remote friendly, compensation focus', node: 'fetch_agent' },
+  { id: '9be2d1a7', status: 'paused', ago: 12 * MIN, summary: 'Staff nurse, Manchester UK, full time', pause: 'plan_review', node: 'plan_review' },
+  { id: '3c7a55e0', status: 'paused', ago: 40 * MIN, summary: 'Software engineer', pause: 'clarify', node: 'clarify' },
+  { id: 'e0d8b2f4', status: 'done', ago: 2 * H, summary: 'Product designer, Berlin Germany, hybrid, 3+ years' },
+  { id: '71ab9c33', status: 'failed', ago: 3 * H, summary: 'Warehouse supervisor, Chicago IL', node: 'batch_extract', error: 'LLMExhausted: every model in the cheap tier failed (3 attempts)' },
+  { id: '5d02e8aa', status: 'done', ago: 1 * D + 2 * H, summary: 'DevOps engineer, Toronto Canada, skills and demand' },
+  { id: 'c9f13b70', status: 'aborted', ago: 1 * D + 5 * H, summary: 'Barista, Sydney Australia', node: 'low_data_review' },
+  { id: '28e4a6d1', status: 'done', ago: 1 * D + 9 * H, summary: 'Machine learning engineer, London UK, senior' },
+  { id: 'f7b60c19', status: 'done', ago: 4 * D, summary: 'Electrician, Dallas TX, apprenticeship pay' },
+  { id: '0a8d93e5', status: 'done', ago: 6 * D, summary: 'Financial analyst, Singapore, fintech' },
+  { id: 'b13c77f2', status: 'done', ago: 9 * D, summary: 'Customer success manager, Dublin Ireland, SaaS' },
+];
+const DIMS = ['demand', 'compensation', 'skills', 'competition', 'titles_seniority'];
+const LABEL = { demand: 'Demand', compensation: 'Compensation', skills: 'Skills', competition: 'Competition', titles_seniority: 'Titles & seniority' };
+const STAGES = [
+  { key: 'request_plan', label: 'Understand', nodes: ['intake', 'clarity_check', 'clarify', 'plan', 'plan_review'] },
+  { key: 'collection', label: 'Collect', nodes: ['fetch_agent', 'tools', 'collect', 'relevance', 'broaden', 'low_data_review'] },
+  { key: 'analysis', label: 'Analyse', nodes: ['batch_extract', 'normalise_skills', 'stats'] },
+  { key: 'brief', label: 'Brief', nodes: ['write_brief', 'critic', 'render'] },
+];
+const NODE_LABEL = { fetch_agent: 'Searching jobs', plan_review: 'Waiting for plan approval', clarify: 'Waiting for your answers', batch_extract: 'Reading postings', low_data_review: 'Waiting: too few postings' };
+
+// ---- helpers ------------------------------------------------------------------------------
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const rel = m => m < 1 ? 'now' : m < H ? m + ' min ago' : m < D ? Math.floor(m / H) + ' h ago' : Math.floor(m / D) + ' d ago';
+const group = m => m < D ? 'Today' : m < 2 * D ? 'Yesterday' : m < 8 * D ? 'Previous 7 days' : 'Earlier';
+const attn = r => r.status === 'paused' || r.status === 'failed';
+const BADGE_TXT = { running: 'Running', paused: 'Needs you', failed: 'Stopped', done: 'Done', aborted: 'Aborted' };
+const badge = s => `<span class="badge b-${s}"><i class="dot"></i>${BADGE_TXT[s]}</span>`;
+
+function route() {
+  const m = location.hash.match(/^#\/runs\/(\w+)/);
+  return m ? RUNS.find(r => r.id === m[1]) || null : null;
+}
+const variant = () => (new URLSearchParams(location.search).get('variant') || 'A').toUpperCase();
+function go(hash) { location.hash = hash; }
+
+// Rows grouped by day bucket, newest first. `compact` hides the meta line (used by the rail variant).
+function historyHTML(sel) {
+  let out = '', last = '';
+  for (const r of RUNS) {
+    const g = group(r.ago);
+    if (g !== last) { out += `<div class="grp">${g}</div>`; last = g; }
+    out += `<button class="row ${sel && sel.id === r.id ? 'sel' : ''} ${attn(r) ? 'attn' : ''}" data-go="#/runs/${r.id}">
+      <span class="t">${esc(r.summary)}</span><span class="m">${badge(r.status)}<span>${rel(r.ago)}</span></span></button>`;
+  }
+  return out;
+}
+
+// The sentence of "where is it now", shared by every frame's trace placeholder.
+function traceState(r) {
+  const cur = r && r.node ? STAGES.find(s => s.nodes.includes(r.node)) : null;
+  return STAGES.map((s, i) => {
+    let st = 'idle';
+    if (r && r.status === 'done') st = 'done';
+    else if (r && cur) {
+      const ci = STAGES.indexOf(cur);
+      st = i < ci ? 'done' : i > ci ? 'idle' : r.status === 'running' ? 'active' : r.status === 'paused' ? 'wait' : r.status === 'failed' ? 'fail' : 'idle';
+    }
+    return { ...s, st };
+  });
+}
+const traceStrip = r => `<div class="trace">${traceState(r).map((s, i) =>
+  `${i ? '<span class="tarrow">›</span>' : ''}<span class="tstage ${s.st}">${s.label}</span>`).join('')}</div>`;
+const traceVertical = r => `<div class="vtrace">${traceState(r).map(s =>
+  `<div class="vn ${s.st}"><i class="vd"></i><div><b>${s.label}</b><div class="muted" style="font-size:12px">${s.st === 'active' ? NODE_LABEL[r.node] || 'Working' : s.st === 'wait' || s.st === 'fail' ? NODE_LABEL[r.node] || r.node : s.nodes.length + ' steps'}</div></div></div>`).join('')}</div>`;
+
+// What the Run column shows for a given Run (stream, Pause card, Brief ...). Same content in all frames.
+function runBody(r) {
+  if (!r) return composerHTML();
+  const ask = `<div class="block user">${esc(r.summary)}</div>`;
+  if (r.status === 'running') return ask + `
+    <div class="block"><h4>Searching jobs</h4>
+      <div class="tool"><i class="check">✓</i> Adzuna: 142 postings (cached) · USAJOBS: 0</div>
+      <div class="tool" style="margin-top:8px"><i class="spin"></i> search_jobs <span class="muted">“data engineer” within 25 km of Austin</span></div></div>
+    <div class="block"><div class="think">Titles vary here: “data engineer”, “analytics engineer”… I’ll try both before widening the radius.</div>
+      <p style="margin:8px 0 0">I found a solid first set. Remote-friendly roles are about a third of them, so I am fetching a second page to confirm that <span class="caret"></span></p></div>
+    <div class="block"><h4>Reading postings</h4><div class="bar"><i style="width:38%"></i></div><div class="muted" style="margin-top:6px">37 of 142</div></div>`;
+  if (r.status === 'paused' && r.pause === 'plan_review') return ask + `
+    <div class="block" style="border-color:var(--warn)"><h4>Approve the search plan</h4>
+      <p style="margin:0 0 8px">Titles: staff nurse, senior staff nurse, band 6 nurse · Manchester + 20 km · last 60 days · target 150 postings.</p>
+      <div class="muted" style="margin-bottom:10px">Assumption: full time only.</div>
+      <div style="display:flex;gap:8px"><button class="btn pri">Approve</button><button class="btn">Edit</button><button class="btn">Reject</button><button class="btn bad">Abort</button></div></div>`;
+  if (r.status === 'paused') return ask + `
+    <div class="block" style="border-color:var(--warn)"><h4>A few questions first</h4>
+      <p style="margin:0 0 6px"><b>Which kind of software engineer?</b></p>
+      <div class="chips"><span class="chip">Backend</span><span class="chip">Frontend</span><span class="chip">Embedded</span><span class="chip">Anything</span></div>
+      <p style="margin:12px 0 6px"><b>Where should I look?</b></p><div class="chips"><span class="chip">Remote, any city</span></div>
+      <div style="margin-top:12px"><button class="btn pri">Continue</button></div></div>`;
+  if (r.status === 'failed') return ask + `
+    <div class="block" style="border-color:var(--bad);background:var(--bad-soft)"><h4 style="color:var(--bad)">Stopped at Reading postings</h4>
+      <p style="margin:0 0 10px">${esc(r.error)}</p><button class="btn pri">Resume</button> <span class="muted" style="margin-left:6px">Retries only that step.</span></div>`;
+  if (r.status === 'aborted') return ask + `<div class="block"><h4>Aborted</h4><p style="margin:0">You stopped this Run when asked about too few postings. No Brief was written.</p></div>`;
+  return ask + `
+    <div class="block"><h4>Market Brief</h4>
+      <p style="margin:0 0 10px;font-size:15px">Demand for product designers in Berlin is steady, with 61 of 142 postings asking for hybrid work. Advertised pay is disclosed in under half of them.</p>
+      <span class="outlook">Competitive</span> <span class="muted">Demand is broad, but few postings state pay.</span></div>
+    <div class="block"><h4>Insights</h4>
+      <div class="insight"><span class="conf c-high">HIGH</span><div>Figma appears in 71% of postings; it is the clearest skill signal. <span class="muted">(98 postings)</span></div></div>
+      <div class="insight"><span class="conf c-medium">MED</span><div>Median advertised salary is about €62k, from only 38 postings. <span class="muted">(38 postings)</span></div></div>
+      <div class="insight"><span class="conf c-low">LOW</span><div>Senior titles pay roughly 20% more, on a thin sample. <span class="muted">(9 postings)</span></div></div></div>
+    <div style="display:flex;gap:8px"><button class="btn">Download JSON</button><button class="btn">Download Markdown</button></div>`;
+}
+
+function composerHTML() {
+  return `<div style="margin:12vh 0 0;text-align:center"><h2 style="font-size:26px;margin:0 0 4px">What should we research?</h2>
+    <p class="muted" style="margin:0 0 18px">Describe a role and a place. I’ll ask if something is unclear.</p></div>
+    <div class="composer"><textarea placeholder="e.g. Senior data engineer in Austin, remote friendly, interested in pay"></textarea>
+      <div class="bottom"><div class="chips" title="Focus">${DIMS.map(d => `<span class="chip" data-chip>${LABEL[d]}</span>`).join('')}</div>
+      <button class="btn pri" data-go="#/runs/a41f09c2">Start Run ↵</button></div></div>`;
+}
+
+// ---- three structurally different frames ---------------------------------------------------
+const frames = {
+  // A: classic chat. Fixed sidebar, one centred column, trace in a right drawer you can toggle.
+  A: { name: 'Chat classic: sidebar + column + trace drawer', render(r) {
+    const open = r && r.status !== 'done' && r.status !== 'aborted' || (r && r.status === 'done');
+    return `<div class="app">
+      <aside style="width:272px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column">
+        <div style="padding:14px 14px 0;font-weight:700;font-size:15px">Talent Scout</div>
+        <button class="newbtn" data-go="#/">＋ New Run</button>
+        <nav class="scroll" style="flex:1;padding:0 6px 12px">${historyHTML(r)}</nav>
+      </aside>
+      <main class="scroll" style="flex:1;padding:24px 24px 90px"><div style="max-width:740px;margin:0 auto">${r ? `<div class="muted" style="font-size:12px;margin-bottom:4px">${badge(r.status)} &nbsp; ${r.id}</div>` : ''}${runBody(r)}</div></main>
+      ${r && open ? `<aside style="width:250px;background:var(--panel);border-left:1px solid var(--line);padding:18px"><h4 class="muted" style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em">Progress</h4>${traceVertical(r)}</aside>` : ''}
+    </div>`; } },
+
+  // B: focus mode. Icon rail; history is a slide-over; trace is a pinned strip across the top with a progress bar.
+  B: { name: 'Focus: icon rail + history slide-over + trace strip', render(r) {
+    const pct = !r ? 0 : r.status === 'done' ? 100 : r.status === 'running' ? 38 : r.status === 'paused' || r.status === 'failed' ? 30 : 0;
+    return `<div class="app" style="flex-direction:column">
+      <header style="display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)">
+        <button class="btn" id="histBtn" title="History">☰ History <span class="badge b-paused" style="margin-left:4px">${RUNS.filter(attn).length}</span></button>
+        <b>Talent Scout</b><span class="muted" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r ? esc(r.summary) : 'New Run'}</span>
+        ${r ? traceStrip(r) : ''}<button class="btn pri" data-go="#/">＋ New</button>
+      </header>
+      <div class="bar" style="border-radius:0;height:3px"><i style="width:${pct}%;background:${r && r.status === 'failed' ? 'var(--bad)' : r && r.status === 'paused' ? 'var(--warn)' : 'var(--accent)'}"></i></div>
+      <main class="scroll" style="flex:1;padding:20px 20px 90px"><div style="max-width:820px;margin:0 auto">${runBody(r)}</div></main>
+      <div id="slide" style="position:fixed;inset:0;display:none;z-index:50"><div data-close style="position:absolute;inset:0;background:rgba(0,0,0,.25)"></div>
+        <aside class="scroll" style="position:absolute;left:0;top:0;bottom:0;width:340px;background:var(--side);padding:8px 6px">
+          <div style="padding:10px 12px;font-weight:700">Earlier Runs</div>${historyHTML(r)}</aside></div>
+    </div>`; },
+    after() { const s = $('#slide'); $('#histBtn').onclick = () => s.style.display = 'block'; s.addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target.closest('[data-go]')) s.style.display = 'none'; }); } },
+
+  // C: workspace. Needs-attention inbox on top of a narrow sidebar; Run split into stream (left) and live trace + facts (right).
+  C: { name: 'Workspace: inbox sidebar + split stream / trace panel', render(r) {
+    const need = RUNS.filter(attn), run = RUNS.filter(x => x.status === 'running');
+    return `<div class="app">
+      <aside style="width:236px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column">
+        <button class="newbtn" data-go="#/">＋ New Run</button>
+        <div class="grp" style="padding-top:2px">Needs you · ${need.length}</div>
+        <div style="padding:0 6px">${need.map(x => `<button class="row attn ${r && r.id === x.id ? 'sel' : ''}" data-go="#/runs/${x.id}"><span class="t">${esc(x.summary)}</span><span class="m">${badge(x.status)}<span>${rel(x.ago)}</span></span></button>`).join('')}</div>
+        <div class="grp">Running · ${run.length}</div>
+        <div style="padding:0 6px">${run.map(x => `<button class="row ${r && r.id === x.id ? 'sel' : ''}" data-go="#/runs/${x.id}"><span class="t">${esc(x.summary)}</span><span class="m">${badge(x.status)}</span></button>`).join('')}</div>
+        <div class="grp">History</div>
+        <nav class="scroll" style="flex:1;padding:0 6px 12px">${RUNS.filter(x => !attn(x) && x.status !== 'running').map(x => `<button class="row ${r && r.id === x.id ? 'sel' : ''}" data-go="#/runs/${x.id}"><span class="t">${esc(x.summary)}</span><span class="m"><span>${badge(x.status)}</span><span>${rel(x.ago)}</span></span></button>`).join('')}</nav>
+      </aside>
+      <main class="scroll" style="flex:1;padding:20px 20px 90px;min-width:0"><div style="max-width:660px;margin:0 auto">${runBody(r)}</div></main>
+      ${r ? `<aside class="scroll" style="width:330px;background:var(--panel);border-left:1px solid var(--line);padding:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><b>Trace</b>${badge(r.status)}</div>
+        <div style="margin:12px 0 18px">${traceVertical(r)}</div>
+        <div class="bar"><i style="width:${r.status === 'done' ? 100 : 38}%;background:var(--accent)"></i></div>
+        <div class="muted" style="margin-top:6px;font-size:12px">${r.status === 'done' ? 'Finished' : r.status === 'running' ? '38% · reading postings' : 'Stopped here'} · ${rel(r.ago)}</div>
+        <h4 class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin:20px 0 6px">Run</h4>
+        <div style="font-size:13px;line-height:1.7"><span class="muted">ID</span> ${r.id}<br><span class="muted">Focus</span> compensation, skills<br><span class="muted">Postings</span> 142 fetched · 38 relevant</div></aside>` : ''}
+    </div>`; } },
+};
+
+// ---- render, wire up, switcher -------------------------------------------------------------
+const KEYS = Object.keys(frames);
+function setVariant(k) { const u = new URL(location.href); u.searchParams.set('variant', k); history.replaceState(null, '', u); render(); }
+function render() {
+  const k = KEYS.includes(variant()) ? variant() : 'A', f = frames[k], r = route();
+  $('#root').innerHTML = f.render(r) + `<div class="switcher"><button data-v="-1">←</button><span>${k} (${f.name})</span><button data-v="1">→</button></div>`;
+  document.title = 'PROTOTYPE: shell · ' + k;
+  f.after && f.after();
+}
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if (g) { go(g.dataset.go); return; }
+  const v = e.target.closest('[data-v]'); if (v) { const i = KEYS.indexOf(variant()); setVariant(KEYS[(i + +v.dataset.v + KEYS.length) % KEYS.length]); return; }
+  const c = e.target.closest('[data-chip]'); if (c) c.classList.toggle('on');
+});
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea,[contenteditable]')) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { const i = KEYS.indexOf(variant()); setVariant(KEYS[(i + (e.key === 'ArrowRight' ? 1 : -1) + KEYS.length) % KEYS.length]); }
+});
+window.addEventListener('hashchange', render);
+render();
+</script>
+</body>
+</html>

@@ -12,7 +12,7 @@ from talent_scout.collection.types import FetchRecord, LowDataPayload
 from talent_scout.gateway.coalesce import coalesce
 from talent_scout.gateway.types import CacheStatus, Fetch, GatewayError
 from talent_scout.kernel.events import emit
-from talent_scout.kernel.state import LogKind, RunLogEntry, State, log
+from talent_scout.kernel.state import LogKind, RunLogEntry, State, log, log_entry
 from talent_scout.kernel.types import Posting, SearchPlan, Source
 from talent_scout.runtime.deps import Deps, Node, Router
 from talent_scout.runtime.pause import LowDataPause
@@ -23,10 +23,6 @@ RAW_FACTOR = 1.5  # the model can't see relevance, so it gathers more raw Postin
 MAX_SAMPLE_TITLES = 5
 MAX_REJECTED_TITLES = 10
 OLD_DAYS = 30
-
-
-def _entry(node: str, kind: LogKind, message: str, **data) -> RunLogEntry:
-    return RunLogEntry(node=node, kind=kind, message=message, data=data)
 
 
 def _fetch_for(plan: SearchPlan, title: str, page: int = 1) -> Fetch:
@@ -164,20 +160,20 @@ def _closing_caveats(state: State, node: str) -> list[RunLogEntry]:
     sample, target = state.sample_postings, state.current_plan.target_postings
     entries = []
     if sample and (federal := sum(p.source == Source.usajobs for p in sample)) * 2 > len(sample):
-        entries.append(_entry(node, LogKind.caveat, f"Mostly federal: {federal} of {len(sample)} Postings are from USAJOBS", federal=federal))
+        entries.append(log_entry(node, LogKind.caveat, f"Mostly federal: {federal} of {len(sample)} Postings are from USAJOBS", federal=federal))
     fetched = [o.fetched_at for r in state.fetches if r.result for o in r.result.sources.values()]
     if sample and fetched:
         # Measured from the newest fetch, never today: a clock here would change the text and miss every downstream LLM cache entry.
         newest = max(fetched).date()
         old = sum((newest - p.posted_at).days > OLD_DAYS for p in sample)
         if old * 2 > len(sample):
-            entries.append(_entry(node, LogKind.caveat, f"Old data: {old} of {len(sample)} Postings are over {OLD_DAYS} days old", old=old))
+            entries.append(log_entry(node, LogKind.caveat, f"Old data: {old} of {len(sample)} Postings are over {OLD_DAYS} days old", old=old))
     if state.broadened_plans:
         plans = [state.search_plan, *state.broadened_plans]
         changes = [_changes(a, b) for a, b in zip(plans, plans[1:])]
-        entries.append(_entry(node, LogKind.caveat, f"Broadened {len(changes)} time(s): " + " | ".join(changes), count=len(changes)))
+        entries.append(log_entry(node, LogKind.caveat, f"Broadened {len(changes)} time(s): " + " | ".join(changes), count=len(changes)))
     if len(sample) < target:
-        entries.append(_entry(node, LogKind.caveat, f"Too few Postings: {len(sample)} relevant of a target of {target}", count=len(sample), target=target))
+        entries.append(log_entry(node, LogKind.caveat, f"Too few Postings: {len(sample)} relevant of a target of {target}", count=len(sample), target=target))
     return entries
 
 
@@ -189,13 +185,13 @@ def _collect_caveats(current: list[FetchRecord]) -> list[RunLogEntry]:
     if outcomes:
         failed |= {r.source for r in current if r.error}
     if failed:
-        entries.append(_entry("collect", LogKind.caveat, f"One source failed: {', '.join(sorted(failed))}", sources=sorted(failed)))
+        entries.append(log_entry("collect", LogKind.caveat, f"One source failed: {', '.join(sorted(failed))}", sources=sorted(failed)))
     if dropped := sum(o.dropped for o in outcomes):
-        entries.append(_entry("collect", LogKind.caveat, f"{dropped} Postings were dropped by the source mapper", dropped=dropped))
+        entries.append(log_entry("collect", LogKind.caveat, f"{dropped} Postings were dropped by the source mapper", dropped=dropped))
     if replayed := [o for o in outcomes if o.cache == CacheStatus.replay]:
         oldest = min(o.fetched_at for o in replayed).isoformat()
         live = sum(o.cache == CacheStatus.miss for o in outcomes)
-        entries.append(_entry("collect", LogKind.caveat, f"Replayed data: oldest fetched {oldest}, {live} live calls during replay", oldest=oldest, live=live))
+        entries.append(log_entry("collect", LogKind.caveat, f"Replayed data: oldest fetched {oldest}, {live} live calls during replay", oldest=oldest, live=live))
     return entries
 
 
@@ -277,8 +273,8 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
                 totals.setdefault(r.fetch.title, {})[r.source] = r.result.sources[r.source].total
         duplicates = sum(len(v) for v in merged.values())
         entries = [
-            _entry("collect", LogKind.note, f"kept {len(kept)} Postings, merged {duplicates} Duplicates", kept=len(kept), duplicates=duplicates),
-            _entry("collect", LogKind.note, "source totals", totals=totals),
+            log_entry("collect", LogKind.note, f"kept {len(kept)} Postings, merged {duplicates} Duplicates", kept=len(kept), duplicates=duplicates),
+            log_entry("collect", LogKind.note, "source totals", totals=totals),
             *_collect_caveats(current),
         ]
         return {"postings": {p.key: p for p in kept}, "fetches": stripped, "run_log": [*state.run_log, *entries]}
@@ -303,11 +299,11 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         outcome = after_relevance(after)
         entries = []
         if degraded := [p.key for p, r in zip(fresh, results) if r["relevant"].source == "llm_fallback" or r["relevant"].truncated]:
-            entries.append(_entry(
+            entries.append(log_entry(
                 "relevance", LogKind.caveat,
                 f"Jev degraded: {len(degraded)} Postings were judged by the LLM fallback or from shortened text", keys=degraded,
             ))
-        entries.append(_entry(
+        entries.append(log_entry(
             "relevance", LogKind.route,
             f"{len(update['sample'])} of {len(state.postings)} Postings relevant (route: {outcome})",
         ))
@@ -336,7 +332,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
             blocked=state.fetch_blocked,
         )
         answer = interrupt(LowDataPause(payload=payload))
-        entries = [_entry("low_data_review", LogKind.pause, f"user chose {answer.action}")]
+        entries = [log_entry("low_data_review", LogKind.pause, f"user chose {answer.action}")]
         # Only on continue: a Pause that ends in broaden would repeat them for every round.
         if answer.action == "continue":
             entries += _closing_caveats(state, "low_data_review")

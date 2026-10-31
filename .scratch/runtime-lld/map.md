@@ -5,7 +5,7 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (components G and
 
 ## Destination
 
-`docs/lld/runtime.md`: an LLD of Runtime and Clients precise enough to build straight from, covering pass 1 (wiring, SQLite, registry, Run Controller, Pause protocol, resume guard, CLI, stub-node skeleton), pass 2 (`--focus` plumbing, Streamlit's mapping onto the Run Controller) and pass 3 (event model), with nothing left to decide. Building the code is a separate effort after this map.
+`docs/lld/runtime.md`: an LLD of Runtime and Clients precise enough to build straight from, covering pass 1 (wiring, SQLite, registry, Run Controller, Pause protocol, resume guard, CLI, stub-node skeleton), pass 2 (`--focus` plumbing, Streamlit's mapping onto the Run Controller) pass 3 (event model) and how pass 6 opens the Store, with nothing left to decide. Building the code is a separate effort after this map.
 
 ## Notes
 
@@ -24,6 +24,7 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (components G and
   - **CLI.** Stdlib `argparse`: `scout run "<request>" [--focus dim ...]`, `scout resume [thread_id]` (lists resumable Runs with no ID), `scout show <thread_id>`. The Market Brief is printed and written as JSON and Markdown to `runs/<thread_id>/`.
   - **Events (pass 3).** Clients get a chat-assistant-style live view: LLM tokens as they arrive, tool and API calls as they happen, and a reasoning display. The event stream yields a `RunEvent` union and clients never see LangGraph chunks. The exact events and their sources are decided in [Clients flow](issues/03-clients-flow.md), after [Research: live streaming sources](issues/05-research-live-streaming-sources.md).
   - **Streamlit is disposable.** A simple web UI is future scope, so Streamlit stays a thin client that shapes nothing in Runtime.
+- On 2026-10-31 the user told the agent to make every remaining decision itself and finish the map. Tickets 06 and 07 were decided by the agent, and each says so.
 
 ## Decisions so far
 
@@ -34,11 +35,16 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (components G and
 - [Run Controller API and wiring](issues/02-run-controller-and-wiring.md): the Controller owns the graph task and hands out a `RunHandle` with an in-memory event buffer; the registry is a `runs` table written after the checkpoint and reconciled on read; `Pause` is a discriminated union by kind; the full graph compiles from day one with stubs for missing stages; the skeleton proves resume with a kill-and-resume test across processes.
 - [Clients flow](issues/03-clients-flow.md): `rich` CLI with `$EDITOR` plan edits and `Ctrl-C` cancelling to a resumable Run; `RunEvent` union with tokens only from `fetch_agent` and a new `tasks` stream mode to verify; tokens stay out of the replay buffer; Streamlit is a thin client with no Controller changes.
 - [Write docs/lld/runtime.md](issues/04-write-runtime-lld-doc.md): the LLD is written and the Kernel, Gateway, HLD and future-scope docs agree with it; the `tasks` mode passed an offline check, which also removed the need for a custom extraction signal.
+- [Opening the Store](issues/06-opening-the-store.md): from pass 6 the Controller opens it on `runs_db` on its own autocommit connection, and nodes reach it through `runtime.store`, not `Deps`.
+- [Bring the LLD in line with the code](issues/07-bring-the-lld-in-line-with-the-code.md): three stale details fixed in the doc, the code was right each time, and nothing else in HLD §3's Runtime row is undecided.
 
 ## Not yet specified
+
+Nothing: the destination is reached.
 
 ## Out of scope
 
 - Infra shell internals: only the seam at the Run Controller is stated here.
 - Node bodies, Pause payload and answer fields, what each `--focus` value changes: stage LLDs.
+- What the Store holds and which nodes read it: Long-term memory LLD.
 - Writing the Runtime and CLI code: separate build effort after this map.

@@ -179,6 +179,9 @@ class State(BaseModel):                     # frozen, extra="forbid"
     stats: MarketStats | None = None
 
     # --- Brief
+    brief_draft: BriefDraft | None = None
+    critic_verdicts: list[InsightVerdict] = []
+    revisions: int = 0
     brief: MarketBrief | None = None
     brief_markdown: str | None = None
 
@@ -210,6 +213,8 @@ class State(BaseModel):                     # frozen, extra="forbid"
 | `extractions` | Analysis | `batch_extract` × N | |
 | `skill_aliases` | Analysis | `normalise_skills` | |
 | `stats` | Analysis | `stats` | |
+| `brief_draft`, `revisions` | Brief | `write_brief` | see §6 |
+| `critic_verdicts` | Brief | `critic` appends, `write_brief` cuts | see §6 |
 | `brief`, `brief_markdown` | Brief | `render` | |
 | `run_log` | Kernel | every node via `log()` | never cleared |
 
@@ -218,8 +223,8 @@ Why it looks like this:
 - **Frozen.** In LangGraph, `state.postings["x"] = p` inside a node silently does nothing, because only *returned* updates are saved. Frozen turns that into an immediate error, so every change has to come back as `{"postings": ...}`.
 - **Search Plan split.** `broaden` belongs to Collection but revises the plan. Giving Collection its own `broadened_plans` keeps one writer per slice, and `current_plan` reads both. The attempt count is `len(broadened_plans)`: no counter to drift, and every revision shows up in Run Notes for free.
 - **`sample` holds keys, not Postings.** Analysis and Brief look Postings up in `postings`, so there's one copy of each.
-- **`focus` reuses `Dimension`,** so `--focus compensation` needs no new type. It changes nothing in the search ([Request & Plan LLD](request-plan.md) §8); ⏳ Brief uses it for emphasis.
-- ⏳ Stage LLDs add their private fields here: the Brief draft, critic verdicts and revision state; and each stage's routing-decision fields.
+- **`focus` reuses `Dimension`,** so `--focus compensation` needs no new type. It changes nothing in the search ([Request & Plan LLD](request-plan.md) §8); Brief uses it for emphasis ([Brief LLD](brief.md) §9).
+- Stage LLDs add their private fields here, and each stage's routing-decision fields.
 - ⏳ The `preferences` slice is added by the Long-term memory LLD.
 
 ## 5. Reducers
@@ -245,7 +250,7 @@ Elsewhere a reducer would only be a convenience, and explicit writes read better
 | `clarify` → `intake` → `clarity_check` | `questions` rewritten with answers; `request_draft` replaced; an Assumption is added if the re-ask cap is hit | earlier questions (re-asks are counted from them) |
 | `plan_review` reject → `plan` | `search_plan` replaced | everything else; nothing has been fetched yet |
 | → `broaden` | the new plan is appended to `broadened_plans`; `messages` = `[]`; `sample` and `fetch_blocked` are recomputed by the next `relevance` | `postings`, `fetches`, `relevance_verdicts` |
-| `critic` → `write_brief` | ⏳ draft and verdicts replaced (Brief LLD) | `stats`, `sample` |
+| `critic` → `write_brief` | flagged Insights replaced in `brief_draft`, `critic_verdicts` cut to the kept ones, `revisions` + 1 ([Brief LLD](brief.md) §5) | the Summary, kept Insights, `stats`, `sample` |
 | Pause re-entry, or a kill mid-node | nothing: an uncommitted node wrote nothing | everything |
 
 **Why reset messages:** the Postings are already safe in `postings`. Old tool chatter costs tokens and can pull the model back toward the old plan. With replace-only, the reset is just `broaden` returning `{"messages": []}`.
@@ -261,10 +266,9 @@ Elsewhere a reducer would only be a convenience, and explicit writes read better
 | `fetch_agent` | `tools` · `collect` | `messages[-1].tool_calls` |
 | `relevance` | `Send`×N → `batch_extract` · `broaden` · `low_data_review` | `sample` vs `current_plan.target_postings`, then `fetch_blocked`, then attempts left = 2 − `len(broadened_plans)` ([Collection LLD](collection.md) §4). Sufficient returns `"analyse"`, which Runtime turns into Analysis's `fan_out`. |
 | `low_data_review` ⏸ | `broaden` · `Send`×N · `stats` · END | `low_data_decision`, the user's answer. `fan_out` sends zero Postings to `stats`, because a fan-out with zero branches would stall the Run. |
-| `critic` | `write_brief` · `render` | ⏳ critic verdicts and revision cap (Brief LLD) |
+| `critic` | `write_brief` · `render` | `critic_verdicts` and `revisions` against a cap of 2 ([Brief LLD](brief.md) §10) |
 
 - Every `Send` payload is a model instance, not a dict. The guard enforces this.
-- ⏳ The revision cap and its decision fields belong to the Brief LLD.
 
 ## 8. Write guard
 
@@ -361,7 +365,7 @@ async def check_balance(settings) -> float: ...  # GET /api/v1/key; raises below
 class LLMExhausted(Exception): tier, name, attempts, bad_output   # chained to the last error; bad_output: that error was bad output, not transport
 ```
 
-- **Two entry points, async only.** `structured` serves intake, plan, extraction, brief writing, the critic and Jev's LLM fallback. `chat` exists only for `fetch_agent`, which needs tools and its own message history; tools are bound to each model *before* the chain is built, because a fallback wrapper has no `bind_tools`. Stages own every prompt.
+- **Two entry points, async only.** `structured` serves intake, plan, extraction, brief writing and Jev's LLM fallback. `chat` exists only for `fetch_agent`, which needs tools and its own message history; tools are bound to each model *before* the chain is built, because a fallback wrapper has no `bind_tools`. Stages own every prompt.
 - **Prompt prefix by signature.** `structured` takes its fixed `system` text when built, and its input is only the variable user content, so stable instructions and schema always come first (HLD §5). No Claude `cache_control` (future-scope).
 - **Models, testing phase.** Both tiers run `deepseek/deepseek-v4.1-flash` ($0.045/$0.50 per M) → `minimax/minimax-m3.1-flash` ($0.15/$0.60): two providers, 1M context, both verified live with strict `json_schema` under `provider.require_parameters: true`. The tier names stay in code, so `LLM_CHEAP` / `LLM_STRONG` in `.env` restore the research picks (future-scope).
 - **Reasoning and output room.** Every call sends `reasoning: {effort}`, `low` for cheap and `medium` for strong. Live, DeepSeek at default effort spent 178 of 200 output tokens reasoning on a 3-field extraction, and MiniMax rejects `reasoning.enabled: false`. `max_tokens` defaults to 2,048 (cheap) and 8,192 (strong), overridable per call, never below 1,000. It is a ceiling, not a charge: about $0.02 per heavy Run at low effort, about $0.12 if every call used 1,000 output tokens.
@@ -401,7 +405,7 @@ One `Settings(BaseSettings)` (`pydantic-settings`) read from the root `.env`. `g
 Off by default. Setting `REPLAY_CACHE=<path>` switches on replay for the whole graph; the Gateway reads the same setting for jobs data, so HLD §7's "the whole graph runs from cached responses" holds as written.
 - **LLM:** a ~25-line `BaseCache` on stdlib `sqlite3`, installed with `set_llm_cache()`. LangChain keys it on the messages plus the model id and parameters, so prompt edits, model changes and feedback retries all miss correctly. Written by hand to avoid the `langchain-community` dependency.
 - **Jev:** a second table in the same file, used by `jev.judge` (§11).
-- **A replayed Run is always obvious to the user.** ⏳ Brief: `render` puts a replay banner at the top of the Market Brief, read from settings ("Replayed run: jobs data, LLM and Jev responses came from the replay cache, not live sources"). Collection logs a Caveat with the age of the oldest cached jobs response used, because replay ignores L1's TTL ([Collection LLD](collection.md) §11).
+- **A replayed Run is always obvious to the user.** `render` ([Brief LLD](brief.md) §12) puts a replay banner at the top of the Market Brief, read from settings ("Replayed run: jobs data, LLM and Jev responses came from the replay cache, not live sources"). Collection logs a Caveat with the age of the oldest cached jobs response used, because replay ignores L1's TTL ([Collection LLD](collection.md) §11).
 - Cache hits repeat the original cost in metadata. That's harmless.
 
 ## 15. Test seams

@@ -100,9 +100,12 @@ class State(Model):
         return [self.postings[k] for k in self.sample]
 
 
+def log_entry(node: str, kind: LogKind, message: str, /, **data: JsonValue) -> RunLogEntry:
+    return RunLogEntry(node=node, kind=kind, message=message, data=data)
+
+
 def log(state: State, node: str, kind: LogKind, message: str, /, **data: JsonValue) -> dict:
-    entry = RunLogEntry(node=node, kind=kind, message=message, data=data)
-    return {"run_log": [*state.run_log, entry]}
+    return {"run_log": [*state.run_log, log_entry(node, kind, message, **data)]}
 
 
 class StateWriteError(Exception):

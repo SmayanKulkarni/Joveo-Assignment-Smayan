@@ -5,6 +5,7 @@ The low-level design of Runtime and Clients (components G and H in [HLD](../HLD.
 Source tickets (each holds the full reasoning):
 - [Run Controller API and wiring](../../.scratch/runtime-lld/issues/02-run-controller-and-wiring.md)
 - [Clients flow](../../.scratch/runtime-lld/issues/03-clients-flow.md)
+- [Opening the Store](../../.scratch/runtime-lld/issues/06-opening-the-store.md)
 - Research: [async persistence and the resume guard](../../.scratch/runtime-lld/issues/01-research-async-persistence-and-guard.md), [live streaming sources](../../.scratch/runtime-lld/issues/05-research-live-streaming-sources.md), [LangGraph persistence and resume](../../.scratch/talent-scout-hld/issues/15-research-langgraph-persistence-and-resume.md)
 
 ## 1. What Runtime and Clients are
@@ -23,7 +24,7 @@ Clients own the CLI and a thin Streamlit page. Neither owns any state.
 They do **not** own:
 - node bodies, or each Pause's payload and answer fields (stage LLDs)
 - what each `focus` value changes ([Request & Plan LLD](request-plan.md) §8). Clients only pass it through.
-- `AsyncSqliteStore`: not opened until preferences land in pass 6 (⏳ Long-term memory)
+- what the Store holds (⏳ Long-term memory). Runtime only opens it, from pass 6 (§11).
 - infra shell internals. Its only seam is the Run Controller.
 
 ## 2. Layout
@@ -63,6 +64,7 @@ class Deps:
     jev: Jev
     gateway: JobsGateway
     settings: Settings
+    stub_stages: bool = False   # tests run every stage as its stub, even one that has landed
 
 Node = Callable[..., Awaitable[dict]]
 Router = Callable[[State], str | list[Send]]
@@ -72,7 +74,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]: ...
 ROUTERS: dict[str, Router]        # keyed by the node they follow
 ```
 
-Nodes close over `Deps`, and there is no `context_schema`. A stage exports only what it has built. A stage's pass 1 export includes a pass-through for any Pause it hasn't built yet (such as `plan_review` returning `{}`), so a real Run doesn't stop at a stub Pause.
+Nodes close over `Deps`, and there is no `context_schema`. A stage exports only what it has built. A stage's pass 1 export includes a pass-through for any Pause it hasn't built yet (such as `plan_review` returning `{}`), so a real Run doesn't stop at a stub Pause. From pass 6, a node that needs the Store declares `runtime: Runtime` and uses `runtime.store`; it isn't in `Deps`.
 
 ## 4. Graph wiring (`runtime/graph.py`)
 
@@ -92,7 +94,7 @@ CONDITIONAL = {
     "clarity_check":   ["clarify", "plan", END],
     "plan_review":     ["fetch_agent", "plan", END],
     "fetch_agent":     ["tools", "collect"],
-    "relevance":       ["batch_extract", "broaden", "low_data_review"],
+    "relevance":       ["batch_extract", "stats", "broaden", "low_data_review"],
     "low_data_review": ["broaden", "batch_extract", "stats", END],
     "critic":          ["write_brief", "render"],
 }
@@ -104,7 +106,7 @@ OWNERS = {
 }
 ```
 
-`build_graph(deps, saver)` wraps every node and router in `owned(name, owner)` from `OWNERS` and compiles once, on `State`. The list of targets goes to `add_conditional_edges`, because a router returning `Send` can't be read for its destinations.
+`build_graph(deps, saver, store=None)` wraps every node and router in `owned(name, owner)` from `OWNERS` and compiles once, on `State`, with `compile(checkpointer=saver, store=store)`. `owned()` keeps the signature through `functools.wraps`, so `runtime` is still injected. The list of targets goes to `add_conditional_edges`, because a router returning `Send` can't be read for its destinations.
 
 **`"analyse"`.** Collection's routers return this plain outcome where they would fan out, because `Send` payloads and batching belong to Analysis and a stage can't import another. `build_graph` wraps those two routers:
 
@@ -114,7 +116,7 @@ def routed(state):
     return fan_out(state) if out == "analyse" else out
 ```
 
-`fan_out` comes from the [Analysis LLD](analysis.md) §5 and also sends zero Postings to `stats`, which is why `low_data_review` keeps its `stats` target. Until Analysis lands, the stub in `runtime/testing.py` returns `"stats"`. See the [Collection LLD](collection.md) §4. Its `Send` payload, `ExtractBatch`, isn't reachable from `State`, so it joins `ALLOWED_MSGPACK`.
+`fan_out` comes from the [Analysis LLD](analysis.md) §5 and also sends zero Postings to `stats`, which is why both wrapped routers list a `stats` target. Until Analysis lands, the stub in `runtime/testing.py` returns `"stats"`. See the [Collection LLD](collection.md) §4. Its `Send` payload, `ExtractBatch`, isn't reachable from `State`, so it joins `ALLOWED_MSGPACK`.
 
 **Fixed per-call config:** `thread_id`, `run_name="scout"`, tags, `thread_id` in LangSmith metadata, `durability="sync"`, `stream_mode=["updates", "messages", "custom", "tasks"]`. `recursion_limit` stays at the default (10007). All four modes are on from pass 1, and pass 3 only adds their mapping.
 
@@ -193,7 +195,7 @@ The Controller owns the graph task, so closing a subscription never cancels the 
 
 - **Buffer:** one `deque(maxlen=5000)` per active Run in this process. Oldest events drop first, and the terminal event is always newest, so it stays. Nothing is persisted: a reloaded client rebuilds from `get_run` (`run_log`, pending Pause, status).
 - **Subscribers:** each `events()` call takes a snapshot of the buffer and registers its own `asyncio.Queue`, with no `await` between the two. `Token` and `Reasoning` go only to subscribers, never the buffer, because one `fetch_agent` turn could otherwise push out everything else.
-- **`cancel()`** cancels the task, writes `failed` with error `cancelled`, releases the lock, and returns the `Stopped` event.
+- **`cancel()`** cancels the task, writes `failed` with error `cancelled` (`aborted` if there is no checkpoint yet, since nothing could rerun), releases the lock, and returns the `Stopped` event.
 
 ## 7. Registry and status (`runtime/registry.py`)
 
@@ -315,7 +317,8 @@ def emit(event: dict) -> None:
 1. Deps: `make_tiers`, `make_jev`, `async with make_gateway`.
 2. Saver: raw `AsyncSqliteSaver(conn, serde=JsonPlusSerializer(allowed_msgpack_modules=[...]))` on `runs_db`, constructed inside the running loop. `from_conn_string` takes no `serde`. `setup()` is retried with backoff, because racing it on a fresh file fails.
 3. Registry connection, on `runs_db` with a 5 s busy timeout. WAL comes from the saver's `setup()`.
-4. `build_graph` compiles once.
+4. From pass 6, the Store: raw `AsyncSqliteStore` on `runs_db`, on its own connection with `isolation_level=None` and a 5 s busy timeout, and `setup()` under the saver's retry. It must be autocommit: on a default connection `setup()` leaves a transaction open, and the Store's next write fails.
+5. `build_graph` compiles once.
 
 The CLI opens one Controller per `asyncio.run`. Streamlit holds one on a background loop for the process lifetime.
 
@@ -412,7 +415,7 @@ Added to the Kernel's `Settings` (Kernel §13):
 | Deps | `make_tiers`, `make_jev`, `make_gateway` | `fake_deps(settings)`: fake chains, `fake_classifier`, `FakeGateway` |
 | Balance | `check_balance` | Monkeypatched to pass |
 
-**Stubs.** Each stub node writes one `log` note and a minimal valid slice for its owner (`render` writes `MarketBrief()` and a line of Markdown). The three Pause stubs each interrupt once. Stub routers walk one path: `clarity_check` → `clarify` until `questions` is non-empty, then `plan` → `plan_review` → `fetch_agent` → `collect` → `relevance` → `low_data_review` → `stats` → `write_brief` → `critic` → `render`.
+**Stubs.** Each stub node writes one `log` note and a minimal valid slice for its owner (`render` writes `stub_brief()` and a line of Markdown, [Brief LLD](brief.md) §15). The three Pause stubs each interrupt once. Stub routers walk one path: `clarity_check` → `clarify` until `questions` is non-empty, then `plan` → `plan_review` → `fetch_agent` → `collect` → `relevance` → `low_data_review` → `stats` → `write_brief` → `critic` → `render`.
 
 **The proof, in `pytest`, with no LLM or network.** A test starts a Run in a subprocess and kills it with `taskkill /F` at each Pause. In a fresh process it fetches the typed Pause with `get_pause` and resumes, through all three Pauses to `done`. It also checks that a second process resuming a running thread gets `RunLocked`. Runtime is not done until this passes.
 
@@ -443,13 +446,13 @@ Each step leaves one small `pytest` file behind. No test calls an LLM or a jobs 
 3. The rest of the mapping in `runtime/events.py`. Test on a scripted graph: tokens only from `fetch_agent`, reasoning optional, `Token` and `Reasoning` absent from the replay buffer, and a `Send` run with one failure counts correctly across the rerun, with `NodeDone` firing once.
 4. CLI live view (§12) and Streamlit's tool and API lines. One live run to check how the view reads, and check whether `deepseek/deepseek-v4.1-flash` sends readable reasoning, which research didn't test.
 
-**Pass 6:** `AsyncSqliteStore` on `runs_db` on its own connection, with values written using `model_dump(mode="json")` and read with `model_validate` (⏳ Long-term memory).
+**Pass 6:** Open the Store (§11) and pass it to `build_graph` (§4), with values written using `model_dump(mode="json")` and read with `model_validate`. Test: a value written through `runtime.store` behind `owned()` is read on another thread after the Controller reopens, and a Pause still resumes. What's stored is ⏳ Long-term memory.
 
 ## 17. Excluded and deferred
 
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
   - **Analysis:** settled in the [Analysis LLD](analysis.md): `fan_out(state)` (§4), and the `normalise_skills` node it adds to the graph.
-  - ⏳ **Brief:** `critic` pass-through until pass 5. `done` depends on `render` writing `brief`.
-  - ⏳ **Long-term memory:** opening the Store.
+  - **Brief:** settled in the [Brief LLD](brief.md): `critic` pass-through until pass 5 (§10), and `done` still depends on `render` writing `brief`.
+  - ⏳ **Long-term memory:** what the Store holds, and which nodes read it.
   - ⏳ **Infra shell:** the API and workers wrap `RunController`. A worker owning the task is what would make a client detach possible.

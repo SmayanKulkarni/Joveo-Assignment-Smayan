@@ -27,7 +27,7 @@ It does **not** own:
 - `SearchPlan` and its limits (Kernel §3, [Request & Plan LLD](request-plan.md) §6)
 - `Fetch`, `coalesce`, the per-source call or the budget guard (Gateway)
 - `fan_out`, batching and federal pay in Stats ([Analysis LLD](analysis.md))
-- rendering Caveats and the `total` disclosure (⏳ Brief)
+- rendering Caveats and the `total` disclosure ([Brief LLD](brief.md) §12)
 
 ## 2. Layout
 
@@ -338,7 +338,7 @@ async def low_data_review(state):
 
 **No Caveat for a normal L2 read,** because up to 7 days old is within the data's expected freshness.
 
-**Source totals** are a `note`, `{title: {source: total}}`, leaving out `cache == store`, whose total isn't the source's. ⏳ Brief renders it as labelled disclosure ("Analysed 50 of about 3,200 Adzuna matches"). It is never a Stat or Evidence (Gateway §3).
+**Source totals** are a `note`, `{title: {source: total}}`, leaving out `cache == store`, whose total isn't the source's. Brief renders it as labelled disclosure, per title and source ([Brief LLD](brief.md) §12). It is never a Stat or Evidence (Gateway §3).
 
 Merged Duplicates are a `note`, not a Caveat (Gateway §6).
 
@@ -385,5 +385,5 @@ Request & Plan pass 1 comes first, since this stage needs the `SearchPlan` limit
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
   - **Analysis:** settled in the [Analysis LLD](analysis.md): `fan_out(state)`, its Sends and batching, zero Postings to `stats`, and federal pay apart from Adzuna salaries.
-  - ⏳ **Brief:** every Caveat in Run Notes, the `total` disclosure, and rendering `broadened_plans`.
+  - **Brief:** settled in the [Brief LLD](brief.md) §12: every Caveat in Run Notes, the `total` disclosure, and rendering `broadened_plans`.
   - ⏳ **Delivery:** choosing sample runs so 18 worst-case Adzuna calls fit the daily limit.

@@ -56,6 +56,21 @@ Work deliberately left out of an LLD, with why and what would bring it back. One
 | A stripped title for grouping | Code can't remove locations or levels without damaging real variants | Title Stats proving too fragmented to use |
 | Advertised and estimated pay reconciled into one figure | There's no honest way to weight a model's guess against a stated salary | A published accuracy figure for Adzuna's estimates |
 
+## Brief
+
+| Item | Why it's left out | Brings it back |
+|---|---|---|
+| Real talent supply data | Job APIs only show demand, so the Outlook reads demand pressure and says so | A candidate-side data source |
+| A fourth "not rated" Outlook | The spec requires exactly one of three, so a stated default is used instead | A reader mistaking the default for a finding |
+| Tuned Outlook and Confidence thresholds | They're judgement checked on one role | Sample runs across roles showing a threshold misfires |
+| A tuned critic cut | Needs a labelled set, and it ships at 0.5 | The `evals/jev/critic.jsonl` sweep in Kernel §11 |
+| Judging the Summary with the critic | Accurate Summaries scored under 0.2, so every Run would hit the cap | A question that scores long claims fairly |
+| Judging claims against Postings | Postings changed no outcome in the probe, and lowered accurate scores | Stats proving too coarse to catch a real fault |
+| Checking number words | Rare, and the critic sees them | A wrong number word reaching a Brief |
+| Keeping valid Insights from a failed draft | `LLMExhausted` doesn't carry output, and the rule-written draft covers this | The Brief written by rule Caveat firing on real Runs |
+| A key-figures table in the Markdown | `brief.json` has every Stat, and coverage gives each Dimension a line | Clients asking for the figures an Insight left out |
+| Dates on the Brief | A clock would make replayed Briefs differ | Taken from the newest `fetched_at` if a reader needs it |
+
 ## Runtime and Clients
 
 | Item | Why it's left out | Brings it back |

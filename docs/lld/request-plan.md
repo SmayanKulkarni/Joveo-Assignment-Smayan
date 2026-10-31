@@ -23,7 +23,7 @@ It owns:
 It does **not** own:
 - `SearchPlan` and its limits, which live in the Kernel so that `broaden` gets them too (§6)
 - `broaden` and `low_data_review` ([Collection LLD](collection.md))
-- Insight emphasis from `focus` (⏳ Brief)
+- Insight emphasis from `focus` ([Brief LLD](brief.md) §9)
 - preferences (⏳ Long-term memory). Its seam is in §10.
 
 ## 2. Layout
@@ -204,7 +204,7 @@ Stable text comes first, as `Tiers.structured` already enforces (Kernel §12).
 
 ## 8. `focus`
 
-`focus` changes nothing in this stage. The same Postings answer every Dimension, and Stats are cheap Python, so narrowing the search would save nothing and would weaken the rest of the Market Brief. ⏳ Brief uses it to order and emphasise Insights.
+`focus` changes nothing in this stage. The same Postings answer every Dimension, and Stats are cheap Python, so narrowing the search would save nothing and would weaken the rest of the Market Brief. Brief uses it to order and emphasise Insights ([Brief LLD](brief.md) §9).
 
 The spec's example is `--focus salary`, so the CLI accepts `salary` as an alias for `compensation` (Runtime §12).
 
@@ -256,5 +256,5 @@ Runtime pass 1 comes first, since this stage needs `runtime/deps.py`, `runtime/p
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
   - **Collection:** `broaden` works within the `SearchPlan` limits ([Collection LLD](collection.md) §9).
-  - ⏳ **Brief:** Insight emphasis from `focus`; rendering Assumptions in the Run Notes.
+  - **Brief:** settled in the [Brief LLD](brief.md): Insight emphasis from `focus` (§9); rendering Assumptions in the Run Notes (§12).
   - ⏳ **Long-term memory:** §10.

@@ -142,23 +142,34 @@ def test_a_transient_failure_during_a_revision_propagates():
     assert not e.value.bad_output
 
 
-def rendered(verdicts):
-    market = sample_state()
+def rendered(verdicts, n=12):
+    market = sample_state(n)
     drafts = [InsightDraft(text="Sample size", stat_ids=["demand.sample_size"]), InsightDraft(text="Employers", stat_ids=["competition.distinct_employers"])]
-    draft = BriefDraft(summary="The Sample holds 12 Postings.", summary_stat_ids=["demand.sample_size"], insights=drafts)
+    draft = BriefDraft(summary=f"The Sample holds {n} Postings.", summary_stat_ids=["demand.sample_size"], insights=drafts)
     return asyncio.run(nodes()["render"](market.model_copy(update={"brief_draft": draft, "critic_verdicts": verdicts})))
 
 
 def test_an_unsupported_insight_ships_capped_at_medium_with_the_caveat_in_the_run_notes():
-    update = rendered([YES, NO])
+    # 30 Postings from 30 employers rate High, so the cap is what lowers the unsupported one.
+    update = rendered([YES, NO], n=30)
     brief = update["brief"]
 
-    assert brief.run_notes.caveats[-1].startswith("Insights not confirmed: 1 ")
+    assert [i.confidence for i in brief.insights[:2]] == ["high", "medium"]
+    assert brief.run_notes.caveats[-1].startswith("Insights not confirmed: 1 Insight could not")
     assert "the critic couldn't confirm it" in brief.insights[1].confidence_reason
     assert "the critic couldn't confirm it" not in brief.insights[0].confidence_reason
     assert "Insights not confirmed" in update["brief_markdown"]
 
 
 def test_all_supported_ships_without_the_caveat():
-    brief = rendered([YES, YES])["brief"]
+    brief = rendered([YES, YES], n=30)["brief"]
     assert not any(c.startswith("Insights not confirmed") for c in brief.run_notes.caveats)
+    assert [i.confidence for i in brief.insights[:2]] == ["high", "high"]
+
+
+def test_a_replacement_that_repeats_a_kept_insight_is_retried():
+    st = state([SAMPLE, TREND], [YES, NO])
+    m = model('{"insights": [{"text": "sample size: 125 postings", "stat_ids": ["demand.sample_size"]}]}', '{"insights": []}')
+    update = asyncio.run(nodes(m)["write_brief"](st))
+
+    assert "repeats an Insight that is kept" in m.seen[1][-1].content and update["brief_draft"].insights == [SAMPLE]

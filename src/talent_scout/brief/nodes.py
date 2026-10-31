@@ -9,7 +9,7 @@ from talent_scout.brief.rules import (
 from talent_scout.brief.types import BriefDraft, Confidence, InsightDraft, InsightVerdict, MarketBrief, RunNotes
 from talent_scout.gateway.types import ATTRIBUTION
 from talent_scout.kernel.llm import LLMExhausted
-from talent_scout.kernel.state import LogKind, RunLogEntry, State, log
+from talent_scout.kernel.state import LogKind, State, log, log_entry
 from talent_scout.kernel.text import plural
 from talent_scout.kernel.types import Evidence, Source
 from talent_scout.runtime.deps import Deps, Node, Router
@@ -21,6 +21,12 @@ RULE_CAVEAT = "Brief written by rule: every model's draft failed its checks, so 
 
 def _caveats(state: State) -> list[str]:
     return [e.message for e in state.run_log if e.kind == LogKind.caveat]
+
+
+def _known_text(state: State) -> str:
+    # Text whose figures the writer may repeat besides the Stats.
+    request = state.hiring_request
+    return " ".join([request.role, request.location, *_caveats(state)])
 
 
 def _stat_lines(state: State) -> list[str]:
@@ -68,10 +74,6 @@ def _claim(state: State, insight: InsightDraft) -> dict:
     }
 
 
-def _entry(node: str, kind: LogKind, message: str, **data) -> RunLogEntry:
-    return RunLogEntry(node=node, kind=kind, message=message, data=data)
-
-
 def _run_notes(state: State) -> RunNotes:
     has_adzuna = any(p.source == Source.adzuna for p in state.sample_postings)
     return RunNotes(
@@ -104,9 +106,8 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         kept = [(i, v) for i, v in pairs if v.supported]
         flagged = [i for i, v in pairs if not v.supported]
 
-        request = state.hiring_request
         # Only the room the kept Insights leave, so a revision can't push the Brief over its cap.
-        schema = checked_revision(state.stats, " ".join([request.role, request.location, *_caveats(state)]), insight_cap(state.stats.sample_size) - len(kept))
+        schema = checked_revision(state.stats, _known_text(state), insight_cap(state.stats.sample_size) - len(kept), [i.text for i, _ in kept])
         chain = deps.tiers.structured("strong", schema, system=REVISE_SYSTEM, name="revise", max_tokens=WRITE_MAX_TOKENS)
         try:
             out = await chain.ainvoke(_revise_input(state, flagged))
@@ -130,9 +131,9 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         if state.brief_draft and state.critic_verdicts:
             return await revise(state)
 
-        request, cap = state.hiring_request, insight_cap(state.stats.sample_size)
+        cap = insight_cap(state.stats.sample_size)
         # Built per Run because the checks close over this Run's Stats.
-        schema = checked_draft(state.stats, " ".join([request.role, request.location, *_caveats(state)]), cap)
+        schema = checked_draft(state.stats, _known_text(state), cap)
         chain = deps.tiers.structured("strong", schema, system=WRITE_SYSTEM, name="write_brief", max_tokens=WRITE_MAX_TOKENS)
         try:
             out = await chain.ainvoke(_writer_input(state, cap))
@@ -154,11 +155,11 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
 
         entries = []
         if degraded := sum(j.source == "llm_fallback" or j.truncated for j in judged):
-            entries.append(_entry(
+            entries.append(log_entry(
                 "critic", LogKind.caveat, f"Critic degraded: {plural(degraded, 'Insight')} judged by the LLM fallback or from shortened text",
             ))
         supported = sum(j.outcome for j in judged)
-        entries.append(_entry(
+        entries.append(log_entry(
             "critic", LogKind.route, f"{supported} of {len(judged)} Insights supported (route: {outcome})",
             scores=[j.p_yes for j in judged], outcome=outcome,
         ))
@@ -169,7 +170,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         verdicts = [v.supported for v in state.critic_verdicts]
         # Logged first so the Run Notes include it.
         if unconfirmed := verdicts.count(False):
-            caveat = _entry("render", LogKind.caveat, f"Insights not confirmed: {plural(unconfirmed, 'Insight')} could not be confirmed by the critic and {'is' if unconfirmed == 1 else 'are'} capped at Medium")
+            caveat = log_entry("render", LogKind.caveat, f"Insights not confirmed: {plural(unconfirmed, 'Insight')} could not be confirmed by the critic and {'is' if unconfirmed == 1 else 'are'} capped at Medium")
             state = state.model_copy(update={"run_log": [*state.run_log, caveat]})
         brief = MarketBrief(
             hiring_request=state.hiring_request,

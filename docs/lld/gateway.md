@@ -26,7 +26,7 @@ It owns:
 It does **not** own:
 - the LLM-facing tool schemas, tool args → `Fetch`, which source to call, or when to page ([Collection LLD](collection.md) §5)
 - when to raise a Caveat and its wording ([Collection LLD](collection.md) §11). The Gateway only supplies the data.
-- rendering "The Adzuna API" attribution (⏳ Brief)
+- rendering "The Adzuna API" attribution ([Brief LLD](brief.md) §12)
 - keeping federal pay apart from Adzuna salary Stats ([Analysis LLD](analysis.md) §9)
 - a daily budget shared across concurrent Runs (⏳ Infra shell)
 
@@ -463,5 +463,5 @@ Each step leaves one small `pytest` file behind. No test spends live quota.
   - ⏳ **Infra shell:** shared daily budget across concurrent Runs, persistence off SQLite, MiniStack if required.
   - **Collection:** settled in the [Collection LLD](collection.md): the `search_adzuna` and `search_usajobs` schemas, re-applying `coalesce`, the `run_log` note for merged Duplicates, every Caveat's trigger, live calls in the replay Caveat, and FAA "Public Notice" announcements and any-word titles in Relevance.
   - **Analysis:** settled in the [Analysis LLD](analysis.md) §9: federal pay apart from Adzuna salaries, and how predicted salaries are treated.
-  - ⏳ **Brief:** rendering the attribution, and the `total` disclosure with Collection.
+  - **Brief:** settled in the [Brief LLD](brief.md) §12: rendering the attribution, and the `total` disclosure with Collection.
   - ⏳ **Delivery:** sample-run strategy within the Adzuna budget, and listing the aggregate exclusion in the README's known limitations.

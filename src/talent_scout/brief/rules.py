@@ -128,14 +128,18 @@ def checked_draft(stats: MarketStats, known_text: str, cap: int) -> type[BriefDr
     return CheckedDraft
 
 
-def checked_revision(stats: MarketStats, known_text: str, cap: int) -> type[BriefRevision]:
+def checked_revision(stats: MarketStats, known_text: str, cap: int, kept_texts: list[str]) -> type[BriefRevision]:
     """The same checks on a revision, where `cap` is what the kept Insights leave. No replacements is valid: those claims are dropped."""
     known, allowed = {s.id for s in stats.stats}, _allowed_figures(stats, known_text)
+    kept = {t.strip().casefold() for t in kept_texts}
 
     class CheckedRevision(BriefRevision):
         @model_validator(mode="after")
         def _check(self):
-            if problems := _insight_problems(self.insights, cap, known, allowed):
+            problems = _insight_problems(self.insights, cap, known, allowed)
+            # A reworded copy of a kept finding would ship it twice.
+            problems += [f"Insight {n} repeats an Insight that is kept" for n, i in enumerate(self.insights, 1) if i.text.strip().casefold() in kept]
+            if problems:
                 raise ValueError("; ".join(problems))
             return self
 

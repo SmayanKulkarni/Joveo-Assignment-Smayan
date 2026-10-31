@@ -6,7 +6,7 @@ from langgraph.types import interrupt
 from pydantic import Field
 
 from talent_scout.kernel.jev import Judgement
-from talent_scout.kernel.state import LogKind, RunLogEntry, State, log
+from talent_scout.kernel.state import LogKind, RunLogEntry, State, log, log_entry
 from talent_scout.kernel.types import (
     ADZUNA_CURRENCY,
     Assumption,
@@ -37,10 +37,6 @@ class QuestionDraft(Model):
 
 def _blank(value: str | None) -> bool:
     return value is None or not value.strip()
-
-
-def _entry(node: str, kind: LogKind, message: str, **data) -> RunLogEntry:
-    return RunLogEntry(node=node, kind=kind, message=message, data=data)
 
 
 def _answered(state: State) -> list[ClarifyingQuestion]:
@@ -125,9 +121,9 @@ def _caveats(judged: dict[RequestField, Judgement]) -> list[RunLogEntry]:
     # Judgements from one call share their source and truncation, so one entry each is enough.
     caveats = []
     if any(j.source == "llm_fallback" for j in judged.values()):
-        caveats.append(_entry("clarity_check", LogKind.caveat, "Ambiguity of the request was judged by the LLM fallback, not Jev"))
+        caveats.append(log_entry("clarity_check", LogKind.caveat, "Ambiguity of the request was judged by the LLM fallback, not Jev"))
     if any(j.truncated for j in judged.values()):
-        caveats.append(_entry("clarity_check", LogKind.caveat, "The request was shortened to fit Jev, so ambiguity may be misjudged"))
+        caveats.append(log_entry("clarity_check", LogKind.caveat, "The request was shortened to fit Jev, so ambiguity may be misjudged"))
     return caveats
 
 
@@ -191,15 +187,15 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
 
         if to_ask:
             new = await asyncio.gather(*(draft_question(state, draft, f, k) for f, k in to_ask.items()))
-            route = _entry("clarity_check", LogKind.route, "asking " + ", ".join(f.value for f in to_ask), fields=outcomes)
+            route = log_entry("clarity_check", LogKind.route, "asking " + ", ".join(f.value for f in to_ask), fields=outcomes)
             return {"questions": [*state.questions, *new], "run_log": [*state.run_log, *caveats, route]}
 
         # Nothing left to ask, so every flagged field is at the cap.
         request, assumptions, abort = _finish(draft, flags, deps.settings.default_country)
         if abort:
-            route = _entry("clarity_check", LogKind.route, f"aborted: {abort}", fields=outcomes)
+            route = log_entry("clarity_check", LogKind.route, f"aborted: {abort}", fields=outcomes)
             return {"run_log": [*state.run_log, *caveats, route]}
-        route = _entry("clarity_check", LogKind.route, "request is final", fields=outcomes)
+        route = log_entry("clarity_check", LogKind.route, "request is final", fields=outcomes)
         return {"hiring_request": request, "assumptions": assumptions, "run_log": [*state.run_log, *caveats, route]}
 
     async def clarify(state: State) -> dict:

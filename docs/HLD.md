@@ -140,7 +140,7 @@ flowchart TD
 - **The LLM extracts per-Posting facts**: skills as written, seniority, must-have vs nice-to-have, years of experience, employer type. Code drops any skill or year not found in the Posting's text. A single later LLM call groups skill spellings across Batches. ([Analysis LLD](lld/analysis.md) §6, §7)
 - **Python computes every number**: counts, salary median and middle 50%, pay-disclosure share, top employers, posting-date trend. `stats` is a fixed node, not a tool. There is no decision for a model to make there, and a tool would add nondeterminism, tokens and a failure mode.
 - **Pay stays in three separate groups**: advertised, Adzuna-estimated and federal are never pooled. All 100 Adzuna salaries in the fixtures are estimates. ([Analysis LLD](lld/analysis.md) §9)
-- The brief writer receives the precomputed stats and Posting IDs. It chooses and phrases Insights but never invents figures.
+- The brief writer receives the precomputed Stats and cites their ids, and code expands those into Posting IDs. It chooses and phrases Insights but never invents figures. Code sets Confidence Tags, the Hiring Outlook and Client Recommendations. ([Brief LLD](lld/brief.md) §1)
 - **Sufficiency** is a rule (count of Relevant Postings vs the Search Plan's target, with capped attempts), not an LLM opinion.
 
 **LLM tiers**: every LLM call goes through OpenRouter. A cheaper tier handles batch extraction and question drafting; a stronger tier handles planning, brief writing and critique. Each tier has a `.with_fallbacks()` chain. When structured output is malformed, the call is retried with the validation error fed back, then falls back to the next model. The models themselves are chosen in LLD. ([LLM tiering and fallbacks](../.scratch/talent-scout-hld/issues/08-llm-tiering-and-fallbacks.md))
@@ -153,7 +153,7 @@ Jev is used only for semantic judgements that cannot be computed. ([Jev placemen
 
 1. **Clarity check**: is the role, location or seniority too ambiguous to search on? This decides between clarifying and skipping ahead. An LLM still drafts the questions themselves.
 2. **Posting relevance**: is this Posting really the researched role, or a keyword collision? Only Relevant Postings count toward Sufficiency.
-3. **Critic** (stretch): is each Insight supported by the Postings it cites? This drives the revise loop.
+3. **Critic** (stretch): is each Insight supported by the Stats it cites? This drives the revise loop. ([Brief LLD](lld/brief.md) §10)
 
 All thresholds live in one place (the Kernel) and are tuned per model, because Jev's calibration does not transfer between models.
 
@@ -246,7 +246,6 @@ After that come the `samples/`, README and write-up, as a delivery task.
 
 | Component | Open questions |
 |---|---|
-| Brief | Rules for the Confidence Tag and the Hiring Outlook |
 | Long-term memory | Which preferences are remembered, and whether they are learned or asked |
 | Infra shell | Everything listed in §10 |
 | Delivery | Choosing the three sample runs within the Adzuna budget |
