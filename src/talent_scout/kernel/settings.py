@@ -53,8 +53,18 @@ class Settings(BaseSettings):
     default_country: str = "us"
     demo: bool = False
     demo_delay: float = 0.4  # seconds each Demo node waits, so a person can follow the Run
+    # All three stay unset locally, which leaves the loopback guards exactly as they are.
+    access_code: str | None = None
+    web_origin: str | None = None
+    render_external_hostname: str | None = None  # Render sets this itself
 
     _known_country = field_validator("default_country")(check_country)
+
+    @field_validator("web_origin")
+    @classmethod
+    def _bare_origin(cls, v):
+        # A pasted URL often ends in a slash, and an Origin header never does.
+        return v.rstrip("/") if v else v
 
     @field_validator("llm_cheap", "llm_strong", mode="before")
     @classmethod

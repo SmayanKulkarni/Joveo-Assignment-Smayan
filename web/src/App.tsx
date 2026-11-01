@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { WakeNotice } from "./api/WakeNotice"
 import { Composer } from "./composer/Composer"
 import { go, runIdOf, usePath } from "./router"
 import { RunPage } from "./run/RunPage"
@@ -27,6 +28,7 @@ export function App() {
       <Sidebar runs={runs} activeId={id} open={open} />
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
       <main>
+        <WakeNotice />
         {id ? <RunPage id={id} key={id} listed={runs.find((run) => run.thread_id === id)} /> : <div className="column"><Composer /></div>}
       </main>
     </div>

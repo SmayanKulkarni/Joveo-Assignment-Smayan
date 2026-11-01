@@ -380,9 +380,9 @@ def _serve(args) -> int:
         )
     else:
         settings = get_settings()
-    # Loopback only, one worker and no reload: a reload would stop live Runs. The grace period is
+    # Loopback unless a host says otherwise, one worker and no reload: a reload would stop live Runs. The grace period is
     # needed because on Windows a shutdown with an open stream otherwise hangs.
-    uvicorn.run(make_app(settings), host="127.0.0.1", port=args.port, timeout_graceful_shutdown=3)
+    uvicorn.run(make_app(settings), host=args.host, port=args.port, timeout_graceful_shutdown=3)
     return 0
 
 
@@ -410,7 +410,8 @@ def _parser() -> argparse.ArgumentParser:
     show.add_argument("--log", action="store_true", help="also print the run log")
     show.set_defaults(command=_show)
 
-    serve = commands.add_parser("serve", help="serve the web app on localhost")
+    serve = commands.add_parser("serve", help="serve the web app")
+    serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
     serve.add_argument("--demo", action="store_true", help="scripted Runs, with no .env, LLM or jobs API")
     serve.set_defaults(command=_serve)

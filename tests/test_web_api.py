@@ -95,6 +95,41 @@ def test_same_origin_passes_through_the_vite_dev_proxy(client):
     assert client.post("/api/runs", json={"request_text": "x"}, headers=proxied).status_code == 201
 
 
+@pytest.fixture
+def public(tmp_path):
+    settings = make_settings(
+        demo=True, demo_delay=0.02, runs_db=tmp_path / "runs.sqlite", runs_dir=tmp_path / "runs",
+        access_code="sesame", web_origin="https://scout.example/", render_external_hostname="api.example",
+    )
+    with TestClient(web.make_app(settings), base_url="https://api.example") as client:
+        yield client
+
+
+def test_a_public_host_needs_the_code_to_write_but_not_to_read(public):
+    body = {"request_text": "x"}
+    for headers in ({}, {"X-Access-Code": "wrong"}, {"X-Access-Code": "sésame".encode()}):
+        response = public.post("/api/runs", json=body, headers=headers)
+        assert response.status_code == 401 and response.json()["code"] == "access_denied"
+    assert public.get("/api/runs").json() == []
+    assert public.post("/api/runs", json=body, headers={"X-Access-Code": "sesame"}).status_code == 201
+
+
+def test_a_public_host_allows_only_the_web_origin(public):
+    allowed = {"Origin": "https://scout.example", "X-Access-Code": "sesame"}
+    response = public.post("/api/runs", json={"request_text": "x"}, headers=allowed)
+    assert response.status_code == 201 and response.headers["access-control-allow-origin"] == "https://scout.example"
+    assert public.post("/api/runs", json={"request_text": "x"}, headers={**allowed, **FOREIGN}).status_code == 403
+    assert "access-control-allow-origin" not in public.get("/api/meta", headers=FOREIGN).headers
+
+    preflight = {
+        "Origin": "https://scout.example",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type,x-access-code",
+    }
+    assert public.options("/api/runs", headers=preflight).status_code == 200
+    assert public.options("/api/runs", headers={**preflight, **FOREIGN}).status_code == 400
+
+
 def test_posting_urls_are_http_only():
     assert web._http_url("https://example.com/a") == "https://example.com/a"
     assert web._http_url("javascript:alert(1)") is None

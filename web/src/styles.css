@@ -201,3 +201,9 @@ marker path { fill: var(--line); } marker.taken path { fill: var(--warn); }
 .dot { fill: var(--warn); opacity: 0; }
 .pause-box { position: relative; }
 .pulse { position: absolute; inset: 0; border: 2px solid var(--warn); border-radius: 14px; opacity: 0; pointer-events: none; }
+
+.wake-notice {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  text-align: center;
+}

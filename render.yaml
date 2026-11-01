@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: talent-scout
+    runtime: docker
+    plan: free
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: ADZUNA_APP_ID
+        sync: false
+      - key: ADZUNA_API_KEY
+        sync: false
+      - key: USAJOBS_API_KEY
+        sync: false
+      - key: USAJOBS_USER_AGENT
+        sync: false
+      - key: LANGSMITH_API_KEY
+        sync: false
+      - key: LANGSMITH_TRACING
+        sync: false
+      - key: LANGSMITH_PROJECT
+        sync: false
+      - key: ACCESS_CODE
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      # The free instance is small, so these sit well below the local defaults.
+      - key: LLM_CONCURRENCY
+        value: "5"
+      - key: JEV_CONCURRENCY
+        value: "16"

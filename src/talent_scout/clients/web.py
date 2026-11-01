@@ -2,12 +2,14 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
+from secrets import compare_digest
 from typing import Annotated, Literal
 from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from fastapi.staticfiles import StaticFiles
@@ -128,11 +130,16 @@ def _controller(request: Request) -> RunController:
     return request.app.state.controller
 
 
-async def same_origin(request: Request) -> None:
+async def write_guard(request: Request) -> None:
+    settings = request.app.state.settings
     # A page on another origin can still send a POST to localhost, and a body-less cancel would pass a content-type check.
     origin = request.headers.get("origin")
-    if origin and origin.partition("://")[2] != request.headers["host"]:
+    if origin and origin != settings.web_origin and origin.partition("://")[2] != request.headers["host"]:
         raise Refusal(403, "foreign_origin", "This request came from another origin")
+    # Only writes spend money, so reads stay open and EventSource never needs a header it can't send.
+    code = request.headers.get("x-access-code", "")
+    if settings.access_code and not compare_digest(code.encode(), settings.access_code.encode()):
+        raise Refusal(401, "access_denied", "This needs the access code")
 
 
 async def live_handle(thread_id: str, request: Request) -> RunHandle:
@@ -164,7 +171,7 @@ async def list_runs(request: Request) -> list[RunRecord]:
     return await _controller(request).list_runs()
 
 
-@api.post("/runs", status_code=201, dependencies=[Depends(same_origin)])
+@api.post("/runs", status_code=201, dependencies=[Depends(write_guard)])
 async def start_run(body: StartRequest, request: Request) -> Started:
     handle = await _controller(request).start(body.request_text, body.focus)
     return Started(thread_id=handle.thread_id)
@@ -178,13 +185,13 @@ async def get_run(thread_id: str, request: Request) -> RunDetail:
     return _detail(view, controller.attached(thread_id))
 
 
-@api.post("/runs/{thread_id}/resume", dependencies=[Depends(same_origin)])
+@api.post("/runs/{thread_id}/resume", dependencies=[Depends(write_guard)])
 async def resume_run(thread_id: str, body: ResumeRequest, request: Request) -> Started:
     handle = await _controller(request).resume(thread_id, body.answer)
     return Started(thread_id=handle.thread_id)
 
 
-@api.post("/runs/{thread_id}/cancel", dependencies=[Depends(same_origin)])
+@api.post("/runs/{thread_id}/cancel", dependencies=[Depends(write_guard)])
 async def cancel_run(thread_id: str, request: Request) -> Stopped:
     controller = _controller(request)
     await controller.get_pause(thread_id)  # an unknown Run becomes a 404
@@ -228,7 +235,15 @@ def make_app(settings: Settings) -> FastAPI:
     app = FastAPI(lifespan=lifespan)
     app.state.settings = settings
     # Stops DNS rebinding. Plain ASGI middleware, so nothing sits between a stream and its disconnect handling.
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=LOOPBACK_HOSTS)
+    hosts = LOOPBACK_HOSTS + ([settings.render_external_hostname] if settings.render_external_hostname else [])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=hosts)
+    if settings.web_origin:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=[settings.web_origin],
+            allow_methods=["GET", "POST"],
+            allow_headers=["Content-Type", "X-Access-Code"],
+        )
 
     def refuse(status: int, code: str, message: str, **extra) -> JSONResponse:
         return JSONResponse({"code": code, "message": message, **extra}, status_code=status)

@@ -179,7 +179,7 @@ The server has no auth and can spend quota, and any web page can send requests t
 
 - Binds `127.0.0.1`, with no `--host` flag.
 - `TrustedHostMiddleware(allowed_hosts=["127.0.0.1", "localhost"])` stops DNS rebinding.
-- `same_origin`, a dependency on every POST: if `Origin` is present and the part after `://` differs from `Host`, 403. This also covers a body-less cross-origin cancel, which content-type checks would miss.
+- `write_guard`, a dependency on every POST: if `Origin` is present, isn't `web_origin`, and the part after `://` differs from `Host`, 403. When `access_code` is set, a missing or wrong `X-Access-Code` is 401. This also covers a body-less cross-origin cancel, which content-type checks would miss.
 - No `BaseHTTPMiddleware`, so nothing sits between the SSE response and disconnect handling.
 
 ### Hosting
@@ -547,7 +547,7 @@ npm --prefix web run dev
 ```
 
 ```ts
-// vite.config.ts. The object form matters: the string shorthand rewrites Host, and same_origin refuses every POST.
+// vite.config.ts. The object form matters: the string shorthand rewrites Host, and write_guard refuses every POST.
 server: { port: 5173, proxy: { "/api": { target: "http://127.0.0.1:8000", changeOrigin: false } } }
 ```
 

@@ -1,3 +1,4 @@
+import { API } from "./client"
 import type { WireEvent } from "./types"
 
 const TERMINAL = new Set(["paused", "done", "stopped"])
@@ -13,7 +14,7 @@ type Handlers = {
 }
 
 export function openStream(id: string, { onEvent, onOpen, onReconnecting, onClosed }: Handlers): () => void {
-  const source = new EventSource(`/api/runs/${id}/events`)
+  const source = new EventSource(`${API}/runs/${id}/events`)
   let grace: number | undefined
   source.onopen = () => {
     clearTimeout(grace)
