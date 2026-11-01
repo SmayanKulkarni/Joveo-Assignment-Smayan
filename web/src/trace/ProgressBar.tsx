@@ -1,5 +1,7 @@
+import { DUR } from "../motion"
 import { liveLine } from "../run/trace"
 import type { TraceState } from "../run/trace"
+import { Bar } from "./Bar"
 
 export function ProgressBar({ trace }: { trace: TraceState }) {
   const percent = Math.round(trace.progress * 100)
@@ -7,9 +9,7 @@ export function ProgressBar({ trace }: { trace: TraceState }) {
   const tone = trace.finished === "failed" ? "stopped" : waiting ? "waiting" : ""
   return (
     <div className="meter">
-      <div className={`bar ${tone}`} role="progressbar" aria-label="Run progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
-        <i style={{ width: `${percent}%` }} />
-      </div>
+      <Bar value={percent} max={100} label="Run progress" className={tone} dur={DUR.slow} />
       <p className="muted">
         {liveLine(trace)} · {percent}%
       </p>

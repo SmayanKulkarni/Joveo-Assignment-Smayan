@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { EASE, gsap, useAnimate, useMotion, usePrevious } from "../motion"
 import type { Graph } from "../api/types"
 import { backEdges, bandsOf, stepIndex } from "../run/steps"
 import type { TraceState } from "../run/trace"
@@ -26,7 +27,27 @@ export function TracePanel({ trace, graph, onJump }: { trace: TraceState; graph:
       return row
     })
   })
+  const animate = useAnimate()
+  const loops = usePrevious(trace.looped.length)
+  const liveStep = trace.current && trace.steps[trace.current].status === "active" ? trace.current : null
   const centre = (id: string) => rows[stepIndex(id)].top + iconY
+
+  useMotion(
+    () => {
+      // The rail leaving the live Step flows; the dashes are CSS, the tween only slides them.
+      gsap.fromTo(".rail.active", { strokeDashoffset: 10 }, { strokeDashoffset: 0, duration: 0.6, ease: EASE.linear, repeat: -1 })
+      // One dot per batch, on the newest back-edge.
+      const edge = trace.looped.at(-1)
+      if (!animate || loops === undefined || !edge || trace.looped.length <= loops) return
+      gsap.fromTo(
+        ".dot",
+        { opacity: 1 },
+        { motionPath: { path: `[data-edge="${edge}"]`, align: `[data-edge="${edge}"]`, alignOrigin: [0.5, 0.5] }, duration: 0.9, ease: "power1.inOut", onComplete: () => void gsap.set(".dot", { opacity: 0 }) },
+      )
+    },
+    [liveStep, trace.looped.length],
+    svg,
+  )
 
   // The live Step stays in view as the Run moves down the rail.
   useEffect(() => {
@@ -66,12 +87,14 @@ export function TracePanel({ trace, graph, onJump }: { trace: TraceState; graph:
           return (
             <path
               key={edge}
+              data-edge={edge}
               className={`back${taken ? " taken" : ""}`}
               d={`M${x} ${centre(from)} C${x + bow} ${centre(from)} ${x + bow} ${centre(to)} ${x + 5} ${centre(to)}`}
               markerEnd={`url(#arrow${taken ? "taken" : ""})`}
             />
           )
         })}
+        <circle className="dot" r={3.5} />
         {rows.map(({ step, top, height }) => (
           <TraceStep key={step.id} step={step} top={top} height={height} trace={trace} live={step.id === trace.current} onJump={onJump} />
         ))}

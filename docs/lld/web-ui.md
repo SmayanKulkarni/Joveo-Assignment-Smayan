@@ -470,7 +470,7 @@ export function useMotion(fn: () => void, deps: unknown[], scope: RefObject<Elem
 }
 ```
 
-Each animated component owns one call, so a loop ends itself when its state changes. Handlers use `contextSafe`. Previous state comes from a ref, to tell an entry from a re-render.
+Each animated component owns one call, so a loop ends itself when its state changes. Previous state comes from `usePrevious` (undefined on mount), to tell an entry from a re-render. `motion.ts` also holds `AnimateContext`, which `RunPage` fills from `RunState.animate`: one-shots read it with `useAnimate()`, loops ignore it. Every bar is the one `Bar` component (`trace/Bar.tsx`), a `role="progressbar"` whose fill scales on X.
 
 | Trigger | Target | Tween | Duration, ease |
 |---|---|---|---|

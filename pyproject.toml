@@ -23,9 +23,6 @@ scout = "talent_scout.clients.cli:main"
 
 [dependency-groups]
 dev = ["pytest"]
-streamlit = [
-    "streamlit>=1.66.1",
-]
 
 [build-system]
 requires = ["hatchling"]

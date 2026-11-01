@@ -1,12 +1,25 @@
-import { memo, useState } from "react"
+import { memo, useRef, useState } from "react"
+import { DUR, EASE, gsap, useAnimate, useMotion } from "../motion"
 import type { Texts, Turn as TurnData } from "./reducer"
+import { Bar } from "../trace/Bar"
 import { ToolCard } from "./ToolCard"
+
+// The only motion on prose: a stepped blink, gone as soon as the turn stops being live.
+function Caret() {
+  const ref = useRef<HTMLSpanElement>(null)
+  useMotion(() => void gsap.to(ref.current, { opacity: 0, duration: DUR.slow, ease: "steps(1)", repeat: -1, yoyo: true }), [], ref)
+  return <span ref={ref} className="caret" aria-hidden />
+}
 
 // live is the running turn, waiting holds a Pause, open is the last turn of an ended Run, and past is collapsed until clicked.
 export type Mode = "live" | "waiting" | "open" | "past"
 
 export const Turn = memo(function Turn({ turn, text, label, mode }: { turn: TurnData; text?: Texts; label: string; mode: Mode }) {
   const [expanded, setExpanded] = useState(false)
+  const item = useRef<HTMLLIElement>(null)
+  const animate = useAnimate()
+  // A turn is a one-shot on arrival only; folding and unfolding keep the same element.
+  useMotion(() => void (animate && gsap.from(item.current, { y: 6, opacity: 0, duration: DUR.base, ease: EASE.out })), [], item)
   const folded = mode === "past" && !expanded
   const title = (
     <>
@@ -17,13 +30,13 @@ export const Turn = memo(function Turn({ turn, text, label, mode }: { turn: Turn
   )
   if (folded) {
     return (
-      <li className="turn past">
+      <li ref={item} className="turn past">
         <button className="fold" aria-expanded={false} onClick={() => setExpanded(true)}>{title}</button>
       </li>
     )
   }
   return (
-    <li className={`turn ${mode}`}>
+    <li ref={item} className={`turn ${mode}`}>
       {mode === "past" ? <button className="fold" aria-expanded onClick={() => setExpanded(false)}>{title}</button> : title}
       {mode === "waiting" && <span className="hint"> (waiting for you)</span>}
       {text?.thinking && (
@@ -33,12 +46,17 @@ export const Turn = memo(function Turn({ turn, text, label, mode }: { turn: Turn
         </details>
       )}
       {turn.drafting && <p className="drafting">{turn.drafting}</p>}
-      {text?.prose && <p className="prose">{text.prose}</p>}
+      {text?.prose && (
+        <p className="prose">
+          {text.prose}
+          {mode === "live" && <Caret />}
+        </p>
+      )}
       {turn.tools.map((tool, i) => <ToolCard key={i} tool={tool} />)}
       {turn.pills.length > 0 && <p>{turn.pills.map((pill) => <span key={pill} className="pill">{pill}</span>)}</p>}
       {turn.progress && (
         <p className="progress">
-          <progress value={turn.progress.done} max={turn.progress.total} /> {turn.progress.done} of {turn.progress.total} batches
+          <Bar value={turn.progress.done} max={turn.progress.total} label="Batches read" className="mini" /> {turn.progress.done} of {turn.progress.total} batches
         </p>
       )}
       {turn.notes.length > 0 && <p className="notes">{turn.notes.join(" · ")}</p>}

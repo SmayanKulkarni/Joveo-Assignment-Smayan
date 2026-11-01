@@ -1,5 +1,7 @@
+import { useRef } from "react"
 import type { Brief, Confidence, PostingRef } from "../api/types"
 import { useMeta } from "../api/useMeta"
+import { DUR, EASE, gsap, useAnimate, useMotion } from "../motion"
 import { Evidence } from "./Evidence"
 import { RunNotes } from "./RunNotes"
 
@@ -127,11 +129,14 @@ function PostingsTable({ sample }: { sample: PostingRef[] }) {
 
 export function BriefView({ id, brief, sample }: { id: string; brief: Brief; sample: PostingRef[] }) {
   const ctx = { brief, sample }
+  const article = useRef<HTMLElement>(null)
+  const animate = useAnimate()
+  useMotion(() => void (animate && gsap.from(article.current!.children, { y: 8, opacity: 0, duration: DUR.base, ease: EASE.out, stagger: 0.06 })), [], article)
   const target = brief.run_notes.final_plan.target_postings
   const { outlook, hiring_request: request } = brief
 
   return (
-    <article className="brief">
+    <article ref={article} className="brief">
       <div className="brief-head">
         <h1>
           Market Brief: {request.role}, {request.location}

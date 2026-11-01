@@ -48,7 +48,7 @@ def low_data_answer(action: str, guidance: str | None) -> dict:
 
 
 def render_pause(pause: Pause) -> str:
-    """Plain text of a Pause, shared by every client."""
+    """Plain text of a Pause."""
     match pause.kind:
         case "clarify":
             return _clarify(pause.payload)

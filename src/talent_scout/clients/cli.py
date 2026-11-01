@@ -56,7 +56,7 @@ console = Console()
 
 
 def event_line(event: RunEvent) -> str | None:
-    """The one-line text of a tool or API event, shared with the Streamlit client."""
+    """The one-line text of a tool or API event."""
     match event:
         case ToolCalled(name=name, summary=summary):
             return f"→ {name}: {summary}"

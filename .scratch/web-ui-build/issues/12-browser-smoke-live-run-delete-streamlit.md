@@ -4,15 +4,15 @@
 
 **Blocked by:** 04: Edit the Search Plan; 05: Read the Market Brief; 06: Find earlier Runs in the sidebar; 09: Stop and Resume a Run; 11: Motion
 
-**Status:** ready-for-agent
+**Status:** built; the live Run by hand is still open
 
 If 11 is dropped for time, this ticket waits on 10 instead.
 
-- [ ] A smoke script drives a Demo Run in a real browser: start, each Pause including a refused edit, reload mid-Run, stop and resume, `Done`, Brief
-- [ ] It uses the installed Edge through Playwright, with no browser download or repo dependency, and isn't collected by `pytest`
+- [x] A smoke script drives a Demo Run in a real browser: start, each Pause including a refused edit, reload mid-Run, stop and resume, `Done`, Brief
+- [x] It uses the installed Edge through Playwright, with no browser download or repo dependency, and isn't collected by `pytest`
 - [ ] One real Run by hand through `scout serve`, with notes on anything that reads badly, fixed or raised
-- [ ] A fresh production build serves with a single `uv run scout serve`
-- [ ] `streamlit_app.py`, `streamlit_bridge.py` and the `streamlit` group are deleted, and `uv lock` is refreshed
-- [ ] `event_line`'s docstring in the CLI and "shared by every client" in the Pause text helpers no longer mention what's gone
-- [ ] The CLI still works: `pytest` passes in full, and `npm test` passes
-- [ ] `docs/lld/web-ui.md` still matches what was built, with any change made during the build written back
+- [x] A fresh production build serves with a single `uv run scout serve`
+- [x] `streamlit_app.py`, `streamlit_bridge.py` and the `streamlit` group are deleted, and `uv lock` is refreshed
+- [x] `event_line`'s docstring in the CLI and "shared by every client" in the Pause text helpers no longer mention what's gone
+- [x] The CLI still works: `pytest` passes in full, and `npm test` passes
+- [x] `docs/lld/web-ui.md` still matches what was built, with any change made during the build written back

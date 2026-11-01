@@ -4,6 +4,7 @@ import { useMeta } from "../api/useMeta"
 import type { RunDetail, RunRecord } from "../api/types"
 import { BriefView } from "../brief/BriefView"
 import { PauseCard } from "../pause/PauseCard"
+import { AnimateContext } from "../motion"
 import { go } from "../router"
 import { ProgressBar } from "../trace/ProgressBar"
 import { StageStrip } from "../trace/StageStrip"
@@ -68,6 +69,7 @@ function RunView({ id, detail, state, notice, streaming, answer, resume, stop }:
   const reason = abortReason(detail)
   const toPause = () => pauseBox.current?.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })
   return (
+    <AnimateContext.Provider value={state.animate}>
     <div className="run">
       <div className="column">
         {meta && narrow && (
@@ -114,5 +116,6 @@ function RunView({ id, detail, state, notice, streaming, answer, resume, stop }:
       </div>
       {meta && !narrow && <TracePanel trace={state.trace} graph={meta.graph} onJump={toPause} />}
     </div>
+    </AnimateContext.Provider>
   )
 }
