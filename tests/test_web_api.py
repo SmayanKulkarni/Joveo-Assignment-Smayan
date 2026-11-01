@@ -210,3 +210,49 @@ def test_live_from_follows_the_handle_across_a_resume(client):
     client.post(f"/api/runs/{thread_id}/resume", json={"answer": {"answers": ["Austin, Texas"]}})
     # The resumed handle starts where the log stood when the Run paused; history before it is not replayed.
     assert client.get(f"/api/runs/{thread_id}").json()["live_from"] == len(paused["run_log"])
+
+
+def slow_client(tmp_path, delay=0.3):
+    settings = make_settings(demo=True, demo_delay=delay, runs_db=tmp_path / "runs.sqlite", runs_dir=tmp_path / "runs")
+    return TestClient(web.make_app(settings), base_url="http://127.0.0.1")
+
+
+def to_searching(client) -> str:
+    thread_id = to_plan_review(client)
+    client.post(f"/api/runs/{thread_id}/resume", json={"answer": APPROVE})
+    with client.stream("GET", f"/api/runs/{thread_id}/events") as stream:
+        for line in stream.iter_lines():
+            if '"tool_called"' in line:
+                break
+    return thread_id
+
+
+def test_cancel_stops_a_live_run_and_resume_carries_on(tmp_path):
+    with slow_client(tmp_path) as client:
+        thread_id = to_searching(client)
+        stopped = client.post(f"/api/runs/{thread_id}/cancel")
+        assert stopped.status_code == 200
+        assert stopped.json()["type"] == "stopped" and stopped.json()["reason"] == "cancelled"
+
+        detail = wait_for(client, thread_id, "failed")
+        assert detail["record"]["error"] == "cancelled" and detail["stopped_at"] == stopped.json()["node"]
+        resume(client, thread_id, None, "paused")
+
+
+def test_cancel_with_nothing_live_is_not_live(client):
+    thread_id = start(client)
+    wait_for(client, thread_id, "paused")
+    refused = client.post(f"/api/runs/{thread_id}/cancel")
+    assert refused.status_code == 409 and refused.json()["code"] == "not_live"
+    assert client.post("/api/runs/nope/cancel").json()["code"] == "unknown_run"
+    assert client.post(f"/api/runs/{thread_id}/cancel", headers=FOREIGN).status_code == 403
+
+
+def test_a_shutdown_leaves_a_live_run_failed_and_resumable(tmp_path):
+    with slow_client(tmp_path) as client:
+        thread_id = to_searching(client)
+    # A fresh server on the same files, as after a restart.
+    with slow_client(tmp_path, delay=0.02) as client:
+        detail = client.get(f"/api/runs/{thread_id}").json()
+        assert detail["record"]["status"] == "failed" and detail["live_from"] is None
+        resume(client, thread_id, None, "paused")

@@ -26,8 +26,8 @@ export function App() {
       </header>
       <Sidebar runs={runs} activeId={id} open={open} />
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
-      <main className="column">
-        {id ? <RunPage id={id} key={id} listed={runs.find((run) => run.thread_id === id)} /> : <Composer />}
+      <main>
+        {id ? <RunPage id={id} key={id} listed={runs.find((run) => run.thread_id === id)} /> : <div className="column"><Composer /></div>}
       </main>
     </div>
   )

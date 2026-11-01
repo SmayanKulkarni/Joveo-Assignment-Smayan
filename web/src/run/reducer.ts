@@ -1,5 +1,7 @@
 import type { Pause, WireEvent } from "../api/types"
 import { DRAFTING, stepOf } from "./steps"
+import { emptyTrace, traceReduce } from "./trace"
+import type { TraceState } from "./trace"
 
 export type Tool = { name: string; summary: string; result: string | null; pill?: string; interrupted?: boolean }
 export type Turn = {
@@ -18,21 +20,23 @@ export type Ending = { kind: "done" | "aborted" } | { kind: "stopped"; node: str
 export type RunState = {
   turns: Turn[]
   texts: Record<number, Texts>
+  trace: TraceState
   pause: Pause | null
   ending: Ending | null
   connection: "live" | "reconnecting"
   animate: boolean // false until caught_up, and on any reopened Run
   gap: boolean
 }
-// reset starts again from a base, answered collapses the open Pause into a one-line record, and batch is one frame's events.
+// reset starts again from a base, answered collapses the open Pause, resumed clears a Stopped ending, batch is one frame.
 export type Action =
   | WireEvent
   | { type: "reset"; to?: RunState; keepTexts?: boolean }
   | { type: "answered"; record: string }
+  | { type: "resumed" }
   | { type: "connection"; to: RunState["connection"] }
   | { type: "batch"; events: WireEvent[] }
 
-export const empty: RunState = { turns: [], texts: {}, pause: null, ending: null, connection: "live", animate: false, gap: false }
+export const empty: RunState = { turns: [], texts: {}, trace: emptyTrace, pause: null, ending: null, connection: "live", animate: false, gap: false }
 
 export const newTurn = (step: string): Turn => ({ step, node: null, notes: [], tools: [], pills: [], drafting: null })
 
@@ -65,6 +69,12 @@ function apiPill(turn: Turn, source: string, text: string): Partial<Turn> {
 }
 
 export function reduce(state: RunState, action: Action): RunState {
+  const next = fold(state, action)
+  const trace = traceReduce(state.trace, action)
+  return trace === state.trace ? next : { ...next, trace }
+}
+
+function fold(state: RunState, action: Action): RunState {
   switch (action.type) {
     case "reset":
       return { ...(action.to ?? empty), texts: action.keepTexts ? state.texts : {}, animate: false, connection: "live", gap: false }
@@ -72,6 +82,8 @@ export function reduce(state: RunState, action: Action): RunState {
       return action.events.reduce(reduce, state)
     case "connection":
       return { ...state, connection: action.to }
+    case "resumed":
+      return { ...state, ending: null }
     case "node_started":
       return patchLast({ ...state, turns: turnFor(state.turns, action.node) }, () => ({
         node: action.node,

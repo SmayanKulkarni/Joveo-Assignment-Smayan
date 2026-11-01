@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react"
-import { ApiError, getRun, resumeRun } from "../api/client"
+import { ApiError, cancelRun, getRun, resumeRun } from "../api/client"
 import { isTerminal, openStream } from "../api/stream"
 import type { RunDetail, RunRecord, RunStatus, WireEvent } from "../api/types"
 import { refreshRuns } from "../sidebar/useRuns"
@@ -22,7 +22,7 @@ const ENDS_AS = (event: WireEvent): RunStatus | null =>
   event.type === "paused" ? "paused" : event.type === "stopped" ? "failed" : event.type === "done" ? event.status : null
 
 // A Run being resumed holds its lock for a moment after its last step, so one retry usually clears run_locked.
-async function postAnswer(id: string, answer: object) {
+async function postAnswer(id: string, answer: object | null) {
   try {
     return await resumeRun(id, answer)
   } catch (e) {
@@ -160,23 +160,46 @@ export function useRun(id: string, listed: RunRecord | undefined) {
     }
   }, [listed, streaming, detail, load])
 
-  // Throws what the card should show against itself; anything the Run has moved past is handled here.
-  async function answer(payload: object, record: string) {
+  // Throws what the card or banner should show against itself. True once the Run has taken the answer, false if it had moved on already.
+  async function post(payload: object | null) {
     setNotice(null)
     try {
       await postAnswer(id, payload)
+      return true
     } catch (e) {
-      if (e instanceof ApiError && (e.code === "not_resumable" || notWaiting(e))) {
-        setNotice("Answered elsewhere")
-        return load()
-      }
-      throw e
+      if (!(e instanceof ApiError && (e.code === "not_resumable" || notWaiting(e)))) throw e
+      setNotice("Answered elsewhere")
+      await load()
+      return false
     }
+  }
+
+  // The new stream starts from what is on screen, changed by the one thing the user just did.
+  function carryOn(base: RunState) {
     refreshRuns()
-    const base = reduce(latest.current, { type: "answered", record })
     dispatch({ type: "reset", to: base, keepTexts: true })
     connect(base)
   }
 
-  return { detail, state, error, notice, streaming, answer }
+  async function answer(payload: object, record: string) {
+    if (await post(payload)) carryOn(reduce(latest.current, { type: "answered", record }))
+  }
+
+  // Resume retries the Step the Run stopped at, so it takes no answer.
+  async function resume() {
+    if (await post(null)) carryOn(reduce(latest.current, { type: "resumed" }))
+  }
+
+  // The Stopped event arrives on the stream, so there is nothing to do here but hear a refusal.
+  async function stop() {
+    try {
+      await cancelRun(id)
+    } catch (e) {
+      // It ended in the moment before: the detail says how.
+      if (e instanceof ApiError && e.code === "not_live") return load()
+      setNotice((e as Error).message)
+    }
+  }
+
+  return { detail, state, error, notice, streaming, answer, resume, stop }
 }

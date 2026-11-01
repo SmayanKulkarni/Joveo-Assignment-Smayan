@@ -20,6 +20,7 @@ from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.state import LogKind
 from talent_scout.kernel.types import ADZUNA_CATEGORIES, ADZUNA_CURRENCY, Dimension, Model, NonBlank
 from talent_scout.runtime.controller import InvalidAnswer, NotResumable, RunController, RunHandle, RunView, UnknownRun
+from talent_scout.runtime.events import Stopped
 from talent_scout.runtime.graph import graph_topology
 from talent_scout.runtime.guard import RunLocked
 from talent_scout.runtime.pause import Pause
@@ -178,6 +179,16 @@ async def get_run(thread_id: str, request: Request) -> RunDetail:
 async def resume_run(thread_id: str, body: ResumeRequest, request: Request) -> Started:
     handle = await _controller(request).resume(thread_id, body.answer)
     return Started(thread_id=handle.thread_id)
+
+
+@api.post("/runs/{thread_id}/cancel", dependencies=[Depends(same_origin)])
+async def cancel_run(thread_id: str, request: Request) -> Stopped:
+    controller = _controller(request)
+    await controller.get_pause(thread_id)  # an unknown Run becomes a 404
+    handle = controller.attached(thread_id)
+    if handle is None:
+        raise Refusal(409, "not_live", "This Run isn't running here")
+    return await handle.cancel()
 
 
 @api.get("/runs/{thread_id}/brief.{kind}")

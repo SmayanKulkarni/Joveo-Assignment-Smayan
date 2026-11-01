@@ -28,7 +28,7 @@ export const startRun = (request_text: string, focus: Dimension[]) =>
 
 export const listRuns = () => call<RunRecord[]>("/runs")
 
-export const getRun =(id: string) => call<RunDetail>(`/runs/${id}`)
+export const getRun = (id: string) => call<RunDetail>(`/runs/${id}`)
 
 export const getMeta = () => call<Meta>("/meta")
 
@@ -38,3 +38,5 @@ export const resumeRun = (id: string, answer: object | null) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ answer }),
   })
+
+export const cancelRun = (id: string) => call<{ node: string | null; reason: string }>(`/runs/${id}/cancel`, { method: "POST" })

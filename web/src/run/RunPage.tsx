@@ -1,16 +1,20 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ApiError } from "../api/client"
+import { useMeta } from "../api/useMeta"
 import type { RunDetail, RunRecord } from "../api/types"
 import { BriefView } from "../brief/BriefView"
 import { PauseCard } from "../pause/PauseCard"
 import { go } from "../router"
-import { stepLabel, stepOf } from "./steps"
+import { ProgressBar } from "../trace/ProgressBar"
+import { StageStrip } from "../trace/StageStrip"
+import { TracePanel } from "../trace/TracePanel"
+import { stepLabel } from "./steps"
+import { StoppedBanner } from "./StoppedBanner"
 import { Stream } from "./Stream"
 import type { RunState } from "./reducer"
 import { useAutoScroll } from "./useAutoScroll"
+import { useNarrow } from "./useNarrow"
 import { useRun } from "./useRun"
-
-const label = (node: string) => stepOf(node)?.label ?? node
 
 // The last log line, else the registry's error: what `scout show` prints for an aborted Run.
 const abortReason = (detail: RunDetail) => detail.run_log.at(-1)?.message ?? detail.record.error
@@ -42,11 +46,14 @@ export function RunPage({ id, listed }: { id: string; listed: RunRecord | undefi
 
 type Loaded = Omit<ReturnType<typeof useRun>, "detail"> & { id: string; detail: RunDetail }
 
-function RunView({ id, detail, state, notice, streaming, answer }: Loaded) {
+function RunView({ id, detail, state, notice, streaming, answer, resume, stop }: Loaded) {
   const { ending, pause } = state
   const live = streaming && !pause && !ending
   const { end, away, stuck, jump } = useAutoScroll(ending?.kind !== "done", state)
   const pauseBox = useRef<HTMLDivElement>(null)
+  const meta = useMeta()
+  const narrow = useNarrow()
+  const [stopping, setStopping] = useState(false)
 
   // A Pause that arrives while the reader is at the bottom takes focus, so a keyboard user lands on it.
   useEffect(() => {
@@ -59,33 +66,53 @@ function RunView({ id, detail, state, notice, streaming, answer }: Loaded) {
 
   const elsewhere = detail.record.status === "running" && detail.live_from === null && !streaming
   const reason = abortReason(detail)
+  const toPause = () => pauseBox.current?.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })
   return (
-    <>
-      <div className="request">{detail.request_text ?? detail.record.summary}</div>
-      <p className="sr-only" aria-live="polite">{announcement(state)}</p>
-      <Stream state={state} live={live} />
-      {elsewhere && <p className="notice">Running in another window</p>}
-      {notice && <p className="notice">{notice}</p>}
-      <div ref={pauseBox}>{pause && <PauseCard key={`${state.turns.length}-${pause.kind}`} pause={pause} send={answer} />}</div>
-      {ending?.kind === "done" &&
-        (detail.brief ? <BriefView id={id} brief={detail.brief} sample={detail.sample} /> : <p>Finishing…</p>)}
-      {ending?.kind === "aborted" && (
-        <div className="card">
-          <h2>This Run ended without a Brief</h2>
-          {reason && <p>{reason}</p>}
-          <a href="/" onClick={go}>Start a new Run</a>
+    <div className="run">
+      <div className="column">
+        {meta && narrow && (
+          <div className="trace-strip">
+            <StageStrip trace={state.trace} graph={meta.graph} />
+            <ProgressBar trace={state.trace} />
+          </div>
+        )}
+        <div className="run-head">
+          <div className="request">{detail.request_text ?? detail.record.summary}</div>
+          {live && (
+            <button
+              type="button"
+              className="danger"
+              disabled={stopping}
+              onClick={() => {
+                setStopping(true)
+                stop().finally(() => setStopping(false))
+              }}
+            >
+              Stop
+            </button>
+          )}
         </div>
-      )}
-      {ending?.kind === "stopped" && (
-        <p className="error">
-          Stopped{ending.node && ` at ${label(ending.node)}`}
-          {ending.reason && `: ${ending.reason}`}
-        </p>
-      )}
-      <div ref={end} />
-      {away && (live || pause) && (
-        <button className="jump" onClick={jump}>{pause ? "Waiting for you" : "Jump to latest"}</button>
-      )}
-    </>
+        <p className="sr-only" aria-live="polite">{announcement(state)}</p>
+        <Stream state={state} live={live} />
+        {elsewhere && <p className="notice">Running in another window</p>}
+        {notice && <p className="notice">{notice}</p>}
+        <div ref={pauseBox}>{pause && <PauseCard key={`${state.turns.length}-${pause.kind}`} pause={pause} send={answer} />}</div>
+        {ending?.kind === "done" &&
+          (detail.brief ? <BriefView id={id} brief={detail.brief} sample={detail.sample} /> : <p>Finishing…</p>)}
+        {ending?.kind === "aborted" && (
+          <div className="card">
+            <h2>This Run ended without a Brief</h2>
+            {reason && <p>{reason}</p>}
+            <a href="/" onClick={go}>Start a new Run</a>
+          </div>
+        )}
+        {ending?.kind === "stopped" && <StoppedBanner ending={ending} resume={resume} />}
+        <div ref={end} />
+        {away && (live || pause) && (
+          <button className="jump" onClick={jump}>{pause ? "Waiting for you" : "Jump to latest"}</button>
+        )}
+      </div>
+      {meta && !narrow && <TracePanel trace={state.trace} graph={meta.graph} onJump={toPause} />}
+    </div>
   )
 }
