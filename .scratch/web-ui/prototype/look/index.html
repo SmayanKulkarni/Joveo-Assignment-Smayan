@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: look and charts</title>
+<!--
+  PROTOTYPE, throwaway. Question: what should the app look like, and which charts earn a place?
+  Real Brief data from runs/. ?depth=flat|subtle|strong picks how far the neumorphism goes; ?run=<id> picks the Brief.
+  Plan editor and clarify card use fake values. Open this file directly.
+-->
+<style>
+:root {
+  --bg:#eef0f3; --ink:#1f2430; --muted:#535c6b; --edge:#7d8796; --accent:#2f5d50; --chart:#00795f;--chart-2:#2fb08f; --warn:#8a4206; --warn-soft:#f7e8d3; --focus:#1f5fd0;
+  --raised:5px 5px 12px rgba(150,160,178,.38),-5px -5px 12px rgba(255,255,255,.85);
+  --raised-sm:2px 2px 5px rgba(150,160,178,.4),-2px -2px 5px rgba(255,255,255,.85);
+  --inset:inset 2px 2px 4px rgba(150,160,178,.4),inset -2px -2px 4px rgba(255,255,255,.85);
+}
+body[data-depth=flat]{--raised:0 1px 3px rgba(30,40,60,.12);--raised-sm:0 1px 2px rgba(30,40,60,.12);--inset:none}
+body[data-depth=strong]{--raised:10px 10px 22px rgba(150,160,178,.55),-10px -10px 22px #fff;--raised-sm:4px 4px 9px rgba(150,160,178,.55),-4px -4px 9px #fff;--inset:inset 4px 4px 8px rgba(150,160,178,.55),inset -4px -4px 8px #fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--bg);border-radius:14px;box-shadow:var(--raised);padding:14px 16px;margin:0 0 16px}
+h1{font-size:20px;margin:0 0 10px} h2{font-size:15px;margin:0 0 8px} h3{font-size:13px;margin:0 0 6px;font-weight:600}
+.muted{color:var(--muted);font-size:13px;margin:2px 0}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--edge);border-radius:8px;box-shadow:var(--inset);padding:5px 8px;width:100%}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+label{display:block;font-size:13px;color:var(--muted)} label>input,label>select{margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border:1px solid var(--edge);border-radius:8px;box-shadow:var(--inset);padding:5px}
+.chip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--edge);border-radius:99px;padding:2px 10px;background:var(--bg);box-shadow:var(--raised-sm);cursor:pointer;color:var(--ink);font:inherit;font-size:13px}
+.chip button{border:0;background:none;padding:0;font:inherit;cursor:pointer;color:var(--muted)}
+.chip input{width:auto;box-shadow:none;margin:0}
+.chip:has(input:checked){background:var(--accent);border-color:var(--accent);color:#fff}
+.chips input[type=text]{flex:1;min-width:120px;border:0;box-shadow:none;padding:2px 4px;background:none}
+button.btn{font:inherit;border:1px solid var(--edge);background:var(--bg);box-shadow:var(--raised-sm);border-radius:10px;padding:6px 14px;cursor:pointer;color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{color:var(--muted);border-style:dashed;box-shadow:none;cursor:default}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.tile{background:var(--bg);border-radius:12px;box-shadow:var(--raised);padding:10px 12px;min-width:0}
+.tile b{display:block;font-size:17px;line-height:1.25;overflow-wrap:anywhere}
+.tile small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:5px 12px;margin:0 0 6px;font-size:13px}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bar-row{display:grid;grid-template-columns:minmax(90px,38%) 1fr 34px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
+.bar-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track{height:10px;display:flex;gap:2px}
+.track i{display:block;height:100%;background:var(--chart);border-radius:0 4px 4px 0;min-width:2px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.track i.must{border-radius:0;background:var(--chart)} .track i.other{background:var(--chart-2)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.range{position:relative;height:26px;margin:18px 0 22px}
+.range .line{position:absolute;top:12px;left:0;right:0;height:2px;background:var(--edge)}
+.range .box{position:absolute;top:6px;height:14px;background:var(--chart);border-radius:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.range .med{position:absolute;top:1px;width:3px;height:24px;background:var(--ink)}
+.range span{position:absolute;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ins{margin:0 0 6px;padding:0;list-style:none}.ins li{padding:5px 0;border-bottom:1px solid #d5d9e0}
+.pill{border:1px solid var(--edge);border-radius:99px;padding:0 8px;font-size:12px;white-space:nowrap}
+details summary{cursor:pointer;color:var(--muted);font-size:13px}
+.state{font:12px ui-monospace,monospace;color:var(--muted)}
+.bar-switch{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:99px;padding:5px 14px;font-size:13px;display:flex;gap:10px}
+.bar-switch a{color:#fff}
+@media (max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.span2{grid-column:span 2}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.charts{grid-template-columns:1fr}}
+@media print{.bar-switch,.proto-only{display:none}:root{--raised:none;--raised-sm:none;--inset:none}body{background:#fff}.card,.tile{border:1px solid #bbb;background:#fff;break-inside:avoid}}
+</style>
+</head>
+<body>
+<main>
+<p class="state proto-only" id="state"></p>
+<form class="card proto-only" onsubmit="return false">
+  <h2>Search plan</h2>
+  <div class="grid">
+    <label class="span2" style="grid-column:span 2">Job titles
+      <span class="chips"><span class="chip">Marketing Intern <button aria-label="Remove Marketing Intern">×</button></span><span class="chip">Marketing Internship <button aria-label="Remove Marketing Internship">×</button></span><span class="chip">Digital Marketing Intern <button aria-label="Remove Digital Marketing Intern">×</button></span><input type="text" placeholder="Add a title, press Enter" aria-label="Add a title"></span></label>
+    <label class="span2" style="grid-column:span 2">Places
+      <span class="chips"><span class="chip">Mumbai <button aria-label="Remove Mumbai">×</button></span><input type="text" placeholder="Add a place, or none for the whole country" aria-label="Add a place"></span></label>
+    <label>Country<select><option>India</option><option>United States</option></select></label>
+    <label>Within<select><option>5 km</option><option>25 km</option><option selected>50 km</option><option>100 km</option></select></label>
+    <label>Posted in the last<select><option>7 days</option><option selected>30 days</option><option>60 days</option></select></label>
+    <label>Target postings<input type="number" value="20"></label>
+    <label class="span2" style="grid-column:span 2">Category<select><option>Any</option><option selected>PR, Advertising &amp; Marketing Jobs</option><option>IT Jobs</option></select></label>
+  </div>
+  <p class="muted">3 titles × 1 place = 3 searches. 5 Adzuna calls left today.</p>
+  <button class="btn primary">Use this plan</button> <button class="btn">Cancel</button> <button class="btn" disabled>Disabled</button>
+</form>
+<form class="card proto-only" onsubmit="return false">
+  <h2>A quick question</h2>
+  <p style="margin:0 0 6px">Which places should we search? Pick as many as you like.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+    <label class="chip"><input type="checkbox" checked>Mumbai</label><label class="chip"><input type="checkbox" checked>Navi Mumbai</label><label class="chip"><input type="checkbox">Thane</label>
+  </div>
+  <input type="text" placeholder="Or type your own" aria-label="Your answer">
+</form>
+<article id="brief"></article>
+</main>
+<div class="bar-switch"><span id="sw"></span></div>
+<script>
+const RUNS = {"30a3efec": {"glance": {"pay": {"p25": 150000.0, "median": 150000.0, "p75": 277500.0, "unit": "INR/year", "n": 28, "group": "Middle 50% of 28 advertised figures, at all levels."}, "skills": [{"label": "Instagram", "count": 12, "must": 0, "employers": 4}, {"label": "Facebook", "count": 11, "must": 0, "employers": 3}, {"label": "YouTube", "count": 10, "must": 0, "employers": 2}, {"label": "lead generation", "count": 3, "must": 0, "employers": 3}, {"label": "social media", "count": 3, "must": 0, "employers": 3}, {"label": "digital marketing", "count": 2, "must": 0, "employers": 2}], "extracted": 22, "places": [], "employers": [{"label": "Drishti Group", "count": 11}, {"label": "Emergent Labs", "count": 2}, {"label": "HighLevel", "count": 2}, {"label": "Humppl", "count": 2}, {"label": "Amitaujas LLP", "count": 1}], "employers_total": 38.0, "sample": 51}, "notes": ["We searched all of the country, because Mumbai alone had too few postings."], "role": "Marketing", "location": "Mumbai", "summary": "For Marketing Intern roles in Mumbai, the sample holds 51 postings with a median age of 10 days, and the outlook is competitive. Advertised pay has a median of 150,000 INR/year across 28 postings, with pay periods assumed. The sample was broadened twice in titles, radius, recency and category.", "outlook": "competitive", "rec": {"job_title": {"reason": "Used in 6 Postings from 6 employers, and it names the entry level requested.", "title": "Digital Marketing Intern"}, "salary_band": {"reason": "Middle 50% of 28 advertised figures, at all levels.", "low": 150000.0, "high": 277500.0, "unit": "INR/year"}, "top_skills": {"reason": "Asked for by the most employers: Instagram (12 Postings), Facebook (11 Postings), lead generation (3 Postings), social media (3 Postings). Skills come from Adzuna snippets, so counts are partial.", "skills": ["Instagram", "Facebook", "lead generation", "social media"]}}, "insights": [{"text": "The sample contains 51 postings, of which 49 are from the last 30 days and 19 from the last 7 days.", "confidence": "medium", "reason": "Medium: weakest cited Stat has 19 Postings from 9 employers", "n": 51}, {"text": "The posting trend is rising: the newest 14 days hold 30 postings against 19 in the 14 days before, and ads still live tilt the count toward recent because filled ads disappear.", "confidence": "high", "reason": "High: weakest cited Stat has 49 Postings from 36 employers", "n": 49}, {"text": "Among titles, Digital Marketing Intern and Marketing Intern each account for 6 of 51 postings, within 39 distinct titles in the sample.", "confidence": "low", "reason": "Low: weakest cited Stat has 6 Postings from 6 employers", "n": 51}, {"text": "Advertised pay for these roles has a median of 150,000 INR/year, a 25th percentile of 150,000 INR/year and a 75th percentile of 277,500 INR/year across 28 postings, and the pay period was assumed for 34 advertised figures with no pay period.", "confidence": "medium", "reason": "Medium: weakest cited Stat has 28 Postings from 17 employers", "n": 28}, {"text": "Advertised pay appears on 66.7% of Adzuna postings, while Adzuna-estimated pay appears on 0.0% of them.", "confidence": "high", "reason": "High: weakest cited Stat has 51 Postings from 38 employers", "n": 51}, {"text": "Instagram appears in 12 of 22 extracted postings and Facebook in 11 of 22, but 29 of 51 postings have no extraction and skills come from 500-character snippets, which undercount skills.", "confidence": "low", "reason": "Low: weakest cited Stat has 11 Postings from 3 employers; skills come from snippets", "n": 12}, {"text": "Reels appears in 9 of 22 extracted postings and X (Twitter) in 9 of 22, each from a single employer.", "confidence": "low", "reason": "Low: weakest cited Stat has 9 Postings from 1 employer; skills come from snippets", "n": 9}, {"text": "Drishti Group accounts for 11 of 51 postings, the sample spans 38 distinct employers, and 49.0% of postings come from direct employers.", "confidence": "medium", "reason": "Medium: weakest cited Stat has 11 Postings from 1 employer", "n": 51}]}, "60910cce": {"glance": {"pay": null, "skills": [{"label": "reporting", "count": 5, "must": 0, "employers": 5}, {"label": "advanced analytics", "count": 4, "must": 0, "employers": 4}, {"label": "data governance", "count": 4, "must": 1, "employers": 4}, {"label": "Machine Learning", "count": 4, "must": 0, "employers": 3}, {"label": "data analysis", "count": 3, "must": 0, "employers": 3}, {"label": "data models", "count": 3, "must": 0, "employers": 3}, {"label": "Business Intelligence", "count": 2, "must": 0, "employers": 2}, {"label": "data engineering", "count": 2, "must": 0, "employers": 2}], "extracted": 30, "places": [{"label": "Mumbai", "count": 25}, {"label": "Thane", "count": 3}, {"label": "Navi Mumbai", "count": 2}], "employers": [{"label": "IDFC FIRST Bank", "count": 3}, {"label": "TIAA", "count": 3}, {"label": "Colgate-Palmolive", "count": 2}, {"label": "Experian", "count": 2}, {"label": "Adani", "count": 1}], "employers_total": 24.0, "sample": 30}, "notes": [], "role": "Data Analyst", "location": "Mumbai", "summary": "For remote Data Analyst roles in Mumbai, the sample has 30 Postings, with 29 from the last 30 days and 12 from the last 7 days. The hiring outlook is competitive.", "outlook": "competitive", "rec": {"job_title": null, "salary_band": null, "top_skills": {"reason": "Asked for by the most employers: reporting (5 Postings), advanced analytics (4 Postings), data governance (4 Postings), Machine Learning (4 Postings), data analysis (3 Postings). Skills come from Adzuna snippets, so counts are partial.", "skills": ["reporting", "advanced analytics", "data governance", "Machine Learning", "data analysis"]}}, "insights": [{"text": "Postings are recent: 29 of 30 are from the last 30 days, 12 of 30 are from the last 7 days, and the median age is 9 days.", "confidence": "medium", "reason": "Medium: weakest cited Stat has 12 Postings from 10 employers", "n": 30}, {"text": "The posting trend is rising: 22 Postings in the newest 14 days against 6 in the 14 before. Ads still live, which tilts recent because filled ads disappear.", "confidence": "medium", "reason": "Medium: weakest cited Stat has 28 Postings from 22 employers", "n": 28}, {"text": "Advertised pay is disclosed in 6.7% (2 of 30) of Postings; Adzuna-estimated pay is 0.0% (0 of 30). Caveats: no pay group has 5 salaries, and 2 advertised figures have no pay period and are treated as annual.", "confidence": "high", "reason": "High: weakest cited Stat has 30 Postings from 24 employers", "n": 30}, {"text": "Among extracted skills, reporting appears in 5 of 30 Postings; advanced analytics, data governance, and Machine Learning each appear in 4 of 30. Caveat: skills come from 500-character snippets, which undercount skills.", "confidence": "low", "reason": "Low: weakest cited Stat has 4 Postings from 3 employers; skills come from snippets", "n": 15}, {"text": "Data governance is required in 1 of 30 extracted Postings. Caveat: skills come from 500-character snippets, which undercount skills.", "confidence": "low", "reason": "Low: weakest cited Stat has 1 Posting from 1 employer; skills come from snippets", "n": 1}, {"text": "The sample has 24 distinct employers; 29 of 30 Postings are from direct employers (96.7%), and 1 of 30 is from staffing agencies (3.3%).", "confidence": "low", "reason": "Low: weakest cited Stat has 1 Posting from 1 employer", "n": 30}, {"text": "Senior level accounts for 26.7% (8 of 30) of extracted Postings, while the level is unknown for 53.3% (16 of 30).", "confidence": "low", "reason": "Low: weakest cited Stat has 8 Postings from 6 employers", "n": 24}, {"text": "The sample has 27 distinct titles across 30 Postings.", "confidence": "high", "reason": "High: weakest cited Stat has 30 Postings from 24 employers", "n": 30}]}}
+const q = new URLSearchParams(location.search)
+const depth = q.get("depth") || "subtle"; document.body.dataset.depth = depth
+const ids = Object.keys(RUNS); const id = q.get("run") || ids[0]; const r = RUNS[id]
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))
+const OUT = {favourable:"▲ Favourable",competitive:"◆ Competitive",hard_to_fill:"▼ Hard to fill"}
+const METER = {high:"●●●",medium:"●●○",low:"●○○"}
+const n = v => Number(v).toLocaleString("en-US",{maximumFractionDigits:0})
+const bars = (rows, max = Math.max(...rows.map(x => x.count))) => rows.map(x => {
+  const other = x.count - (x.must || 0)
+  return `<div class="bar-row" title="${esc(x.label)}: ${x.count}${x.employers ? ` postings from ${x.employers} employers` : ""}"><span>${esc(x.label)}</span><span class="track" aria-hidden="true">${x.must ? `<i class="must" style="width:${x.must/max*100}%"></i>` : ""}${other ? `<i class="${x.must ? "other" : ""}" style="width:${other/max*100}%"></i>` : ""}</span><span class="num">${x.count}</span></div>`
+}).join("")
+function pay(p) {
+  const lo = 0, hi = p.p75 * 1.15, at = v => (v - lo) / (hi - lo) * 100
+  return `<section class="tile"><h3>Pay, middle 50%</h3><div class="range" aria-hidden="true"><div class="line"></div><div class="box" style="left:${at(p.p25)}%;width:${at(p.p75)-at(p.p25)}%"></div><div class="med" style="left:${at(p.median)}%"></div><span style="left:${at(p.p25)}%;top:-16px">${n(p.p25)}</span><span style="left:${at(p.p75)}%;top:28px;transform:translateX(-100%)">${n(p.p75)}</span></div><p class="muted">Median ${n(p.median)} ${esc(p.unit)}, from ${p.n} postings. The dark line marks the median.</p></section>`
+}
+function render() {
+  const g = r.glance, rec = r.rec, top = [...r.insights].sort((a,b) => ["high","medium","low"].indexOf(a.confidence)-["high","medium","low"].indexOf(b.confidence))
+  const li = i => `<li><span class="pill">${METER[i.confidence]} ${i.confidence}</span> ${esc(i.text)}<details><summary>Why, and the evidence</summary><p class="muted">${esc(i.reason)}. ${i.n} postings.</p></details></li>`
+  document.getElementById("brief").innerHTML = `
+  <h1>${esc(r.role)}, ${esc(r.location)}</h1>
+  <div class="tiles">
+    <div class="tile"><small>Hiring outlook</small><b>${OUT[r.outlook]}</b></div>
+    <div class="tile"><small>Job title</small><b>${rec.job_title ? esc(rec.job_title.title) : "Not enough evidence"}</b></div>
+    <div class="tile"><small>Salary band</small><b>${rec.salary_band ? `${n(rec.salary_band.low)} to ${n(rec.salary_band.high)}` : "Not enough evidence"}</b>${rec.salary_band ? `<span class="muted">${esc(rec.salary_band.unit)}</span>` : ""}</div>
+    <div class="tile"><small>Top skills</small><b style="font-size:14px">${rec.top_skills ? esc(rec.top_skills.skills.slice(0,4).join(", ")) : "Not enough evidence"}</b></div>
+  </div>
+  ${r.notes.map(t => `<p class="note"><span aria-hidden="true">⚠ </span>${esc(t)}</p>`).join("")}
+  <section class="card"><p style="margin:0">${esc(r.summary)}</p></section>
+  <div class="charts">
+    ${g.pay ? pay(g.pay) : ""}
+    ${g.skills.length ? `<section class="tile"><h3>Skills employers ask for</h3>${bars(g.skills)}<p class="muted">Of ${g.extracted} postings we could read. Dark is required, light is the rest. Skills from one employer are left out.</p></section>` : ""}
+    ${g.places.length ? `<section class="tile"><h3>Where the postings are</h3>${bars(g.places)}<p class="muted">${g.sample} postings.</p></section>` : ""}
+    ${g.employers.length ? `<section class="tile"><h3>Who is hiring most</h3>${bars(g.employers)}<p class="muted">${n(g.employers_total)} employers in all.</p></section>` : ""}
+  </div>
+  <section class="card" style="margin-top:12px"><h2>What we found</h2><ul class="ins">${top.slice(0,3).map(li).join("")}</ul><details><summary>Show all ${top.length}</summary><ul class="ins">${top.slice(3).map(li).join("")}</ul></details></section>
+  <details class="card"><summary>How this was researched</summary><p class="muted">Full Run Notes, every Caveat and the Postings analysed live here, and in the downloads.</p></details>
+  <p class="muted">Jobs data provided by Adzuna</p>`
+  document.getElementById("state").textContent = `depth=${depth} run=${id}`
+  const link = (k, v) => { const u = new URLSearchParams(q); u.set(k, v); return `<a href="?${u}">${v}</a>` }
+  document.getElementById("sw").innerHTML = ["flat","subtle","strong"].map(v => link("depth", v)).join(" ") + " | " + ids.map(v => link("run", v)).join(" ")
+}
+render()
+</script>
+</body>
+</html>

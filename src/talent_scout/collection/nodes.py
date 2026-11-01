@@ -17,7 +17,7 @@ from talent_scout.kernel.types import Posting, SearchPlan, Source
 from talent_scout.runtime.deps import Deps, Node, Router
 from talent_scout.runtime.pause import LowDataPause
 
-MAX_FETCHES = 6  # per Attempt; 3 Attempts spend at most 18 of Adzuna's 25 daily calls, retries aside
+MAX_FETCHES = 6  # per Attempt; 3 Attempts spend at most 18 of Adzuna's 250 daily calls, retries aside
 MAX_BROADENS = 2  # so 3 Attempts before low_data_review
 RAW_FACTOR = 1.5  # the model can't see relevance, so it gathers more raw Postings than the target
 MAX_SAMPLE_TITLES = 5
@@ -71,7 +71,7 @@ def _make_tools(gateway) -> dict[str, BaseTool]:
     async def search_usajobs(
         title: str, plan: Annotated[SearchPlan, InjectedToolArg], attempt: Annotated[int, InjectedToolArg], page: int = 1, location: str = ""
     ) -> FetchRecord:
-        """Search USAJOBS, the US federal government's own job ads, by title. US searches only, and it ignores the plan's category. Free and unmetered, but federal roles only, so a private-sector title may return little. One call returns one page of up to 50. `location` must be one of the plan's places; blank means the first."""
+        """Search USAJOBS, the US federal government's own job ads, by title. US searches only. Honours the plan's category when it maps to federal job series. Free and unmetered, but federal roles only, so a private-sector title may return little. One call returns one page of up to 50. `location` must be one of the plan's places; blank means the first."""
         return await search(Source.usajobs, title, page, location, plan, attempt)
 
     return {t.name: t for t in (search_adzuna, search_usajobs)}
@@ -168,11 +168,8 @@ def _blocked(state: State, deps: Deps) -> str | None:
     if current and all(r.error for r in current):
         return "Every search in this Attempt failed: " + "; ".join(dict.fromkeys(r.error for r in current))
     # Skipped under replay, or a recorded Run could take a different route when replayed.
-    if (
-        deps.gateway.calls_left(Source.adzuna) == 0
-        and state.current_plan.country != "us"
-        and not deps.settings.replay_cache
-    ):
+    # US Runs too: USAJOBS alone can't make up a private-sector Sample, so the user decides rather than a broaden guessing.
+    if deps.gateway.calls_left(Source.adzuna) == 0 and not deps.settings.replay_cache:
         return "Adzuna's daily limit is used up, until the next UTC day"
     return None
 
@@ -206,11 +203,13 @@ def _collect_caveats(current: list[FetchRecord]) -> list[RunLogEntry]:
     outcomes = [o for r in current if r.result for o in r.result.sources.values()]
     entries = []
     # A partial L2 page names its source in `failures`; a failed call is only a failure worth a Caveat when another answered.
-    failed = {s for r in current if r.result for s in r.result.failures}
+    failed = {s: why for r in current if r.result for s, why in r.result.failures.items()}
     if outcomes:
-        failed |= {r.source for r in current if r.error}
+        failed |= {r.source: r.error for r in current if r.error}
     if failed:
-        entries.append(log_entry("collect", LogKind.caveat, f"One source failed: {', '.join(sorted(failed))}", sources=sorted(failed)))
+        # The reason is kept: "daily limit reached" and "down" call for different things from the reader.
+        reasons = "; ".join(f"{s} ({failed[s]})" for s in sorted(failed))
+        entries.append(log_entry("collect", LogKind.caveat, f"One source failed: {reasons}", sources=sorted(failed)))
     if dropped := sum(o.dropped for o in outcomes):
         entries.append(log_entry("collect", LogKind.caveat, f"{dropped} Postings were dropped by the source mapper", dropped=dropped))
     if replayed := [o for o in outcomes if o.cache == CacheStatus.replay]:

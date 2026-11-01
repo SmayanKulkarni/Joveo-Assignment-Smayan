@@ -141,13 +141,16 @@ class UsajobsClient:
         self._client, self._settings, self._store = client, settings, store
 
     async def search(self, f: Fetch) -> Page:
-        # Fetch.category is not sent: filtering after mapping would shorten pages and falsify the total.
         params = {
             "PositionTitle": f.title,
             "ResultsPerPage": PAGE_SIZE,
             "Page": f.page,
             "DatePosted": min(f.max_days_old, MAX_DATE_POSTED),
         }
+        # PositionTitle matches any one word, so "software engineer" returns civil engineers. Filtered by the API, so pages and totals stay true.
+        # A tag with no series (sales-jobs, say) sends nothing rather than an empty filter.
+        if codes := " ".join(DOMAINS.get(f.category, ("", ""))).split() if f.category else None:
+            params["JobCategoryCode"] = ";".join(codes)
         if f.location:
             params |= {"LocationName": f.location, "Radius": ceil(f.radius_km / KM_PER_MILE)}
         headers = {"Host": HOST, "User-Agent": self._settings.usajobs_user_agent, "Authorization-Key": self._settings.usajobs_api_key}

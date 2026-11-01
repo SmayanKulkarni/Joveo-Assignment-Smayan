@@ -128,8 +128,8 @@ def test_both_fetch_blocked_reasons_fire():
     assert blocked_after(left=3) is None
 
 
-def test_a_us_run_isnt_blocked_by_an_empty_adzuna_budget_and_replay_skips_the_check():
-    assert blocked_after(left=0, country="us") is None
+def test_an_empty_adzuna_budget_blocks_a_us_run_too_and_replay_skips_the_check():
+    assert blocked_after(left=0, country="us") == "Adzuna's daily limit is used up, until the next UTC day"
     assert blocked_after(left=0, replay=True) is None
 
 

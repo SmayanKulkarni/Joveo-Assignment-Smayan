@@ -7,6 +7,8 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (the web UI that 
 
 `docs/lld/web-ui.md`: an LLD of a browser UI for the whole system, precise enough to build straight from. A user starts a Run, watches it live (streamed tokens, tool-call loading states, a trace graph with animated progress), answers Pauses, reads the Market Brief, and finds every earlier Run in a chat-style sidebar. Nothing is left to decide. Building it is a separate effort after this map.
 
+Reopened 2026-11-01 after using the built UI: the LLD and new build tickets in `.scratch/web-ui-build/issues/` also cover several places and unlimited titles in a Search Plan, a subtle neumorphic and compact look, readable labels, a user-facing view free of log clutter, one or two plain Caveats, and a Brief that reads at a glance with charts.
+
 ## Notes
 
 - Domain: a new client over the Run Controller, plus the thin web API it needs. Vocabulary: `GLOSSARY.md`. Spec: `Joveo_Talent_Market_Agent- Assessment.pdf`. Deadline Mon 2 Nov 2026, 9:00 AM, so this map stays lean and every ticket picks the simplest thing that reads well.
@@ -22,6 +24,11 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (the web UI that 
   - **Friendly node labels return.** [future-scope](../../docs/lld/future-scope.md) deferred them "until showing the live view to clients"; this is that. The label table is decided in [Trace graph](issues/05-trace-graph.md).
   - **Streamlit is deleted** when the web UI lands, as future scope says.
   - **No-LLM demo mode.** The server can run on `fake_deps` and the stub graph, so the UI is built and checked without OpenRouter or a jobs API.
+- Decided on reopening, 2026-11-01, again with the agent told to make every decision:
+  - **Tickets live here.** `.scratch/web-ui-build` holds only build slices and has no map, so decisions go on this map and its last ticket cuts the build slices there.
+  - **Two audiences.** The screen serves a reader who doesn't care how the Run worked. `brief.json` and `brief.md` keep the full record.
+  - **Numbers stay honest.** Charts show only Stats or Sample data, never LLM figures.
+  - **The deadline stands.** It is 2 Nov 2026, 9:00 AM, so the last ticket orders the build slices by value in case time runs out.
 
 ## Decisions so far
 
@@ -37,11 +44,19 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (the web UI that 
 - [Brief view](issues/08-brief-view.md): rendered from structured data in `brief.md`'s section order, with inline Evidence (cited Stats and linked Postings), never colour alone, Run Notes open with Caveats first, and print as a stylesheet only.
 - [Motion with GSAP](issues/09-motion-with-gsap.md): React renders the final state and GSAP only plays the way in, through one `useMotion` helper; an animation table with shared tokens, and no per-token tween.
 - [Frontend build and verification](issues/10-frontend-build-and-verification.md): npm with exact pins, no router, store or CSS library; FastAPI in the main dependencies; Vitest, API tests, a contract file and one browser smoke; Streamlit goes last; dark mode deferred.
-- [Write docs/lld/web-ui.md](issues/11-write-web-ui-lld-doc.md): the LLD and its 8-pass checklist are written, and the Runtime, HLD, future-scope and glossary docs agree with it. The map is complete.
+- [Write docs/lld/web-ui.md](issues/11-write-web-ui-lld-doc.md): the LLD and its 8-pass checklist are written, and the Runtime, HLD, future-scope and glossary docs agree with it. The map was complete until it reopened on 2026-11-01.
+- [Research: searching many titles and places on Adzuna](issues/12-research-adzuna-many-titles-and-places.md): multi-word titles and several places each need their own Adzuna call, so calls = titles x places x pages; a wide Mumbai radius and the real quota still need a live check.
+
+- [Many places and titles in a Search Plan](issues/13-many-places-and-titles-in-a-search-plan.md): `SearchPlan.locations` with no title limit, one wide search for one metro (measured), code pins places through broaden and only the user can go wider, the cap scales with the plan and the daily guard stays the ceiling.
+- [Subtle neumorphic look and compact layout](issues/14-subtle-neumorphic-look-and-compact-layout.md): one surface with soft shadows but real borders, AA measured, chip inputs and a 4-column editor, `labels.ts` and `Intl.DisplayNames`.
+- [What the user sees and what the record keeps](issues/15-what-the-user-sees-and-what-the-record-keeps.md): only server-written `result` lines reach the live view, at most two plain reader notes, Run Notes fold away complete, attribution stays visible, and the record doesn't change.
+- [A Brief you can read at a glance](issues/16-a-brief-you-can-read-at-a-glance.md): four answer tiles, then notes, Summary and charts, three Insights first; screen and Markdown agree on facts, not wording.
+- [Charts in the Brief](issues/17-charts-in-the-brief.md): pay range, skills, places and employers as HTML bars from one server function on Stats and the Sample, each hidden when thin.
+- [Update the LLD and cut build tickets](issues/18-update-the-lld-and-cut-build-tickets.md): the LLDs agree, and build tickets 13 to 18 are cut in value order. The map is complete again.
 
 ## Not yet specified
 
-Nothing: the fog is clear. Dark mode was deferred in [Frontend build and verification](issues/10-frontend-build-and-verification.md).
+Nothing: the fog is clear. Dark mode stays deferred, as [Frontend build and verification](issues/10-frontend-build-and-verification.md) decided.
 
 ## Out of scope
 

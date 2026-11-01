@@ -228,9 +228,10 @@ See [USAJOBS client and mapper (pass 2)](../../.scratch/gateway-lld/issues/05-us
 | `Page` | `Fetch.page` |
 | `DatePosted` | `min(max_days_old, 60)`. The API silently caps at 60 |
 | `LocationName`, `Radius` | `location`, `ceil(radius_km / 1.609)`. `Radius` behaves like miles. Both omitted when `location` is blank |
+| `JobCategoryCode` | the families and overrides the Domain table maps `Fetch.category` to, joined with `;`. Omitted when there is no category or the tag maps to no series |
 
 - `Fields` isn't sent, and `sort=opendate` isn't used: it puts unrelated engineers ahead of real matches.
-- `Fetch.category` is ignored, so a Posting can return with a different Domain from the one asked for. Filtering after mapping would shorten pages and falsify `total`.
+- `PositionTitle` matches any one word of the title, so "software engineer" also returns civil engineers. `JobCategoryCode` narrows that on the API's side, so pages stay full and `total` stays true. Family codes such as `2200` work as filters.
 - `Page.total = SearchResult.SearchResultCountAll`. A body without `SearchResult` is `SourceUnavailable`.
 - `429` is `SourceUnavailable`, with no lockout, since there's no limit to protect.
 - A multi-word country-wide search can time out (seen at 20 s and 25 s). It ends in `failures[usajobs]`, and Adzuna's results still return. Raising the timeout wouldn't help.
@@ -314,7 +315,7 @@ l1(source TEXT, fetch TEXT, postings TEXT, total INT, dropped INT,
 budget(source TEXT, utc_day TEXT, used INT, PRIMARY KEY (source, utc_day))
 ```
 
-- Both sources are counted. Only Adzuna has a limit (`adzuna_daily_limit`, 25, from the account dashboard), so USAJOBS reports `calls_left = None`. No per-minute limit was reported.
+- Both sources are counted. Only Adzuna has a limit (`adzuna_daily_limit`, 250, set by the user; a real `429` still locks the rest of the UTC day), so USAJOBS reports `calls_left = None`. No per-minute limit was reported.
 - To hold calls back for a walkthrough, lower the setting in `.env`. There's no reserve setting.
 - The day boundary is UTC, since Adzuna's reset time is undocumented. If it differs, a `429` catches it.
 - `store.spend(source)` runs before every HTTP attempt, retries included. It's one atomic statement, after `INSERT OR IGNORE` of today's row:
@@ -353,7 +354,7 @@ l2_postings(key TEXT PRIMARY KEY, country TEXT, via TEXT, posting TEXT, last_see
 ```
 
 - **Write:** every live Adzuna response, from any page, before `coalesce`, with `INSERT ... ON CONFLICT(key) DO UPDATE`. The newest version wins. `via` is that `Fetch`'s JSON. `last_seen_at` is now.
-- **Read:** `WHERE country = ? AND last_seen_at >= ?`, then the reuse rule in Python, checking `via` before validating the Posting. A row that no longer validates is skipped. Mark the read with `# ponytail: full scan of about 8,750 rows (25 calls x 50 x 7 days), add Region and Domain columns if the budget grows`. Measured at 23–39 ms for 7,000 rows, against 800–2,500 ms for an Adzuna call.
+- **Read:** `WHERE country = ? AND last_seen_at >= ?`, then the reuse rule in Python, checking `via` before validating the Posting. A row that no longer validates is skipped. Mark the read with `# ponytail: full scan of up to about 87,500 rows (250 calls x 50 x 7 days), add Region and Domain columns if reads get slow`. Measured at 23–39 ms for 7,000 rows, against 800–2,500 ms for an Adzuna call.
 - **Dropped from the schema:** Region and Domain columns, `first_seen` (nothing reads it) and raw responses (§8).
 
 **Reuse rule.** A stored Posting is reused only if the `Fetch` that last returned it (`via`) was at least as broad as the new one. Otherwise "senior data engineer" Postings would fill a later "data engineer" request and push its salary Stats up.
@@ -416,7 +417,7 @@ All in Kernel §13 and already in `kernel/settings.py`: `adzuna_app_id`, `adzuna
 | Setting | Default |
 |---|---|
 | `gateway_db` | `.cache/gateway.sqlite` |
-| `adzuna_daily_limit` | 25 |
+| `adzuna_daily_limit` | 250 |
 | `l1_ttl_hours` | 24 |
 | `l2_fresh_days` | 7 |
 

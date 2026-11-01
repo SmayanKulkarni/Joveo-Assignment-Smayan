@@ -18,7 +18,7 @@ _Avoid_: Follow-up, prompt
 A gap in the Hiring Request the agent filled itself (because the user's answer stayed vague) and recorded in the Run Notes.
 
 **Search Plan**:
-The title variants, location scope and radius, date range and target number of Postings the agent intends to fetch.
+The title variants, one or more places (or the whole country) and radius, date range and target number of Postings the agent intends to fetch.
 _Avoid_: Query plan, strategy
 
 ### Evidence
@@ -94,7 +94,7 @@ The record of Clarifying Questions and answers, the final Search Plan, Postings 
 _Avoid_: Log, metadata
 
 **Caveat**:
-A limitation found during a Run that affects how far the user can trust the Market Brief, such as Postings lost, too little or old data, or a judgement made without Jev's probabilities. Always shown in the Run Notes; backend errors are never Caveats.
+A limitation found during a Run that affects how far the user can trust the Market Brief, such as Postings lost, too little or old data, or a judgement made without Jev's probabilities. Always in the Run Notes; the screen shows at most two as plain lines. Backend errors are never Caveats.
 _Avoid_: Warning, error, disclaimer
 
 ### Process

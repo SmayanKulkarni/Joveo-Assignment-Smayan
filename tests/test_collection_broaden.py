@@ -318,10 +318,10 @@ def test_mostly_federal_caveat_fires_over_half_usajobs_and_not_for_private_posti
 
 def test_one_source_failed_fires_on_a_partial_l2_page_or_a_failed_call_beside_an_answered_one():
     partial = record([posting("1")], failures={Source.usajobs: "USAJOBS is down"})
-    assert caveats(collected([partial])) == ["One source failed: usajobs"]
+    assert caveats(collected([partial])) == ["One source failed: usajobs (USAJOBS is down)"]
 
     mixed = [record([posting("1")]), record(title="b", source=Source.usajobs, error="USAJOBS is down")]
-    assert caveats(collected(mixed)) == ["One source failed: usajobs"]
+    assert caveats(collected(mixed)) == ["One source failed: usajobs (USAJOBS is down)"]
 
     # Nothing failed, or everything failed: the second is a block for the Pause, not a Caveat.
     assert caveats(collected([record([posting("1")])])) == []

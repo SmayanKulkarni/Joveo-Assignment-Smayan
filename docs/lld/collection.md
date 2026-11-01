@@ -41,7 +41,7 @@ src/talent_scout/collection/
 `types.py` exists as a stub at this path from the Runtime build. It imports `kernel.types` and `gateway.types`. `gateway/types.py` imports only `kernel.types`, so it has the same standing as a stage `types.py`, and nothing loops.
 
 ```python
-MAX_FETCHES = 6     # per Attempt; 3 Attempts spend at most 18 of Adzuna's 25 daily calls, retries aside
+MAX_FETCHES = 6     # per Attempt; 3 Attempts spend at most 18 of Adzuna's 250 daily calls, retries aside
 MAX_BROADENS = 2    # so 3 Attempts before low_data_review
 ```
 
@@ -161,7 +161,7 @@ async def search_usajobs(title: str, plan: Annotated[SearchPlan, InjectedToolArg
 **Why two tools.** The spec evaluates tool calling, where the model decides which tool to use. The choice has to be the model's, or the eval has nothing to see.
 - **A router inside one tool hides the decision.** The trace would show one generic search call, and which API ran would be code. Two tools put the choice in the model's tool call, visible in LangSmith.
 - **A `source` argument would be a parameter, not a tool.** It's the same hidden-schema problem in a smaller form, and it forces one description to cover two APIs that differ.
-- **The APIs genuinely differ, so the choice is real.** Adzuna is worldwide, private-sector, honours every plan field, and has a quota of 25 calls a day. USAJOBS is US-only, federal-only, ignores `category`, and is free. Each docstring says so, and the model weighs it: a federal-adjacent role starts at USAJOBS, a private-sector title at Adzuna, and a low `calls_left` favours free calls.
+- **The APIs genuinely differ, so the choice is real.** Adzuna is worldwide, private-sector, honours every plan field, and has a quota of 250 calls a day. USAJOBS is US-only, federal-only, and is free. Each docstring says so, and the model weighs it: a federal-adjacent role starts at USAJOBS, a private-sector title at Adzuna, and a low `calls_left` favours free calls.
 - **The Gateway stays simple.** `fetch(f, source)` calls one source. L1 keys, replay files and the budget guard were already per source, so nothing there changes.
 - **The cost is a weaker guarantee.** A cheap model may skip USAJOBS on a US Run, and the Sample would carry less federal evidence. `FETCH_SYSTEM` tells it to try both on a US Run's primary title, and the "Mostly federal" Caveat already covers the other tilt. The cap of 6 is now shared, so a US Run searching both sources covers three titles instead of six.
 
@@ -262,7 +262,7 @@ Written on every pass, because it decides whether broadening can help:
 | Reason | Condition |
 |---|---|
 | "Every search in this Attempt failed: <error>" | The Attempt has records, and all of them have `error` |
-| "Adzuna's daily limit is used up, until the next UTC day" | `gateway.calls_left(Source.adzuna) == 0`, `current_plan.country != "us"`, and `replay_cache` isn't set |
+| "Adzuna's daily limit is used up, until the next UTC day" | `gateway.calls_left(Source.adzuna) == 0` and `replay_cache` isn't set. US Runs too: USAJOBS alone can't make up a private-sector Sample |
 
 Otherwise it's `None`. A US Run carries on, because USAJOBS still answers. The budget check is skipped under replay, or a recorded Run could take a different route when replayed.
 

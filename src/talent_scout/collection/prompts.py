@@ -27,14 +27,14 @@ Rules:
 # "Yes" is the side that must clear the bar (Kernel LLD 11), so the criteria describe both sides.
 RELEVANT_NOUL = Noul(
     instructions=(
-        "Is this job posting really an advertisement for the researched role? "
-        "Ignore seniority and location: a junior, senior or unlevelled posting for the same role is still the role."
+        # Naming `role` and the duties matters: asked only about "the researched role", Jev put a Heavy Mobile
+        # Equipment Repairer at 0.6 for Software Engineer, because long federal adverts read as plausible.
+        "Is this posting's actual job the researched `role`? Judge by the duties the posting describes, "
+        "compared with what someone holding `role` does day to day. Ignore seniority and location. "
+        "Sharing a word with the role does not make it the role."
     ),
     criteria=NoulCriteria(**{
-        "true": "The posting advertises the researched role, or a close variant of its title.",
-        "false": (
-            "A different job that shares a keyword (e.g. 'Data Entry Analyst' for 'Data Analyst'), "
-            "or a general talent pool or public notice that is not an advertisement for the role."
-        ),
+        "true": "The duties are those of the role, even under a different or generic title.",
+        "false": "A different occupation that shares a word with the role, or a talent pool or public notice.",
     }),
 )

@@ -130,7 +130,7 @@ class Store:
         The slice may be short: the caller decides whether a partial page is good enough. Serving never touches last_seen_at.
         """
         cutoff = self._l2_cutoff()
-        # ponytail: full scan of about 8,750 rows (25 calls x 50 x 7 days), add Region and Domain columns if the budget grows
+        # ponytail: full scan of up to about 87,500 rows (250 calls x 50 x 7 days), add Region and Domain columns if reads get slow
         rows = self._db.execute(
             "SELECT via, posting, last_seen_at FROM l2_postings WHERE country = ? AND last_seen_at >= ?", (f.country, cutoff)
         ).fetchall()

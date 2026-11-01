@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     balance_floor_usd: float = 0.25
     replay_cache: Path | None = None
     gateway_db: Path = Path(".cache/gateway.sqlite")
-    adzuna_daily_limit: int = 25
+    adzuna_daily_limit: int = 250
     l1_ttl_hours: int = 24
     l2_fresh_days: int = 7
     runs_db: Path = Path(".cache/runs.sqlite")

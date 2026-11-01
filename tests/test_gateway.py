@@ -37,7 +37,8 @@ def fixture_body(name):
 
 
 def gateway_settings(**kw):
-    return make_settings(adzuna_app_id=APP_ID, ADZUNA_API_KEY=APP_KEY, **kw)
+    # Pinned so the budget tests' arithmetic doesn't move with the default.
+    return make_settings(adzuna_app_id=APP_ID, ADZUNA_API_KEY=APP_KEY, **{"adzuna_daily_limit": 25, **kw})
 
 
 def make_fetch(**kw):
@@ -761,10 +762,11 @@ def test_usajobs_request_for_a_located_search():
     run_search(serve(fixture_body("usajobs_search"), seen=seen), f, UsajobsClient)
     req = seen[0]
     assert req.url.host == USAJOBS_HOST and req.url.path == "/api/Search"
-    # DatePosted is capped at 60, Radius is miles rounded up, and the category is never sent.
+    # DatePosted is capped at 60, Radius is miles rounded up, and the category becomes its federal series.
     assert dict(req.url.params) == {
         "PositionTitle": "data engineer", "ResultsPerPage": "50", "Page": "3", "DatePosted": "60",
         "LocationName": "washington", "Radius": str(ceil(50 / 1.609)),
+        "JobCategoryCode": "2200;0391;0854;1550;1560",
     }
     assert req.headers["Host"] == USAJOBS_HOST
     assert req.headers["User-Agent"] == "d" and req.headers["Authorization-Key"] == "c"
@@ -775,6 +777,13 @@ def test_usajobs_blank_location_omits_location_and_radius_and_short_windows_pass
     run_search(serve(fixture_body("usajobs_search"), seen=seen), make_fetch(radius_km=25, max_days_old=10), UsajobsClient)
     q = dict(seen[0].url.params)
     assert q["DatePosted"] == "10" and "LocationName" not in q and "Radius" not in q
+
+
+@pytest.mark.parametrize("category", [None, "sales-jobs"])
+def test_usajobs_sends_no_series_filter_without_a_category_it_can_map(category):
+    seen = []
+    run_search(serve(fixture_body("usajobs_search"), seen=seen), make_fetch(category=category), UsajobsClient)
+    assert "JobCategoryCode" not in seen[0].url.params
 
 
 def test_usajobs_429_is_source_unavailable_with_no_lockout():
