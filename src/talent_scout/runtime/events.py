@@ -6,6 +6,7 @@ from langchain_core.messages import AIMessage
 
 from pydantic import Field
 
+from talent_scout.kernel.state import LogKind
 from talent_scout.kernel.types import Model
 from talent_scout.runtime.pause import Pause
 
@@ -24,6 +25,7 @@ class NodeDone(Model):
     type: Literal["node_done"] = "node_done"
     node: str
     notes: list[str]
+    results: list[str] = []
 
 
 class Token(Model):
@@ -132,9 +134,9 @@ class ChunkMapper:
                 self._extract_done += 1
                 events.append(ExtractProgress(done=self._extract_done, total=self._extract_total))
                 if self._extract_done == self._extract_total:
-                    events.append(NodeDone(node=key, notes=self._notes(update)))
+                    events.append(NodeDone(node=key, **self._lines(update)))
             elif key != "__metadata__":
-                events.append(NodeDone(node=key, notes=self._notes(update)))
+                events.append(NodeDone(node=key, **self._lines(update)))
         return events
 
     def _messages(self, message, metadata: dict) -> list[RunEvent]:
@@ -156,10 +158,10 @@ class ChunkMapper:
             return []
         return [event_class(**{k: v for k, v in chunk.items() if k != "type"})]
 
-    def _notes(self, update: dict | None) -> list[str]:
+    def _lines(self, update: dict | None) -> dict[str, list[str]]:
         run_log = (update or {}).get("run_log")
         if run_log is None:
-            return []
-        notes = [entry.message for entry in run_log[self._log_len:]]
+            return {"notes": [], "results": []}
+        added = run_log[self._log_len:]
         self._log_len = len(run_log)
-        return notes
+        return {"notes": [e.message for e in added], "results": [e.message for e in added if e.kind == LogKind.result]}

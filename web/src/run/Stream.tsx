@@ -24,7 +24,6 @@ export function Stream({ state, live }: { state: RunState; live: boolean }) {
     // Announcing every token would be unusable, so the log is silent and a separate region speaks the milestones.
     <div role="log" aria-live="off">
       {list}
-      {state.gap && <p className="muted">Some live text wasn't kept</p>}
       {state.connection === "reconnecting" && <p className="pill reconnecting">Reconnecting…</p>}
     </div>
   )

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { SearchPlan } from "../api/types"
 import { useMeta } from "../api/useMeta"
+import { categoryName } from "../labels"
 import { where } from "../util"
 import { AbortButton, Refusals } from "./parts"
 import { PlanEditor } from "./PlanEditor"
@@ -55,7 +56,7 @@ export function PlanReviewForm({ plan, assumptions, send }: { plan: SearchPlan; 
         <dt>Target</dt>
         <dd>{plan.target_postings} Postings</dd>
         <dt>Category</dt>
-        <dd>{plan.category ?? "Any"}</dd>
+        <dd>{plan.category ? categoryName(plan.category) : "Any"}</dd>
       </dl>
       {assumptions.length > 0 && (
         <>

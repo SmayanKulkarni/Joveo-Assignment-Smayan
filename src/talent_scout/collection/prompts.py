@@ -16,10 +16,11 @@ BROADEN_SYSTEM = """\
 You widen a job-posting search that found too few relevant postings. You are given the hiring request, the plan that fell short, what each search found, and some titles that were rejected as not the role.
 
 Rules:
-- Pick the moves most likely to help: more title variants, a wider radius, an older max_days_old, dropping the category, a country-wide search, or replacing a noisy title.
+- Pick the moves most likely to help: more title variants, a wider radius, an older max_days_old, dropping the category, or replacing a noisy title.
+- Each title is one job title, never a list of titles joined together.
 - Use the totals and rejected titles to choose. A title with few matches is exhausted, so a wider search helps more than the same title. A rejected title shows a noisy keyword, so replace it.
 - Follow the user's guidance over these defaults when it is given.
-- Keep country and target_postings as they are. They are restored by code anyway.
+- Keep country, location and target_postings as they are. They are restored by code anyway.
 - Stay within the limits of the plan format. Do not drop or change the primary role.
 """
 

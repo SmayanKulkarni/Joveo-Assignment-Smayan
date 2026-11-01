@@ -1,13 +1,13 @@
 import type { Pause, WireEvent } from "../api/types"
-import { DRAFTING, stepOf } from "./steps"
+import { DRAFTING, sourceName, stepOf } from "./steps"
 import { emptyTrace, traceReduce } from "./trace"
 import type { TraceState } from "./trace"
 
 export type Tool = { name: string; summary: string; result: string | null; pill?: string; interrupted?: boolean }
 export type Turn = {
   step: string
-  node: string | null // the node running now, so a gap in live text is only claimed where text could stream
-  notes: string[]
+  node: string | null
+  results: string[] // plain progress lines only; route names and plan diffs stay in the log
   answer?: string
   tools: Tool[]
   pills: string[] // API calls that matched no card
@@ -25,7 +25,6 @@ export type RunState = {
   ending: Ending | null
   connection: "live" | "reconnecting"
   animate: boolean // false until caught_up, and on any reopened Run
-  gap: boolean
 }
 // reset starts again from a base, answered collapses the open Pause, resumed clears a Stopped ending, batch is one frame.
 export type Action =
@@ -36,9 +35,9 @@ export type Action =
   | { type: "connection"; to: RunState["connection"] }
   | { type: "batch"; events: WireEvent[] }
 
-export const empty: RunState = { turns: [], texts: {}, trace: emptyTrace, pause: null, ending: null, connection: "live", animate: false, gap: false }
+export const empty: RunState = { turns: [], texts: {}, trace: emptyTrace, pause: null, ending: null, connection: "live", animate: false }
 
-export const newTurn = (step: string): Turn => ({ step, node: null, notes: [], tools: [], pills: [], drafting: null })
+export const newTurn = (step: string): Turn => ({ step, node: null, results: [], tools: [], pills: [], drafting: null })
 
 // A turn is one visit to one Step, so fetch_agent and tools share one.
 export function turnFor(turns: Turn[], node: string): Turn[] {
@@ -64,7 +63,7 @@ function addText(state: RunState, field: keyof Texts, text: string): RunState {
 
 function apiPill(turn: Turn, source: string, text: string): Partial<Turn> {
   const at = turn.tools.findIndex((t) => t.name === `search_${source}` && !t.pill)
-  if (at < 0) return { pills: [...turn.pills, `${source} · ${text}`] }
+  if (at < 0) return { pills: [...turn.pills, `${sourceName(source)} · ${text}`] }
   return { tools: turn.tools.map((t, j) => (j === at ? { ...t, pill: text } : t)) }
 }
 
@@ -77,7 +76,7 @@ export function reduce(state: RunState, action: Action): RunState {
 function fold(state: RunState, action: Action): RunState {
   switch (action.type) {
     case "reset":
-      return { ...(action.to ?? empty), texts: action.keepTexts ? state.texts : {}, animate: false, connection: "live", gap: false }
+      return { ...(action.to ?? empty), texts: action.keepTexts ? state.texts : {}, animate: false, connection: "live" }
     case "batch":
       return action.events.reduce(reduce, state)
     case "connection":
@@ -93,7 +92,7 @@ function fold(state: RunState, action: Action): RunState {
       return patchLast({ ...state, turns: turnFor(state.turns, action.node) }, (turn) => ({
         node: null,
         drafting: null,
-        notes: [...turn.notes, ...action.notes],
+        results: [...turn.results, ...action.results],
       }))
     case "reasoning":
       return addText(state, "thinking", action.text)
@@ -133,12 +132,8 @@ function fold(state: RunState, action: Action): RunState {
             : turn,
         ),
       }
-    case "caught_up": {
-      // Live text sent before this point, or during an outage, is gone. Only say so where the active turn could have streamed.
-      const i = state.turns.length - 1
-      const lost = i >= 0 && streams(state.turns[i].node) && !state.pause && !state.ending && !state.texts[i]
-      return { ...state, animate: true, gap: state.gap || lost }
-    }
+    case "caught_up":
+      return { ...state, animate: true }
     default:
       return state
   }

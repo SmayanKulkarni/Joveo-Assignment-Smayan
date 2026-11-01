@@ -206,7 +206,8 @@
    "node": "intake",
    "notes": [
     "Read the request"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -217,7 +218,8 @@
    "node": "clarity_check",
    "notes": [
     "one question to ask first"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -251,7 +253,8 @@
    "node": "clarify",
    "notes": [
     "answered 1 questions"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -262,7 +265,8 @@
    "node": "intake",
    "notes": [
     "Read the request"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -273,7 +277,8 @@
    "node": "clarity_check",
    "notes": [
     "request is final"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -284,7 +289,8 @@
    "node": "plan",
    "notes": [
     "plan: Data Engineer, target 20"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -325,7 +331,8 @@
    "node": "plan_review",
    "notes": [
     "plan approve"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -334,7 +341,8 @@
   {
    "type": "node_done",
    "node": "fetch_agent",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -360,7 +368,8 @@
   {
    "type": "node_done",
    "node": "tools",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -369,7 +378,8 @@
   {
    "type": "node_done",
    "node": "fetch_agent",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -395,7 +405,8 @@
   {
    "type": "node_done",
    "node": "tools",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -404,7 +415,8 @@
   {
    "type": "node_done",
    "node": "fetch_agent",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -415,7 +427,11 @@
    "node": "collect",
    "notes": [
     "kept 3 Postings, merged 0 Duplicates",
-    "source totals"
+    "source totals",
+    "Found 3 postings"
+   ],
+   "results": [
+    "Found 3 postings"
    ]
   },
   {
@@ -426,7 +442,11 @@
    "type": "node_done",
    "node": "relevance",
    "notes": [
+    "3 are the role",
     "3 of 3 Postings relevant"
+   ],
+   "results": [
+    "3 are the role"
    ]
   },
   {
@@ -470,7 +490,8 @@
    "node": "low_data_review",
    "notes": [
     "user chose broaden"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -480,7 +501,11 @@
    "type": "node_done",
    "node": "broaden",
    "notes": [
-    "broadened: radius_km: 40 -> 80; max_days_old: 30 -> 60"
+    "broadened: radius_km: 40 -> 80; max_days_old: 30 -> 60",
+    "Widened the search"
+   ],
+   "results": [
+    "Widened the search"
    ]
   },
   {
@@ -490,7 +515,8 @@
   {
    "type": "node_done",
    "node": "fetch_agent",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -516,7 +542,8 @@
   {
    "type": "node_done",
    "node": "tools",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -525,7 +552,8 @@
   {
    "type": "node_done",
    "node": "fetch_agent",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -551,7 +579,8 @@
   {
    "type": "node_done",
    "node": "tools",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -560,7 +589,8 @@
   {
    "type": "node_done",
    "node": "fetch_agent",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -571,7 +601,11 @@
    "node": "collect",
    "notes": [
     "kept 6 Postings, merged 0 Duplicates",
-    "source totals"
+    "source totals",
+    "Found 6 postings"
+   ],
+   "results": [
+    "Found 6 postings"
    ]
   },
   {
@@ -582,7 +616,11 @@
    "type": "node_done",
    "node": "relevance",
    "notes": [
+    "6 are the role",
     "6 of 6 Postings relevant"
+   ],
+   "results": [
+    "6 are the role"
    ]
   },
   {
@@ -622,7 +660,8 @@
   {
    "type": "node_done",
    "node": "batch_extract",
-   "notes": []
+   "notes": [],
+   "results": []
   },
   {
    "type": "node_started",
@@ -633,7 +672,8 @@
    "node": "normalise_skills",
    "notes": [
     "2 skill names, no duplicates"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -645,7 +685,8 @@
    "notes": [
     "6 Stats from 6 Postings",
     "Demo data: these Postings are invented for the walkthrough"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -656,7 +697,8 @@
    "node": "write_brief",
    "notes": [
     "3 Insights from the draft"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -667,7 +709,8 @@
    "node": "critic",
    "notes": [
     "2 of 3 Insights supported (route: write_brief)"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -678,7 +721,8 @@
    "node": "write_brief",
    "notes": [
     "1 Insight reworded"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -689,7 +733,8 @@
    "node": "critic",
    "notes": [
     "3 of 3 Insights supported (route: render)"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "node_started",
@@ -700,7 +745,8 @@
    "node": "render",
    "notes": [
     "3 Insights"
-   ]
+   ],
+   "results": []
   },
   {
    "type": "done",

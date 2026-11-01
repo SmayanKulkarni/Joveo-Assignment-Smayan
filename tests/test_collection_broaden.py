@@ -41,9 +41,27 @@ def test_broaden_pins_country_and_target_clears_messages_and_logs_the_change():
     assert (new.country, new.target_postings) == ("in", 20)
     assert new.radius_km == 60 and new.titles == ["Data Analyst", "BI Analyst"]
     assert update["messages"] == [] and update["low_data_guidance"] is None
-    assert update["run_log"][-1].message.startswith("broadened: ") and "radius_km: 25 -> 60" in update["run_log"][-1].message
+    assert update["run_log"][-2].message.startswith("broadened: ") and "radius_km: 25 -> 60" in update["run_log"][-2].message
     # The guidance used up here reached the prompt.
     assert "try BI roles" in strong.seen[0][1].content
+
+
+def test_broaden_keeps_the_place_unless_the_user_ticked_whole_country():
+    drafted = plan(location="", radius_km=60).model_dump_json()
+    for whole, kept in ((False, "Pune"), (True, "")):
+        deps, *_ = make_deps(strong=[drafted])
+        update = run(make_nodes(deps)["broaden"], state_with(search_plan=plan(location="Pune"), low_data_whole_country=whole))
+        assert update["broadened_plans"][0].location == kept
+
+
+def test_only_a_broaden_answer_can_carry_whole_country_and_an_old_checkpoint_loads_without_it():
+    _, (final,) = review(state_with(), LowDataAnswer(action="broaden", whole_country=True))
+    assert final["low_data_whole_country"] is True
+    _, (final,) = review(state_with(), LowDataAnswer(action="continue", whole_country=True))
+    assert final["low_data_whole_country"] is False
+    old = state_with().model_dump()
+    del old["low_data_whole_country"]
+    assert State.model_validate(old).low_data_whole_country is False
 
 
 def test_broaden_feeds_the_other_limits_back_and_a_corrected_plan_passes():

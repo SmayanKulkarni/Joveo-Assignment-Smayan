@@ -64,10 +64,9 @@ test("a reset to the base keeps live text", () => {
   expect(reduce(state, { type: "reset", to: empty }).texts).toEqual({})
 })
 
-test("the gap line only follows a replay that reached a streaming turn", () => {
-  const started = reduce(empty, { type: "node_started", node: "fetch_agent" })
-  expect(reduce(started, { type: "caught_up" }).gap).toBe(true)
-  expect(reduce(reduce(empty, { type: "node_started", node: "intake" }), { type: "caught_up" }).gap).toBe(false)
-  const paused: Pause = { kind: "clarify", payload: { questions: [] } }
-  expect(reduce(reduce(started, { type: "paused", pause: paused }), { type: "caught_up" }).gap).toBe(false)
+test("only result lines reach a turn: no route name or plan diff", () => {
+  const state = play(events)
+  const shown = state.turns.flatMap((t) => t.results).join("\n")
+  expect(shown).toMatch(/postings/i)
+  expect(shown).not.toMatch(/route:|broadened:|->/)
 })

@@ -117,6 +117,19 @@ def test_a_call_over_the_cap_is_refused_and_every_message_counts():
     assert len(update["fetches"]) == 1
 
 
+def test_failed_calls_read_plainly_on_the_card_and_unchanged_to_the_model(monkeypatch):
+    cards = []
+    monkeypatch.setattr("talent_scout.collection.nodes.emit", cards.append)
+    deps, *_ = make_deps(results=[SourceUnavailable("Adzuna is down")])
+    over = search_call("c", id="3")
+    over["name"] = "search_nowhere"
+
+    update = run(make_nodes(deps)["tools"], asked(search_call("a", id="1"), over))
+
+    assert [c["summary"] for c in cards if c["type"] == "tool_returned"] == ["Didn't run", "Didn't run"]
+    assert "Unknown tool" in update["messages"][-1].content
+
+
 def test_bad_args_and_refusals_use_up_the_cap_like_good_calls():
     deps, *_, gateway = make_deps(results=[result([])])
     bad = search_call("a", id="1")
@@ -249,5 +262,5 @@ def test_tools_emits_tool_called_and_tool_returned_for_a_good_call_and_a_failed_
     events = asyncio.run(go())
 
     assert sorted(e["summary"] for e in events if e["type"] == "tool_called") == ['"Analyst" page 2', '"Data Analyst" page 1']
-    assert [e["summary"] for e in events if e["type"] == "tool_returned"] == ["2 Postings, 2 new", "adzuna is down"]
+    assert [e["summary"] for e in events if e["type"] == "tool_returned"] == ["2 Postings, 2 new", "Didn't run"]
     assert {e["name"] for e in events} == {"search_adzuna"}

@@ -1,4 +1,5 @@
 import type { SearchPlan } from "./api/types"
+import { categoryName, countryName } from "./labels"
 
 export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
 
@@ -11,8 +12,8 @@ export function ago(iso: string, now = Date.now()): string {
   return `${Math.floor(minutes / 1440)}d`
 }
 
-export const where = (plan: SearchPlan) => `${plan.location.trim() || "Country-wide"} (${plan.country.toUpperCase()})`
+export const where = (plan: SearchPlan) => `${plan.location.trim() || "Country-wide"}, ${countryName(plan.country)}`
 
 export const planLine = (p: SearchPlan) =>
   `${p.titles.join(", ")}; ${where(p)}; radius ${p.radius_km} km; up to ${p.max_days_old} days old; target ${p.target_postings}; ` +
-  `category ${p.category ?? "any"}`
+  `category ${p.category ? categoryName(p.category) : "any"}`

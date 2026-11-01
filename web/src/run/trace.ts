@@ -86,7 +86,7 @@ function apply(trace: TraceState, action: Action): TraceState {
     }
     case "node_done": {
       const step = stepOf(action.node)
-      const note = action.notes.at(-1)
+      const note = action.results.at(-1)
       return step && note ? patch(trace, step.id, { note }) : trace
     }
     case "tool_called":

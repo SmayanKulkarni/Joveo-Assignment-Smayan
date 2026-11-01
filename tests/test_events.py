@@ -8,7 +8,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 
 from talent_scout.kernel.events import emit
-from talent_scout.kernel.state import State, owned
+from talent_scout.kernel.state import LogKind, State, log_entry, owned
 from talent_scout.runtime.events import (
     ApiCalled, ChunkMapper, ExtractProgress, NodeDone, NodeStarted, Reasoning, Token, ToolCalled, ToolReturned,
 )
@@ -42,6 +42,12 @@ def test_custom_dicts_map_to_events_and_unknown_types_are_dropped(caplog):
     assert mapper.map("custom", api) == [ApiCalled(source="adzuna", cached=True, count=3)]
     assert mapper.map("custom", {"type": "mystery"}) == []
     assert "mystery" in caplog.text
+
+
+def test_node_done_results_are_only_the_result_lines():
+    log = [log_entry("collect", LogKind.note, "source totals"), log_entry("collect", LogKind.result, "Found 80 postings")]
+    (done,) = ChunkMapper(0).map("updates", {"collect": {"run_log": log}})
+    assert done == NodeDone(node="collect", notes=["source totals", "Found 80 postings"], results=["Found 80 postings"])
 
 
 def test_reasoning_comes_from_any_node_but_batch_extract_and_text_only_counts_as_a_token_in_fetch_agent():

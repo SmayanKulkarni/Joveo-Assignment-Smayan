@@ -219,21 +219,24 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         calls = state.messages[-1].tool_calls
         left = MAX_FETCHES - _tool_count(state)
 
-        def error(call: dict, text: str) -> ToolMessage:
+        shown: dict[str, str] = {}  # what the card says about a failed call; the model still reads the message text
+
+        def error(call: dict, text: str, card: str) -> ToolMessage:
+            shown[call["id"]] = card
             return ToolMessage(content=text, tool_call_id=call["id"], name=call["name"], status="error")
 
         async def run(i: int, call: dict) -> FetchRecord | ToolMessage:
             args = call["args"]
             emit({"type": "tool_called", "name": call["name"], "summary": f'"{args.get("title")}" page {args.get("page", 1)}'})
             if i >= left:
-                return error(call, f"Refused: the limit of {MAX_FETCHES} searches in this Attempt is used up.")
+                return error(call, f"Refused: the limit of {MAX_FETCHES} searches in this Attempt is used up.", "Skipped: search limit reached")
             if call["name"] not in bound:
-                return error(call, f"Unknown tool {call['name']!r}. Available: {', '.join(bound)}.")
+                return error(call, f"Unknown tool {call['name']!r}. Available: {', '.join(bound)}.", "Didn't run")
             try:
                 # Injected values go last so model output can't override them.
                 return await bound[call["name"]].ainvoke({**args, "plan": plan, "attempt": attempt})
             except ValidationError as e:
-                return error(call, f"Bad arguments: {e}")
+                return error(call, f"Bad arguments: {e}", "Didn't run")
 
         outcomes = await asyncio.gather(*(run(i, c) for i, c in enumerate(calls)))
 
@@ -243,7 +246,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         for call, outcome in zip(calls, outcomes):
             if isinstance(outcome, ToolMessage):
                 messages.append(outcome)
-                emit({"type": "tool_returned", "name": call["name"], "summary": outcome.content})
+                emit({"type": "tool_returned", "name": call["name"], "summary": shown[call["id"]]})
                 continue
             keys = {p.key for p in outcome.result.postings} if outcome.result else set()
             new = len(keys - seen)
@@ -252,7 +255,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
             messages.append(ToolMessage(content=_summary(outcome, new), tool_call_id=call["id"], name=call["name"]))
             emit({
                 "type": "tool_returned", "name": call["name"],
-                "summary": f"{len(keys)} Postings, {new} new" if outcome.result else str(outcome.error),
+                "summary": f"{len(keys)} Postings, {new} new" if outcome.result else "Didn't run",
             })
         return {"messages": [*state.messages, *messages], "fetches": [*state.fetches, *records]}
 
@@ -275,6 +278,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         entries = [
             log_entry("collect", LogKind.note, f"kept {len(kept)} Postings, merged {duplicates} Duplicates", kept=len(kept), duplicates=duplicates),
             log_entry("collect", LogKind.note, "source totals", totals=totals),
+            log_entry("collect", LogKind.result, f"Found {len(kept)} postings", kept=len(kept)),
             *_collect_caveats(current),
         ]
         return {"postings": {p.key: p for p in kept}, "fetches": stripped, "run_log": [*state.run_log, *entries]}
@@ -303,6 +307,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
                 "relevance", LogKind.caveat,
                 f"Jev degraded: {len(degraded)} Postings were judged by the LLM fallback or from shortened text", keys=degraded,
             ))
+        entries.append(log_entry("relevance", LogKind.result, f"{len(update['sample'])} are the role"))
         entries.append(log_entry(
             "relevance", LogKind.route,
             f"{len(update['sample'])} of {len(state.postings)} Postings relevant (route: {outcome})",
@@ -315,12 +320,19 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         current = state.current_plan
         draft = await broaden_chain.ainvoke(_broaden_input(state))
         # Pinned in code, so broadening can't reach Sufficiency by lowering the target or leave the market asked about.
-        plan = draft.model_copy(update={"country": current.country, "target_postings": current.target_postings})
+        # Only the user's whole-country tick may drop the place, and a blank location already means country-wide.
+        pinned = {"country": current.country, "target_postings": current.target_postings}
+        pinned["location"] = "" if state.low_data_whole_country else current.location
+        plan = draft.model_copy(update=pinned)
         return {
             "broadened_plans": [*state.broadened_plans, plan],
             "messages": [],
             "low_data_guidance": None,  # used up, so a later broaden doesn't repeat it
-            **log(state, "broaden", LogKind.note, f"broadened: {_changes(current, plan)}"),
+            "run_log": [
+                *state.run_log,
+                log_entry("broaden", LogKind.note, f"broadened: {_changes(current, plan)}"),
+                log_entry("broaden", LogKind.result, "Widened the search"),
+            ],
         }
 
     async def low_data_review(state: State) -> dict:
@@ -337,7 +349,12 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         if answer.action == "continue":
             entries += _closing_caveats(state, "low_data_review")
         # Both are written even when null, so a stale guidance never feeds a later broaden.
-        return {"low_data_decision": answer.action, "low_data_guidance": answer.guidance, "run_log": [*state.run_log, *entries]}
+        return {
+            "low_data_decision": answer.action,
+            "low_data_guidance": answer.guidance,
+            "low_data_whole_country": answer.whole_country and answer.action == "broaden",
+            "run_log": [*state.run_log, *entries],
+        }
 
     return {
         "fetch_agent": fetch_agent,

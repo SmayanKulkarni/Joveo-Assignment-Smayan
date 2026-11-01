@@ -9,8 +9,10 @@ type Payload = Extract<Pause, { kind: "low_data_review" }>["payload"]
 
 export function LowDataForm({ payload, send }: { payload: Payload; send: Send }) {
   const [guidance, setGuidance] = useState("")
+  const [wholeCountry, setWholeCountry] = useState(false)
   const { busy, refusal, submit } = useSubmit(send)
   const { count, target, fetched, rejected, attempts, blocked, calls_left, plans } = payload
+  const hasPlace = plans[plans.length - 1].location.trim() !== ""
 
   return (
     <section className="card">
@@ -35,13 +37,18 @@ export function LowDataForm({ payload, send }: { payload: Payload; send: Send })
         Guidance for a wider search (optional)
         <textarea value={guidance} onChange={(e) => setGuidance(e.target.value)} rows={2} />
       </label>
+      {hasPlace && (
+        <label className="check">
+          <input type="checkbox" checked={wholeCountry} onChange={(e) => setWholeCountry(e.target.checked)} /> Search the whole country
+        </label>
+      )}
       <Refusals refusal={refusal} />
       <div className="actions">
         <button
           type="button"
           className="start"
           disabled={busy}
-          onClick={() => submit({ action: "broaden", guidance: guidance.trim() || null }, "You asked for a wider search")}
+          onClick={() => submit({ action: "broaden", guidance: guidance.trim() || null, whole_country: hasPlace && wholeCountry }, "You asked for a wider search")}
         >
           Search wider
         </button>

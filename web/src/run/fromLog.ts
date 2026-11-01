@@ -7,7 +7,7 @@ import { traceReduce } from "./trace"
 // These nodes write no log line in normal use, so the line that follows one implies it ran.
 const IMPLIED: Record<string, string> = { collect: "search", normalise_skills: "postings" }
 
-// The starting state for a Run with no stored events: its route and notes, but no tokens or tool cards.
+// The starting state for a Run with no stored events: its result lines, but no tokens or tool cards.
 export function fromLog({ record, pause, stopped_at, run_log, live_from }: RunDetail): RunState {
   const turns: Turn[] = []
   // A live handle replays everything from live_from, so only the lines before it are history.
@@ -18,13 +18,13 @@ export function fromLog({ record, pause, stopped_at, run_log, live_from }: RunDe
     // A node that writes several lines implies its predecessor once, not once per line.
     if (implied && line.node !== previous && turns.at(-1)?.step !== implied) turns.push(newTurn(implied))
     if (turns.at(-1)?.step !== step) turns.push(newTurn(step))
-    turns.at(-1)!.notes.push(line.message)
+    if (line.kind === "result") turns.at(-1)!.results.push(line.message)
     previous = line.node
   }
   // Each turn replays as the events that would have made it, so a reload lands where the live trace would be.
-  const events: Action[] = turns.flatMap(({ step, notes }) => {
+  const events: Action[] = turns.flatMap(({ step, results }) => {
     const node = STEPS.find((s) => s.id === step)?.nodes[0] ?? step
-    return [{ type: "node_started", node }, { type: "node_done", node, notes }]
+    return [{ type: "node_started", node }, { type: "node_done", node, notes: [], results }]
   })
   const state: RunState = { ...empty, turns }
   const withTrace = (...more: Action[]) => ({ ...state, trace: [...events, ...more].reduce(traceReduce, empty.trace) })

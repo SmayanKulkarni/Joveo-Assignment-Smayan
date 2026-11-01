@@ -26,3 +26,4 @@ class LowDataPayload(Model):
 class LowDataAnswer(Model):
     action: Literal["broaden", "continue", "abort"]
     guidance: str | None = None  # feeds the next broaden
+    whole_country: bool = False  # the only way to drop the place; ignored by every other action

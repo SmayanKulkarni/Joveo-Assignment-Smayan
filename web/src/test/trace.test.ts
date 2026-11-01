@@ -67,7 +67,7 @@ test("a reload lands where the live trace was at each Pause", () => {
   expect(pauses.length).toBeGreaterThan(1)
   for (const at of pauses) {
     const feed = events.slice(0, at + 1)
-    const run_log = feed.flatMap((e) => (e.type === "node_done" ? e.notes.map((message) => ({ node: e.node, kind: "note", message })) : []))
+    const run_log = feed.flatMap((e) => (e.type === "node_done" ? e.notes.map((message) => ({ node: e.node, kind: e.results.includes(message) ? "result" : "note", message })) : []))
     const pause = (feed.at(-1) as Extract<WireEvent, { type: "paused" }>).pause
     const detail = {
       record: { thread_id: "t", summary: "s", status: "paused", error: null, created_at: "", updated_at: "" },

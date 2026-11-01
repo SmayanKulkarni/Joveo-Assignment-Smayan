@@ -26,7 +26,7 @@ export const Turn = memo(function Turn({ turn, text, label, mode }: { turn: Turn
     <>
       {mode === "past" && <span aria-hidden>✓ </span>}
       <b>{label}</b>
-      {folded && turn.notes.length > 0 && <span> · {turn.notes.at(-1)}</span>}
+      {folded && turn.results.length > 0 && <span> · {turn.results.at(-1)}</span>}
     </>
   )
   if (folded) {
@@ -60,7 +60,7 @@ export const Turn = memo(function Turn({ turn, text, label, mode }: { turn: Turn
           <Bar value={turn.progress.done} max={turn.progress.total} label="Batches read" className="mini" /> {turn.progress.done} of {turn.progress.total} batches
         </p>
       )}
-      {turn.notes.length > 0 && <p className="notes">{turn.notes.join(" · ")}</p>}
+      {turn.results.length > 0 && <p className="notes">{turn.results.join(" · ")}</p>}
       {turn.answer && <div className="answered">{turn.answer}</div>}
     </li>
   )

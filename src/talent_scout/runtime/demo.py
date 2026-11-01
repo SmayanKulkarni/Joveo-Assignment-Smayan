@@ -268,6 +268,7 @@ def demo_nodes(delay: float) -> dict[str, Node]:
         entries = [
             log_entry("collect", LogKind.note, f"kept {len(found)} Postings, merged 0 Duplicates", kept=len(found), duplicates=0),
             log_entry("collect", LogKind.note, "source totals", totals={title: {"adzuna": 1_240, "usajobs": 38}}),
+            log_entry("collect", LogKind.result, f"Found {len(found)} postings", kept=len(found)),
         ]
         return {"postings": {p.key: p for p in found}, "run_log": [*state.run_log, *entries]}
 
@@ -276,7 +277,11 @@ def demo_nodes(delay: float) -> dict[str, Node]:
         message = f"{len(state.postings)} of {len(state.postings)} Postings relevant"
         return {
             "relevance_verdicts": {k: True for k in state.postings}, "sample": list(state.postings), "fetch_blocked": None,
-            **log(state, "relevance", LogKind.route, message),
+            "run_log": [
+                *state.run_log,
+                log_entry("relevance", LogKind.result, f"{len(state.postings)} are the role"),
+                log_entry("relevance", LogKind.route, message),
+            ],
         }
 
     async def broaden(state: State) -> dict:
@@ -285,7 +290,11 @@ def demo_nodes(delay: float) -> dict[str, Node]:
         wider = plan.model_copy(update={"radius_km": 80, "max_days_old": 60})
         return {
             "broadened_plans": [*state.broadened_plans, wider], "messages": [], "low_data_guidance": None,
-            **log(state, "broaden", LogKind.note, "broadened: radius_km: 40 -> 80; max_days_old: 30 -> 60"),
+            "run_log": [
+                *state.run_log,
+                log_entry("broaden", LogKind.note, "broadened: radius_km: 40 -> 80; max_days_old: 30 -> 60"),
+                log_entry("broaden", LogKind.result, "Widened the search"),
+            ],
         }
 
     async def low_data_review(state: State) -> dict:

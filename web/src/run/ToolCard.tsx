@@ -1,9 +1,8 @@
 import { useRef } from "react"
 import { DUR, EASE, gsap, useAnimate, useMotion, usePrevious } from "../motion"
 import type { Tool } from "./reducer"
+import { sourceName } from "./steps"
 
-const SOURCES: Record<string, string> = { adzuna: "Adzuna", usajobs: "USAJOBS" }
-const sourceName = (name: string) => SOURCES[name.replace(/^search_/, "")] ?? name
 
 export function ToolCard({ tool }: { tool: Tool }) {
   const state = tool.result !== null ? "done" : tool.interrupted ? "interrupted" : "running"

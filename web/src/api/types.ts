@@ -107,7 +107,7 @@ export type Brief = {
 
 export type RunEvent =
   | { type: "node_started"; node: string }
-  | { type: "node_done"; node: string; notes: string[] }
+  | { type: "node_done"; node: string; notes: string[]; results: string[] }
   | { type: "token"; node: string; text: string }
   | { type: "reasoning"; node: string; text: string }
   | { type: "tool_called"; name: string; summary: string }
