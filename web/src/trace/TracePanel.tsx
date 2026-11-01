@@ -28,7 +28,7 @@ export function TracePanel({ trace, graph, onJump }: { trace: TraceState; graph:
     })
   })
   const animate = useAnimate()
-  const loops = usePrevious(trace.looped.length)
+  const loops = usePrevious(trace.loops)
   const liveStep = trace.current && trace.steps[trace.current].status === "active" ? trace.current : null
   const centre = (id: string) => rows[stepIndex(id)].top + iconY
 
@@ -37,15 +37,15 @@ export function TracePanel({ trace, graph, onJump }: { trace: TraceState; graph:
       // The rail leaving the live Step flows; the dashes are CSS, the tween only slides them.
       gsap.fromTo(".rail.active", { strokeDashoffset: 10 }, { strokeDashoffset: 0, duration: 0.6, ease: EASE.linear, repeat: -1 })
       // One dot per batch, on the newest back-edge.
-      const edge = trace.looped.at(-1)
-      if (!animate || loops === undefined || !edge || trace.looped.length <= loops) return
+      const edge = trace.lastLoop
+      if (!animate || loops === undefined || !edge || trace.loops <= loops) return
       gsap.fromTo(
         ".dot",
         { opacity: 1 },
         { motionPath: { path: `[data-edge="${edge}"]`, align: `[data-edge="${edge}"]`, alignOrigin: [0.5, 0.5] }, duration: 0.9, ease: "power1.inOut", onComplete: () => void gsap.set(".dot", { opacity: 0 }) },
       )
     },
-    [liveStep, trace.looped.length],
+    [liveStep, trace.loops],
     svg,
   )
 

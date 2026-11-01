@@ -1,5 +1,6 @@
 import { memo, useRef, useState } from "react"
 import { DUR, EASE, gsap, useAnimate, useMotion } from "../motion"
+import { streams } from "./reducer"
 import type { Texts, Turn as TurnData } from "./reducer"
 import { Bar } from "../trace/Bar"
 import { ToolCard } from "./ToolCard"
@@ -49,7 +50,7 @@ export const Turn = memo(function Turn({ turn, text, label, mode }: { turn: Turn
       {text?.prose && (
         <p className="prose">
           {text.prose}
-          {mode === "live" && <Caret />}
+          {mode === "live" && streams(turn.node) && <Caret />}
         </p>
       )}
       {turn.tools.map((tool, i) => <ToolCard key={i} tool={tool} />)}

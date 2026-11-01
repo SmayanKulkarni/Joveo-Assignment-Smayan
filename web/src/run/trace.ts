@@ -8,6 +8,8 @@ export type TraceState = {
   steps: Record<string, StepTrace>
   current: string | null
   looped: string[] // back-edges the Run has taken, as "from→to"
+  loops: number // every traversal, so a repeated edge can still be told apart
+  lastLoop: string | null
   tool: { name: string; summary: string } | null // the call in flight
   sources: Record<string, Source>
   extract: { done: number; total: number }
@@ -23,6 +25,8 @@ export const emptyTrace: TraceState = {
   steps: Object.fromEntries(STEPS.map((s) => [s.id, idle()])),
   current: null,
   looped: [],
+  loops: 0,
+  lastLoop: null,
   tool: null,
   sources: {},
   extract: { done: 0, total: 0 },
@@ -40,13 +44,15 @@ function enter(trace: TraceState, id: string): TraceState {
 
   const steps = { ...trace.steps }
   const to = stepIndex(id)
-  let looped = trace.looped
+  let { looped, loops, lastLoop } = trace
   if (trace.current) {
     const from = stepIndex(trace.current)
     if (steps[trace.current].status === "active" || steps[trace.current].status === "waiting") steps[trace.current] = { ...steps[trace.current], status: "done" }
     if (to < from) {
       // A loop: everything from the target to where the Run was runs again, except optional Steps that already ran.
-      looped = [...new Set([...looped, `${trace.current}→${id}`])]
+      lastLoop = `${trace.current}→${id}`
+      looped = [...new Set([...looped, lastLoop])]
+      loops += 1
       for (const step of STEPS.slice(to + 1, from + 1)) {
         if (steps[step.id].status === "done" && !step.optional) steps[step.id] = idle(steps[step.id].visits)
       }
@@ -63,6 +69,8 @@ function enter(trace: TraceState, id: string): TraceState {
     ...trace,
     steps,
     looped,
+    loops,
+    lastLoop,
     current: id,
     tool: null,
     sources: id === "search" ? {} : trace.sources,

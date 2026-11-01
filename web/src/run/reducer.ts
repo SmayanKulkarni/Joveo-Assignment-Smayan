@@ -46,7 +46,7 @@ export function turnFor(turns: Turn[], node: string): Turn[] {
   return turns.at(-1)?.step === step ? turns : [...turns, newTurn(step)]
 }
 
-const streams = (node: string | null) => node !== null && (node in DRAFTING || node === "fetch_agent")
+export const streams = (node: string | null) => node !== null && (node in DRAFTING || node === "fetch_agent")
 
 // Changes the newest turn and leaves the rest as they are, so finished turns keep their identity for memo.
 function patchLast(state: RunState, change: (turn: Turn) => Partial<Turn>): RunState {
