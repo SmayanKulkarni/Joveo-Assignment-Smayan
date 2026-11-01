@@ -234,7 +234,7 @@ def prompt(pause) -> dict:
                 return low_data_answer(action, None)
             guidance = input("Guidance for the broaden (Enter to skip): ")
             # Only offered when there is a place to drop; this is the one way to leave it.
-            wider = pause.payload.plans[-1].location.strip() != "" and input("Search the whole country? [y/N]: ").strip().lower() == "y"
+            wider = bool(pause.payload.plans[-1].locations) and input("Search the whole country? [y/N]: ").strip().lower() == "y"
             return low_data_answer(action, guidance, wider)
 
 

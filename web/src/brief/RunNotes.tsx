@@ -66,7 +66,6 @@ export function RunNotes({ notes }: { notes: Brief["run_notes"] }) {
           <b>Postings analysed:</b> {analysed}
         </li>
         <Item label="Source match counts" lines={notes.match_totals} empty="None" />
-        {notes.attribution && <li>{notes.attribution}</li>}
       </ul>
     </section>
   )

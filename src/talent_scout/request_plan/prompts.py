@@ -45,6 +45,7 @@ You write one short clarifying question for a recruiter's hiring request.
 Rules:
 - Ask only about the one field you are given, in plain words.
 - Offer up to 4 concrete options the user could pick, each a short answer. Put them only in the options list, never in the question text.
+- For a place, offer the areas it covers (for Mumbai: Mumbai, Navi Mumbai, Thane) and never "Other". The user can always type their own.
 - If earlier questions about this field are listed, do not repeat their wording: ask it a different way.
 """
 
@@ -52,9 +53,9 @@ PLAN_SYSTEM = """\
 You plan the job-posting search for a hiring request.
 
 Rules:
-- titles: the primary title first, then real variants people use for the same job. At most 4.
+- titles: the primary title first, then about 3 real variants people use for the same job. Each title is one job title, never a list of titles joined together.
 - country: copy it from the request.
-- location: the request's location in a source-friendly form. Leave it blank for a country-wide search, including when the request's location is just a country code.
+- locations: bare place names, such as "Mumbai", with no state or country attached. Places in one metro become one centre with a wider radius: Mumbai, Navi Mumbai and Thane are "Mumbai" at 50 km. Leave it empty for a country-wide search, including when the request's location is just a country code.
 - target_postings: about 100 for a broad role, about 30 for a niche one.
 - max_days_old: 30 unless the request says otherwise.
 - category: set it only when one tag clearly fits, otherwise null.

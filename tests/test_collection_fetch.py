@@ -33,7 +33,7 @@ def test_bound_schemas_hide_plan_and_attempt_and_a_non_us_plan_binds_only_adzuna
     schemas = {t.name: convert_to_openai_tool(t)["function"]["parameters"]["properties"] for t in cheap.bound_tools}
 
     assert set(schemas) == {"search_adzuna", "search_usajobs"}
-    assert all(set(props) == {"title", "page"} for props in schemas.values())
+    assert all(set(props) == {"title", "page", "location"} for props in schemas.values())
 
     _, cheap = fetch_agent_turn([ai_calls()])
     assert [t.name for t in cheap.bound_tools] == ["search_adzuna"]
@@ -42,7 +42,7 @@ def test_bound_schemas_hide_plan_and_attempt_and_a_non_us_plan_binds_only_adzuna
 def test_model_args_cannot_override_the_plan_or_attempt():
     deps, *_, gateway = make_deps(results=[result([posting("1")])])
     call = search_call("Data Analyst")
-    call["args"] |= {"plan": plan(country="gb", location="London").model_dump(), "attempt": 9}
+    call["args"] |= {"plan": plan(country="gb", locations=["London"]).model_dump(), "attempt": 9}
 
     update = run(make_nodes(deps)["tools"], asked(call))
 
@@ -54,7 +54,7 @@ def test_each_tool_passes_its_own_source_and_the_plan_builds_the_fetch():
     deps, *_, gateway = make_deps(results=[result([], source=Source.adzuna), result([], source=Source.usajobs)])
     state = asked(
         search_call("Data Analyst", id="a"), search_call("Analyst", tool="search_usajobs", page=2, id="u"),
-        search_plan=plan(country="us", location="Texas", radius_km=10, category="it-jobs"),
+        search_plan=plan(country="us", locations=["Texas"], radius_km=10, category="it-jobs"),
     )
 
     update = run(make_nodes(deps)["tools"], state)
@@ -159,7 +159,7 @@ def test_the_summary_follows_the_format_and_carries_no_posting_text_beyond_title
 
     content = update["messages"][-1].content
     lines = content.splitlines()
-    assert lines[0] == 'adzuna "data analyst" page 1: 7 Postings, 6 new.'
+    assert lines[0] == 'adzuna "data analyst" in bangalore page 1: 7 Postings, 6 new.'
     assert lines[1] == "About 3,200 matches, 17 calls left."
     assert lines[2] == "Sample titles: " + "; ".join(f"Data Analyst {i}" for i in range(5)) + "."
     assert not any(p.description in content or p.url in content or p.company in content for p in postings)
@@ -190,7 +190,7 @@ def test_the_first_turn_holds_the_plan_goal_sample_and_only_matching_searches():
     assert system.content.startswith("You gather job postings")
     assert plan(target_postings=40).model_dump_json() in human.content
     assert "about 60 Postings" in human.content and "Sample so far: 1 relevant" in human.content
-    assert 'adzuna "data analyst" page 1: 900 matches' in human.content
+    assert 'adzuna "data analyst" in bangalore page 1: 900 matches' in human.content
     assert '"analyst" page' not in human.content.replace('"data analyst"', "") and "bi analyst" not in human.content
     assert update["messages"][-1].tool_calls and "run_log" not in update
 
@@ -264,3 +264,43 @@ def test_tools_emits_tool_called_and_tool_returned_for_a_good_call_and_a_failed_
     assert sorted(e["summary"] for e in events if e["type"] == "tool_called") == ['"Analyst" page 2', '"Data Analyst" page 1']
     assert [e["summary"] for e in events if e["type"] == "tool_returned"] == ["2 Postings, 2 new", "Didn't run"]
     assert {e["name"] for e in events} == {"search_adzuna"}
+
+
+def test_a_place_outside_the_plan_is_refused_and_a_blank_one_means_the_first():
+    deps, *_, gateway = make_deps(results=[result([posting("1")])])
+    pune = search_call("Data Analyst", id="p") | {"args": {"title": "Data Analyst", "location": "Pune"}}
+    blank = search_call("Data Analyst", id="b")
+    state = asked(pune, blank, search_plan=plan(locations=["Mumbai", "Thane"]))
+
+    update = run(make_nodes(deps)["tools"], state)
+
+    refused = [m for m in update["messages"] if getattr(m, "status", None) == "error"]
+    assert len(refused) == 1 and "not a place in the plan" in refused[0].content
+    assert [f.location for f in gateway.fetches] == ["mumbai"]
+
+
+def test_the_cap_grows_with_titles_times_places_and_totals_name_both():
+    from talent_scout.collection.nodes import _cap
+
+    assert _cap(plan(titles=["a", "b", "c"], locations=["x", "y", "z", "w"])) == 12
+    assert _cap(plan()) == MAX_FETCHES
+
+
+def test_a_chosen_place_never_searched_becomes_a_caveat():
+    from talent_scout.collection.nodes import _closing_caveats
+
+    p = plan(locations=["Mumbai", "Thane"])
+    state = state_with(search_plan=p, fetches=[record(the_plan=plan(locations=["Mumbai"]))])
+
+    messages = [e.message for e in _closing_caveats(state, "relevance")]
+
+    assert "Places not searched: Thane" in messages
+
+
+def test_an_old_single_location_loads_as_locations():
+    from talent_scout.kernel.types import SearchPlan
+
+    old = plan().model_dump() | {"location": "Pune"}
+    del old["locations"]
+    assert SearchPlan.model_validate(old).locations == ["Pune"]
+    assert SearchPlan.model_validate(old | {"location": ""}).locations == []

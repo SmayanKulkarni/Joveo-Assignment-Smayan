@@ -197,7 +197,7 @@ def test_focus_rejects_unknown_values_and_lands_in_the_checkpoint(settings, monk
 
 def test_edit_reopens_the_editor_with_the_error_on_top_until_the_plan_validates(monkeypatch):
     plan = cli.SearchPlan(
-        titles=["Stub role"], country="us", location="Stub city", radius_km=0,
+        titles=["Stub role"], country="us", locations=["Stub city"], radius_km=0,
         max_days_old=30, target_postings=20, category=None,
     )
     seen = []

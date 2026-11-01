@@ -13,6 +13,7 @@ Source tickets (each holds the full reasoning, and what was verified):
 - [Brief view](../../.scratch/web-ui/issues/08-brief-view.md)
 - [Motion with GSAP](../../.scratch/web-ui/issues/09-motion-with-gsap.md)
 - [Frontend build and verification](../../.scratch/web-ui/issues/10-frontend-build-and-verification.md)
+- Reopened 2026-11-01: [Many places and titles](../../.scratch/web-ui/issues/13-many-places-and-titles-in-a-search-plan.md), [Look](../../.scratch/web-ui/issues/14-subtle-neumorphic-look-and-compact-layout.md), [What the user sees](../../.scratch/web-ui/issues/15-what-the-user-sees-and-what-the-record-keeps.md), [Brief at a glance](../../.scratch/web-ui/issues/16-a-brief-you-can-read-at-a-glance.md), [Charts](../../.scratch/web-ui/issues/17-charts-in-the-brief.md)
 
 ## 1. What it is
 
@@ -304,7 +305,7 @@ A Step is done when the Run moves to a different Step, or on `Done`. A Pause onl
 
 ## 7. Live view
 
-**A turn is one visit to one Step.** A `NodeStarted` whose Step differs from the current turn's opens a new turn, so `fetch_agent` and `tools` stay in one turn, and a loop opens another. The stream is the chronological record, and the trace is the map. The active turn is expanded. A finished one collapses to its check, label and last note, and expands on click. Once a Run is `done`, all turns fold under a closed "How this Run went".
+**A turn is one visit to one Step.** A `NodeStarted` whose Step differs from the current turn's opens a new turn, so `fetch_agent` and `tools` stay in one turn, and a loop opens another. The stream is the chronological record, and the trace is the map. The active turn is expanded. A finished one collapses to its check, label and last result line, and expands on click. Once a Run is `done`, all turns fold under a closed "How this Run went".
 
 | Event | Effect on the stream |
 |---|---|
@@ -315,12 +316,16 @@ A Step is done when the Run moves to a different Step, or on `Done`. A Pause onl
 | `ApiCalled` | Sets the source pill on the first card named `search_<source>` without one, else a turn-level pill |
 | `ToolReturned` | Resolves the oldest open card of that name: check, then the summary |
 | `ExtractProgress` | The turn's `progress` bar and "3 of 6 batches" |
-| `NodeDone` | Appends notes; ends the drafting line |
+| `NodeDone` | Appends `results`; ends the drafting line. `notes` are never shown |
 | `Paused` | The Pause card, inline at the end of the stream |
 | `Done`, `Stopped` | Endings, below |
-| `caught_up` | `animate: true`; adds a `gap` line if needed |
+| `caught_up` | `animate: true` |
 
-**Drafting phrases.** `clarity_check` "Working out what's unclear…", `plan` "Drafting the search plan…", `broaden` "Working out how to widen the search…", `write_brief` "Drafting the brief…", `critic` "Checking claims against the numbers…". JSON fragments are never shown. A card still open at `Stopped` reads "Interrupted". Tools pair first-in-first-out by name: `tools` runs calls in a `gather` but emits `tool_returned` in call order.
+**Drafting phrases.** `clarity_check` "Working out what's unclear…", `plan` "Drafting the search plan…", `broaden` "Working out how to widen the search…", `write_brief` "Drafting the brief…", `critic` "Checking claims against the numbers…". JSON fragments are never shown.
+
+**What reaches the screen.** A line shows only if the reader can act on it or it changes how far to trust the Brief. The server writes those lines as `LogKind.result` (`collect` "Found 80 postings", `relevance` "51 are the role", `broaden` "Widened the search"), and `fromLog` filters on `kind`. Route names, plan diffs and other log text stay in `run_log`. A refused tool call reads "Skipped: search limit reached", other failed calls "Didn't run", and pills use source names.
+
+A card still open at `Stopped` reads "Interrupted". Tools pair first-in-first-out by name: `tools` runs calls in a `gather` but emits `tool_returned` in call order.
 
 ### State
 
@@ -383,27 +388,28 @@ Every card posts `{answer: <payload>}` to `resume`. `PlanReviewAnswer` has no de
 | | Edit | `{action: "edit", plan: <SearchPlan>, feedback: null}` |
 | | Reject | `{action: "reject", plan: null, feedback: "<text>"}` |
 | | Abort | `{action: "abort", plan: null, feedback: null}` |
-| `low_data_review` | Search wider | `{action: "broaden", guidance: "<trimmed>" or null}` |
+| `low_data_review` | Search wider | `{action: "broaden", guidance: "<trimmed>" or null, whole_country: <bool>}` |
 | | Continue | `{action: "continue", guidance: null}` |
 | | Abort | `{action: "abort", guidance: null}` |
 
-**`clarify`, "A quick question" or "A few quick questions".** Each question has its text, `options` as real radio inputs styled as chips, and a free-text box. Picking a chip fills the box, and typing clears the chip. The button reads "Send answers", or "Continue without answering" when all are blank.
+**`clarify`, "A quick question" or "A few quick questions".** Each question has its text, `options` as real inputs styled as chips, and a free-text box. Picking a chip fills the box, and typing clears the chip. A question with `about == location` uses checkboxes, and its picks and any typed place are sent as one string joined with ", "; other questions use radios. The button reads "Send answers", or "Continue without answering" when all are blank.
 
-**`plan_review`, "Check the search plan".** Titles as chips, Where (`location` or "Country-wide", country code in capitals), Radius, Posted within N days, Target N Postings, Category (or "Any"), then Assumptions as "seniority: Senior, because …". Actions: Approve (primary), Edit, Ask for a different plan (a required feedback box), Abort.
+**`plan_review`, "Check the search plan".** Titles as chips, Where (`locations` or "Country-wide", the country's name), Radius, Posted within N days, Target N Postings, Category's label (or "Any"), a line such as "3 titles x 2 places = 6 searches. 5 Adzuna calls left today.", then Assumptions as "seniority: Senior, because …". Actions: Approve (primary), Edit, Ask for a different plan (a required feedback box), Abort.
 
 **`PlanEditor` is a structured form,** not the CLI's JSON editor:
 
 | Field | Control |
 |---|---|
-| `titles` | 1 to 4 text rows, add and remove |
-| `country` | Select from `/meta` `countries` |
-| `location` | Text; blank means country-wide |
-| `radius_km`, `max_days_old`, `target_postings` | Number inputs, 0 to 100, 1 to 60, 20 to 200 |
-| `category` | Select from `/meta` `categories`, plus "Any" (null) |
+| `titles` | Chips with an always-open add box, no upper limit |
+| `country` | Select from `/meta` `countries`, showing names |
+| `locations` | Chips with an add box; none means country-wide |
+| `radius_km`, `max_days_old` | Selects, 5, 10, 25, 50, 100 km and 7, 14, 30, 60 days, adding the plan's value if it isn't a preset. Radius is disabled with no place |
+| `target_postings` | Number input, 20 to 200 |
+| `category` | Select from `/meta` `categories` showing labels, plus "Any" (null) |
 
-HTML limits only help, and the server stays the check. "Use this plan" submits.
+Short fields share a 4-column grid, two on a phone. HTML limits only help, and the server stays the check. "Use this plan" submits.
 
-**`low_data_review`, "Too few Postings".** "Only 3 relevant Postings found; the target is 20." "Fetched 50, rejected 47 as not the role, over 1 Attempt." Then `blocked` if set, Adzuna calls left if known, and the plans tried in a `<details>`. An optional guidance box feeds Search wider. Then "Continue with 3 Postings" and Abort.
+**`low_data_review`, "Too few Postings".** "Only 3 relevant Postings found; the target is 20." "Fetched 50, rejected 47 as not the role, over 1 Attempt." Then `blocked` if set, Adzuna calls left if known, and the plans tried in a `<details>`. An optional guidance box feeds Search wider, and a "Search the whole country" checkbox, shown when the plan has places, sets `whole_country`. Nothing else can drop a place. Then "Continue with 3 Postings" and Abort.
 
 **Abort is two-step everywhere,** an inline "Abort this Run? Yes / No", because it's the one irreversible answer.
 
@@ -424,35 +430,60 @@ A stale card in a second tab lasts at most one sidebar poll. A stale answer can 
 
 ## 9. Brief view
 
-Rendered from `RunDetail.brief` and `sample`, not `brief.md`: Evidence needs to expand, and with no Markdown renderer or raw HTML, outside text stays escaped by React. Section order is `brief.md`'s, so screen, download and print agree.
+Rendered from `RunDetail.brief`, `sample` and `glance`, not `brief.md`: Evidence needs to expand, and with no Markdown renderer or raw HTML, outside text stays escaped by React. The screen serves a reader who wants the answer in seconds, and `brief.json` and `brief.md` keep the full record. Screen and Markdown agree on facts, not wording.
 
 | # | Section | Component | Reads |
 |---|---|---|---|
 | 1 | Title, Download JSON, Download Markdown, Print | `BriefHeader` | `hiring_request.role`, `.location` |
-| 2 | Replay banner, Weak Sample notice | `BriefNotices` | `replayed`; `stats.sample_size < run_notes.final_plan.target_postings` |
-| 3 | Summary | `Summary` | `summary` |
-| 4 | Hiring Outlook | `Outlook` | `outlook` |
-| 5 | Client Recommendations | `Recommendations` | `recommendations` |
-| 6 | Insights | `Insights` | `insights`; `/meta` `confidence_key` in a closed `<details>` |
-| 7 | Run Notes | `RunNotes` | `run_notes` |
-| 8 | Postings analysed | `PostingsTable`, closed `<details>` | `sample` |
+| 2 | Four tiles: Hiring Outlook, Job title, Salary band, Top skills (up to 4) | `Tiles` | `outlook`, `recommendations` |
+| 3 | Replay banner, then at most two reader notes | `BriefNotices` | `replayed`, `glance.reader_notes` |
+| 4 | Summary | `Summary` | `summary` |
+| 5 | Up to four charts | `Charts` | `glance` |
+| 6 | "What we found": three Insights, then "Show all" | `Insights` | `insights`; `/meta` `confidence_key` in a closed `<details>` |
+| 7 | Closed "How this was researched": Run Notes, Postings analysed | `RunNotes`, `PostingsTable` | `run_notes`, `sample` |
+| 8 | Attribution, always visible | `BriefFooter` | `run_notes.attribution` |
 
-Notice and empty-state wording matches `brief/markdown.py`.
+**Tiles.** Each has a "Why" fold holding its reason and `Evidence`. A missing recommendation reads "Not enough evidence" in muted text. Four columns, two on a phone. An Outlook with empty `stat_ids` is the default and shows no Evidence. A salary band reads `low to high`, then the unit, with no decimals.
 
 **Never colour alone.**
-- Confidence Tag: a pill with the word and a meter (●●● High, ●●○ Medium, ●○○ Low), and `confidence_reason` beneath.
-- Hiring Outlook: a large word with a shape, ▲ Favourable, ◆ Competitive, ▼ Hard to fill, then `reason`.
-- Caveat: a warning icon and the word "Caveat" on each.
+- Confidence Tag: a pill with the word and a meter (●●● High, ●●○ Medium, ●○○ Low).
+- Hiring Outlook: a word with a shape, ▲ Favourable, ◆ Competitive, ▼ Hard to fill.
+- Reader note: a warning icon and plain words.
 
-**Run Notes stay open,** with Caveats first, since a closed fold would hide what most affects trust. Then Questions and answers, Assumptions, Focus, Final Search Plan, earlier plans, Postings analysed by source (from `posting_keys` prefixes), source match counts, attribution.
+**Insights.** Highest confidence first, stable within a level. Each shows its pill and text, with `confidence_reason` and `Evidence` in a fold. Text is never truncated, as a cut could remove a figure.
 
-**`Evidence`,** used by Insights, Recommendations and the Outlook. "Evidence: 38 Postings" expands inline to the cited Stats (`stat_ids` in `brief.stats`: label, value, unit) and the Postings (`posting_keys` in `sample`: title and company, ten at first, then "Show all 38"). Links use `target="_blank" rel="noopener noreferrer"`, and a null `url` shows no link.
+**`brief/glance.py`.** A pure `glance(brief, postings) -> Glance`, computed on read and put on `RunDetail`, so earlier Runs get it and `brief.json` keeps its bytes. It also feeds `brief.md`'s `## Market figures`. The UI only draws.
 
-- `Evidence.count` is a Python property and isn't in the JSON, so use `posting_keys.length`.
-- An Outlook with empty `stat_ids` is the default and shows no Evidence.
-- A salary band reads `low to high unit`, with no decimals, via `toLocaleString`.
+**`reader_notes`, the first two that apply, in this order:**
 
-**Print is a stylesheet only.** `@media print` hides the sidebar, trace panel, "How this Run went" and all buttons, and widens the column. Closed `<details>` stay closed, so the full Posting list belongs to the Markdown download.
+| Applies when | Reads |
+|---|---|
+| The first plan had places and the final plan has none | We searched the whole country, not only {location}. |
+| A "Places not searched" Caveat | We couldn't search {places}. |
+| `sample_size` is under the target | Only {n} postings against the {target} we aimed for, so treat this as a rough guide. |
+| `earlier_plans` isn't empty | We widened the search to find enough postings. |
+| An "Old data" Caveat | Most of these postings are over 30 days old. |
+| A "Mostly federal" Caveat | Most of these postings are US federal jobs. |
+| A "One source failed" Caveat | One job source didn't answer, so this rests on the other. |
+
+Caveats match on the prefix code wrote them with. Every Caveat stays in Run Notes, `brief.json` and `brief.md`.
+
+**Charts.** Only Stats and the Sample, never LLM figures. Drawn as HTML and CSS: real text rows with CSS widths, each with its number, so screen readers and print get the labels. Clicking a row opens its Evidence, and a native `title` gives the hover.
+
+| Chart | Data | Hidden when |
+|---|---|---|
+| Pay, middle 50% | The Salary band's `stat_ids`: a p25 to p75 box, median line, both ends labelled, "from N postings" | No Salary band |
+| Skills employers ask for | `skills.*.count` from 2+ employers, top 8 by count, required part from `skills.*.must`. Caption gives the extracted count and says one-employer skills are left out. "Dark is required" only when a required count exists | None qualify |
+| Where the postings are | Sample `region`: strip what all share, group by the next level, top 6 then "N other places". A country-only region is "Area not given" and doesn't stop the grouping | Under 2 groups |
+| Who is hiring most | Top 5 `competition.employer.*`, caption from `competition.distinct_employers` | No employers |
+
+`--chart #00795f`, with `--chart-2 #2fb08f` for a skill bar's non-required part. Validated by the `dataviz` script. `--chart-2` is under 3:1, so every bar keeps its visible number. Print uses `print-color-adjust: exact`.
+
+**`Evidence`,** used by tiles, Insights and chart rows. "Evidence: 38 Postings" expands inline to the cited Stats (`stat_ids` in `brief.stats`: label, value, unit) and the Postings (`posting_keys` in `sample`: title and company, ten at first, then "Show all 38"). Links use `target="_blank" rel="noopener noreferrer"`, and a null `url` shows no link. `Evidence.count` is a Python property and isn't in the JSON, so use `posting_keys.length`.
+
+**Run Notes** are complete and unchanged inside the fold: Caveats first, then Questions and answers, Assumptions, Focus, Final Search Plan, earlier plans, Postings analysed by source (from `posting_keys` prefixes) and source match counts.
+
+**Print is a stylesheet only.** `@media print` hides the sidebar, trace panel, "How this Run went" and all buttons, widens the column, removes shadows and uses white. Closed `<details>` stay closed, so the full record belongs to the Markdown download.
 
 ## 10. Motion
 
@@ -577,3 +608,23 @@ Each pass leaves its check behind. No test calls an LLM or a jobs API.
 ## 14. Excluded and deferred
 
 Deliberate deferrals are in [future-scope.md](future-scope.md): dark mode, per-tool-call IDs, a global event feed, auth, and Run management. The Infra shell's API would wrap the Controller separately, and this API is not its design.
+
+## 15. Look
+
+A subtle neumorphism: one surface, soft shadows, real edges. The [look prototype](../../.scratch/web-ui/prototype/look/index.html) holds the CSS, and [its ticket](../../.scratch/web-ui/issues/14-subtle-neumorphic-look-and-compact-layout.md) the reasoning.
+
+| Token | Value | Against `--bg` |
+|---|---|---|
+| `--bg` | `#eef0f3` | The one surface |
+| `--ink` | `#1f2430` | 13.59 |
+| `--muted` | `#535c6b` | 5.91 |
+| `--edge` | `#7d8796` | 3.18, control borders |
+| `--accent` | `#2f5d50` | White on it 7.49 |
+| `--focus` | `#1f5fd0` | 5.10, solid 2px outline |
+| `--raised` | `5px 5px 12px rgba(150,160,178,.38), -5px -5px 12px rgba(255,255,255,.85)` | Cards and tiles |
+| `--raised-sm` | `2px 2px 5px rgba(150,160,178,.4), -2px -2px 5px rgba(255,255,255,.85)` | Buttons and chips |
+| `--inset` | `inset 2px 2px 4px rgba(150,160,178,.4), inset -2px -2px 4px rgba(255,255,255,.85)` | Inputs |
+
+Controls always keep a 1px `--edge` border, because shadow alone loses the edge. Disabled is a dashed border and muted text, never reduced opacity. Radii: 14 cards, 8 inputs, 99 chips.
+
+**Labels.** `web/src/labels.ts` holds the 20 category names ("IT Jobs", "PR, Advertising & Marketing Jobs") with a raw fallback. Country names come from `Intl.DisplayNames`. Wire values don't change.

@@ -7,7 +7,7 @@ const line = (node: string, message = node) => ({ node, kind: "note", message })
 function detail(status: RunStatus, over: Partial<RunDetail> = {}): RunDetail {
   return {
     record: { thread_id: "t", summary: "s", status, error: null, created_at: "", updated_at: "" },
-    request_text: "r", focus: [], pause: null, stopped_at: null, run_log: [], live_from: null, brief: null, sample: [], ...over,
+    request_text: "r", focus: [], pause: null, stopped_at: null, run_log: [], live_from: null, brief: null, sample: [], glance: null, ...over,
   }
 }
 
@@ -30,7 +30,7 @@ test("only the lines before live_from are history", () => {
 })
 
 test("each status places the cursor", () => {
-  const pause: Pause = { kind: "plan_review", payload: { plan: {} as never, assumptions: [] } }
+  const pause: Pause = { kind: "plan_review", payload: { plan: {} as never, assumptions: [], calls_left: null } }
   const paused = fromLog(detail("paused", { pause, run_log: [line("plan")] }))
   expect(paused.pause).toBe(pause)
   expect(paused.turns.map((t) => t.step)).toEqual(["plan", "approve"])

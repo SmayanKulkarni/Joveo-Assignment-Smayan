@@ -306,7 +306,9 @@
        "Data Engineer"
       ],
       "country": "us",
-      "location": "Austin, Texas",
+      "locations": [
+       "Austin, Texas"
+      ],
       "radius_km": 40,
       "max_days_old": 30,
       "target_postings": 20,
@@ -318,7 +320,8 @@
        "value": "mid-level",
        "reason": "the request doesn't say"
       }
-     ]
+     ],
+     "calls_left": 21
     }
    }
   },
@@ -467,7 +470,9 @@
         "Data Engineer"
        ],
        "country": "us",
-       "location": "Austin, Texas",
+       "locations": [
+        "Austin, Texas"
+       ],
        "radius_km": 40,
        "max_days_old": 30,
        "target_postings": 20,

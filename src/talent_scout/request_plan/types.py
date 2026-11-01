@@ -40,6 +40,7 @@ class ClarifyAnswer(Model):
 class PlanReviewPayload(Model):
     plan: SearchPlan
     assumptions: list[Assumption]
+    calls_left: int | None = None  # Adzuna's, at the moment of the Pause, so the UI can price the plan
 
 
 class PlanReviewAnswer(Model):

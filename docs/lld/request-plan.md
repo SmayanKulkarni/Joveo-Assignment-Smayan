@@ -163,7 +163,8 @@ async def clarify(state):
 
 | Field | Limit | Why |
 |---|---|---|
-| `titles` | 1–4 | Each title is its own Fetch, and Adzuna allows 25 calls a day |
+| `titles` | At least 1, no maximum | Each title is its own Fetch per place. The user may want many, so the budget lives in Collection §5 and the daily guard, not here. The prompt suggests about 4 |
+| `locations` | Any number; `[]` is country-wide | Bare place names. One metro is one centre with a wider radius, measured in [the research](../../.scratch/web-ui/issues/assets/research-adzuna-many-titles-and-places.md#live-check-2026-11-01) |
 | `country` | in `ADZUNA_CURRENCY` | `Fetch` rejects anything else |
 | `radius_km` | 0–100 | A wider radius stops being one market |
 | `max_days_old` | 1–60 | USAJOBS's `DatePosted` caps at 60 |
@@ -171,6 +172,8 @@ async def clarify(state):
 | `category` | in `ADZUNA_CATEGORIES`, or null | A tag the source doesn't know would silently find nothing |
 
 These sit on `SearchPlan` itself, so the LLM's output, a user's edit and Collection's `broaden` all pass the same checks. A violation from the LLM is fed back on the retry (Kernel §12). A violation in an edit is `InvalidAnswer`, which re-prompts.
+
+A `mode="before"` validator turns an old `location` into `locations`, so earlier checkpoints and Briefs still load. `HiringRequest.location` stays one string in the user's words, since it only heads the Brief and feeds prompts.
 
 Only the seniority the user stated goes into `titles`. Work mode and employment type can't be searched on: they stay on `hiring_request` and reach the Run Notes.
 
@@ -198,7 +201,7 @@ async def plan_review(state):
 | `INTAKE_SYSTEM` | cheap | `request_text`, answered questions | Copy the user's words and never invent a field: unstated means null. A later answer overrides the request. Infer `country` only from a place that implies one. Examples from the spec's cases: "Data Analyst, Bangalore", "Engineer, Texas", and a request with no location. |
 | Jev Nouls | Jev | Raw request, draft, Q&A | "Would a recruiter need to ask before searching?" Per field: "Engineer" could be software, civil or mechanical; "Texas" could be the state or a metro; "Senior" could be 5+ years or a level. |
 | `QUESTION_SYSTEM` | cheap | Draft, flagged fields, earlier questions | One targeted question per field, with concrete options. A re-ask must not repeat the earlier wording. |
-| `PLAN_SYSTEM` | strong | `hiring_request`, Assumptions, on reject the previous plan and feedback | Primary title first, then real variants. About 100 target Postings for a broad role, about 30 for a niche one. `max_days_old` 30 by default. Blank `location` for a country-wide search. Set `category` only when one tag clearly fits. Follow feedback over the defaults. |
+| `PLAN_SYSTEM` | strong | `hiring_request`, Assumptions, on reject the previous plan and feedback | Primary title first, then real variants. About 100 target Postings for a broad role, about 30 for a niche one. `max_days_old` 30 by default. Empty `locations` for a country-wide search. Bare place names. Places in one metro become one centre with a wider radius, such as Mumbai at 50 km for Mumbai, Navi Mumbai and Thane. Each title is one job title. Set `category` only when one tag clearly fits. Follow feedback over the defaults. |
 
 Stable text comes first, as `Tiers.structured` already enforces (Kernel §12).
 

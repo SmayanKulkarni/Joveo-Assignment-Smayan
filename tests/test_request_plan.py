@@ -68,7 +68,7 @@ def draft(**over) -> RequestDraft:
 
 
 def plan_json(**over) -> str:
-    base = dict(titles=["Data Analyst"], country="in", location="Bangalore", radius_km=25, max_days_old=30,
+    base = dict(titles=["Data Analyst"], country="in", locations=["Bangalore"], radius_km=25, max_days_old=30,
                 target_postings=100, category=None)
     return SearchPlan(**{**base, **over}).model_dump_json()
 
@@ -272,7 +272,7 @@ def test_clarify_pauses_with_the_unanswered_and_matches_answers_by_position(answ
 
 
 def test_plan_retries_a_bad_plan_with_feedback_and_ignores_focus():
-    too_many_titles = json.dumps({**json.loads(plan_json()), "titles": list("abcde")})
+    too_many_titles = json.dumps({**json.loads(plan_json()), "radius_km": 500})
     deps, _, strong, _ = make_deps(strong=[too_many_titles, plan_json()])
     state = state_with(hiring_request=final_request(), focus=[Dimension.compensation])
 
@@ -416,7 +416,7 @@ def test_texas_goes_through_a_real_clarify_loop_to_fetch_agent(tmp_path):
     answered = draft(role="Software Engineer", location="Texas", country="us")
     deps, *_ = make_deps(
         cheap=[texas.model_dump_json(), question_json("Which engineer?", ["Software"]), answered.model_dump_json()],
-        strong=[plan_json(titles=["Software Engineer"], country="us", location="Texas")],
+        strong=[plan_json(titles=["Software Engineer"], country="us", locations=["Texas"])],
         classifier=Sequenced({"role": 0.9, "location": 0.1}, {"role": 0.1, "location": 0.1}),
     )
 

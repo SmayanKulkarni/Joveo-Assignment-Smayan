@@ -20,7 +20,7 @@ class OutlookRating(StrEnum):
 
 
 class InsightDraft(Model):
-    text: str = Field(description="One finding, phrased in plain descriptive words and copying figures exactly as given.")
+    text: str = Field(description="One finding of at most 20 words, phrased in plain descriptive words and copying figures exactly as given.")
     stat_ids: list[str] = Field(description="Ids of every Stat the finding relies on, and only those.")
 
 

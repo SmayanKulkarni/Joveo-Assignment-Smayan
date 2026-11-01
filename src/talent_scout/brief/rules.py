@@ -236,7 +236,7 @@ def outlook(stats: MarketStats, request: HiringRequest) -> HiringOutlook:
 
     lead = f"{plural(count, 'employer')} across {plural(n, 'Posting')}" if count is not None else f"No employers named across {plural(n, 'Posting')}"
     facts = [
-        *([f"a {level} level requested"] if level else []),
+        *([f"{'an' if level[0] in 'aeiou' else 'a'} {level} level requested"] if level else []),
         *([f"a median of {years.value:g} years asked"] if years else []),
         *([f"{senior_share:.0%} of extracted Postings at senior level or above"] if seniority else []),
         *([f"a {direction} trend"] if trend else []),

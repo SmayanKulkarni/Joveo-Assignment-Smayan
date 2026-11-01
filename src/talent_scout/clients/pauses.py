@@ -15,7 +15,7 @@ def _clarify(payload: ClarifyPayload) -> str:
 def render_plan(plan: SearchPlan) -> str:
     lines = ["Search Plan"]
     for name, value in plan.model_dump().items():
-        shown = ", ".join(value) if isinstance(value, list) else "none" if value is None else value
+        shown = ", ".join(value) or "country-wide" if isinstance(value, list) else "none" if value is None else value
         lines.append(f"  {name}: {shown}")
     return "\n".join(lines)
 
@@ -25,6 +25,8 @@ def _plan_review(payload: PlanReviewPayload) -> str:
     if payload.assumptions:
         lines.append("Assumptions")
         lines.extend(f"  {a.about}: {a.value} ({a.reason})" for a in payload.assumptions)
+    if payload.calls_left is not None:
+        lines.append(f"Adzuna calls left today: {payload.calls_left}")
     return "\n".join(lines)
 
 

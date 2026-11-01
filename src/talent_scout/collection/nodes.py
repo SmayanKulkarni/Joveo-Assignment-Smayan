@@ -25,17 +25,35 @@ MAX_REJECTED_TITLES = 10
 OLD_DAYS = 30
 
 
-def _fetch_for(plan: SearchPlan, title: str, page: int = 1) -> Fetch:
+def _places(plan: SearchPlan) -> list[str]:
+    # A country-wide plan still searches once, in no place.
+    return plan.locations or [""]
+
+
+def _cap(plan: SearchPlan) -> int:
+    # So a title or place the user adds still gets searched; the daily guard stays the ceiling.
+    return max(MAX_FETCHES, len(plan.titles) * len(_places(plan)))
+
+
+def _norm(place: str) -> str:
+    return " ".join(place.lower().split())
+
+
+def _in(place: str) -> str:
+    return f" in {place}" if place else ""
+
+
+def _fetch_for(plan: SearchPlan, title: str, page: int = 1, location: str = "") -> Fetch:
     return Fetch(
-        title=title, page=page, country=plan.country, location=plan.location, radius_km=plan.radius_km,
+        title=title, page=page, country=plan.country, location=location, radius_km=plan.radius_km,
         max_days_old=plan.max_days_old, category=plan.category,
     )
 
 
 def _make_tools(gateway) -> dict[str, BaseTool]:
-    async def search(source: Source, title: str, page: int, plan: SearchPlan, attempt: int) -> FetchRecord:
+    async def search(source: Source, title: str, page: int, location: str, plan: SearchPlan, attempt: int) -> FetchRecord:
         # Built outside the try: a bad Fetch is a ValidationError for the executor, not a failed source.
-        fetch = _fetch_for(plan, title, page)
+        fetch = _fetch_for(plan, title, page, location)
         try:
             return FetchRecord(attempt=attempt, source=source, fetch=fetch, result=await gateway.fetch(fetch, source), error=None)
         except GatewayError as e:  # SourceRejected is a bug and is not caught, so it stops the Run
@@ -44,17 +62,17 @@ def _make_tools(gateway) -> dict[str, BaseTool]:
     # plan and attempt are injected so the model can't drift from the plan the user approved.
     @tool
     async def search_adzuna(
-        title: str, plan: Annotated[SearchPlan, InjectedToolArg], attempt: Annotated[int, InjectedToolArg], page: int = 1
+        title: str, plan: Annotated[SearchPlan, InjectedToolArg], attempt: Annotated[int, InjectedToolArg], page: int = 1, location: str = ""
     ) -> FetchRecord:
-        """Search Adzuna, a worldwide aggregator of private-sector job ads, by title. Honours every plan field. Metered: a small daily quota shared by every Run, so spend calls on titles that matter. One call returns one page of up to 50."""
-        return await search(Source.adzuna, title, page, plan, attempt)
+        """Search Adzuna, a worldwide aggregator of private-sector job ads, by title. Honours every plan field. Metered: a small daily quota shared by every Run, so spend calls on titles that matter. One call returns one page of up to 50. `location` must be one of the plan's places; blank means the first."""
+        return await search(Source.adzuna, title, page, location, plan, attempt)
 
     @tool
     async def search_usajobs(
-        title: str, plan: Annotated[SearchPlan, InjectedToolArg], attempt: Annotated[int, InjectedToolArg], page: int = 1
+        title: str, plan: Annotated[SearchPlan, InjectedToolArg], attempt: Annotated[int, InjectedToolArg], page: int = 1, location: str = ""
     ) -> FetchRecord:
-        """Search USAJOBS, the US federal government's own job ads, by title. US searches only, and it ignores the plan's category. Free and unmetered, but federal roles only, so a private-sector title may return little. One call returns one page of up to 50."""
-        return await search(Source.usajobs, title, page, plan, attempt)
+        """Search USAJOBS, the US federal government's own job ads, by title. US searches only, and it ignores the plan's category. Free and unmetered, but federal roles only, so a private-sector title may return little. One call returns one page of up to 50. `location` must be one of the plan's places; blank means the first."""
+        return await search(Source.usajobs, title, page, location, plan, attempt)
 
     return {t.name: t for t in (search_adzuna, search_usajobs)}
 
@@ -87,11 +105,12 @@ def _settings(f: Fetch) -> tuple:
 
 
 def _already_searched(state: State) -> list[str]:
-    here = _settings(_fetch_for(state.current_plan, "x"))
+    plan = state.current_plan
+    here = {_settings(_fetch_for(plan, "x", location=place)) for place in _places(plan)}
     return [
-        f'- {r.source} "{r.fetch.title}" page {r.fetch.page}: {_total(r):,} matches'
+        f'- {r.source} "{r.fetch.title}"{_in(r.fetch.location)} page {r.fetch.page}: {_total(r):,} matches'
         for r in state.fetches
-        if r.result and _settings(r.fetch) == here
+        if r.result and _settings(r.fetch) in here
     ]
 
 
@@ -102,13 +121,16 @@ def _fetch_input(state: State) -> str:
         f"Raw goal: about {round(RAW_FACTOR * plan.target_postings)} Postings across all searches.",
         f"Sample so far: {len(state.sample)} relevant Postings, target {plan.target_postings}.",
     ]
+    if plan.locations:
+        # Primary title in every place first, so a short budget covers the role everywhere before any variant.
+        lines += ["Searches to run, in order (title, place):", *(f'- "{t}" in {p}' for t in plan.titles for p in plan.locations)]
     if searched := _already_searched(state):
         lines += ["Already searched with these settings, so do not repeat:", *searched]
     return "\n".join(lines)
 
 
 def _summary(record: FetchRecord, new: int) -> str:
-    head = f'{record.source} "{record.fetch.title}" page {record.fetch.page}:'
+    head = f'{record.source} "{record.fetch.title}"{_in(record.fetch.location)} page {record.fetch.page}:'
     if record.result is None:
         return f"{head}\n{record.source} failed: {record.error}."
     outcome = record.result.sources[record.source]
@@ -132,7 +154,7 @@ def _broaden_input(state: State) -> str:
     ]
     for r in state.fetches:
         found = f"{_total(r):,} matches" if r.result else f"failed: {r.error}"
-        lines.append(f'- {r.source} "{r.fetch.title}" page {r.fetch.page}: {found}')
+        lines.append(f'- {r.source} "{r.fetch.title}"{_in(r.fetch.location)} page {r.fetch.page}: {found}')
     rejected = [p.title for k, p in state.postings.items() if not state.relevance_verdicts.get(k, True)]
     if rejected:
         lines += ["Titles rejected as not the role:", *(f"- {t}" for t in rejected[:MAX_REJECTED_TITLES])]
@@ -168,6 +190,9 @@ def _closing_caveats(state: State, node: str) -> list[RunLogEntry]:
         old = sum((newest - p.posted_at).days > OLD_DAYS for p in sample)
         if old * 2 > len(sample):
             entries.append(log_entry(node, LogKind.caveat, f"Old data: {old} of {len(sample)} Postings are over {OLD_DAYS} days old", old=old))
+    searched = {_norm(r.fetch.location) for r in state.fetches}
+    if missed := [p for p in state.current_plan.locations if _norm(p) not in searched]:
+        entries.append(log_entry(node, LogKind.caveat, f"Places not searched: {', '.join(missed)}", places=missed))
     if state.broadened_plans:
         plans = [state.search_plan, *state.broadened_plans]
         changes = [_changes(a, b) for a, b in zip(plans, plans[1:])]
@@ -201,8 +226,8 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
 
     async def fetch_agent(state: State) -> dict:
         plan = state.current_plan
-        if _tool_count(state) >= MAX_FETCHES:
-            return log(state, "fetch_agent", LogKind.note, f"search cap of {MAX_FETCHES} reached")
+        if _tool_count(state) >= _cap(plan):
+            return log(state, "fetch_agent", LogKind.note, f"search cap of {_cap(plan)} reached")
         first = not state.messages
         messages = [SystemMessage(FETCH_SYSTEM), HumanMessage(_fetch_input(state))] if first else state.messages
         reply = await deps.tiers.chat("cheap", tools=_bound(tools_by_name, plan), name="fetch_agent").ainvoke(messages)
@@ -217,7 +242,9 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         attempt = _attempt(state)
         bound ={t.name: t for t in _bound(tools_by_name, plan)}
         calls = state.messages[-1].tool_calls
-        left = MAX_FETCHES - _tool_count(state)
+        cap = _cap(plan)
+        left = cap - _tool_count(state)
+        places = {_norm(p) for p in plan.locations}
 
         shown: dict[str, str] = {}  # what the card says about a failed call; the model still reads the message text
 
@@ -227,14 +254,18 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
 
         async def run(i: int, call: dict) -> FetchRecord | ToolMessage:
             args = call["args"]
-            emit({"type": "tool_called", "name": call["name"], "summary": f'"{args.get("title")}" page {args.get("page", 1)}'})
+            emit({"type": "tool_called", "name": call["name"], "summary": f'"{args.get("title")}"{_in(args.get("location") or "")} page {args.get("page", 1)}'})
             if i >= left:
-                return error(call, f"Refused: the limit of {MAX_FETCHES} searches in this Attempt is used up.", "Skipped: search limit reached")
+                return error(call, f"Refused: the limit of {cap} searches in this Attempt is used up.", "Skipped: search limit reached")
             if call["name"] not in bound:
                 return error(call, f"Unknown tool {call['name']!r}. Available: {', '.join(bound)}.", "Didn't run")
+            if (place := _norm(args.get("location") or "")) and place not in places:
+                return error(call, f"Refused: {args['location']!r} is not a place in the plan. Places: {', '.join(plan.locations) or 'none (country-wide)'}.", "Didn't run")
             try:
                 # Injected values go last so model output can't override them.
-                return await bound[call["name"]].ainvoke({**args, "plan": plan, "attempt": attempt})
+                # A blank place means the plan's first, so the model can't search somewhere unapproved.
+                place = args.get("location") or _places(plan)[0]
+                return await bound[call["name"]].ainvoke({**args, "location": place, "plan": plan, "attempt": attempt})
             except ValidationError as e:
                 return error(call, f"Bad arguments: {e}", "Didn't run")
 
@@ -273,7 +304,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         totals: dict[str, dict[str, int]] = {}
         for r in current:
             if r.result and r.result.sources[r.source].cache != CacheStatus.store:  # a store total isn't the source's
-                totals.setdefault(r.fetch.title, {})[r.source] = r.result.sources[r.source].total
+                totals.setdefault(f"{r.fetch.title}{_in(r.fetch.location)}", {})[r.source] = r.result.sources[r.source].total
         duplicates = sum(len(v) for v in merged.values())
         entries = [
             log_entry("collect", LogKind.note, f"kept {len(kept)} Postings, merged {duplicates} Duplicates", kept=len(kept), duplicates=duplicates),
@@ -320,9 +351,9 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         current = state.current_plan
         draft = await broaden_chain.ainvoke(_broaden_input(state))
         # Pinned in code, so broadening can't reach Sufficiency by lowering the target or leave the market asked about.
-        # Only the user's whole-country tick may drop the place, and a blank location already means country-wide.
-        location = "" if state.low_data_whole_country else current.location
-        plan = draft.model_copy(update={"country": current.country, "target_postings": current.target_postings, "location": location})
+        # Only the user's whole-country tick may drop the places, and no places already means country-wide.
+        locations = [] if state.low_data_whole_country else current.locations
+        plan = draft.model_copy(update={"country": current.country, "target_postings": current.target_postings, "locations": locations})
         return {
             "broadened_plans": [*state.broadened_plans, plan],
             "messages": [],

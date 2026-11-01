@@ -41,7 +41,7 @@ def ai_calls(*calls: dict) -> AIMessage:
 
 
 def plan(**over) -> SearchPlan:
-    base = dict(titles=["Data Analyst"], country="in", location="Bangalore", radius_km=25, max_days_old=30, target_postings=20, category=None)
+    base = dict(titles=["Data Analyst"], country="in", locations=["Bangalore"], radius_km=25, max_days_old=30, target_postings=20, category=None)
     return SearchPlan(**{**base, **over})
 
 
@@ -74,7 +74,7 @@ def record(
 ) -> FetchRecord:
     p = the_plan or plan()
     fetch = Fetch(
-        title=title, page=page, country=p.country, location=p.location, radius_km=p.radius_km,
+        title=title, page=page, country=p.country, location=(p.locations or [""])[0], radius_km=p.radius_km,
         max_days_old=p.max_days_old, category=p.category,
     )
     res = None if error else result(postings or [], source=source, **result_args)

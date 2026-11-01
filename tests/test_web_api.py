@@ -146,7 +146,7 @@ def test_every_pause_is_answered_to_done_and_the_brief_downloads(client):
 
 def test_a_refused_answer_is_cleaned_and_leaves_the_run_paused(client):
     thread_id = to_plan_review(client)
-    bad_plan = {"titles": ["x"], "country": "us", "location": "", "radius_km": 500, "max_days_old": 30,
+    bad_plan = {"titles": ["x"], "country": "us", "locations": [], "radius_km": 500, "max_days_old": 30,
                 "target_postings": 20, "category": None}
     cases = [
         ({"action": "edit", "plan": bad_plan, "feedback": None}, ["plan", "radius_km"]),

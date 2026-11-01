@@ -2,7 +2,7 @@ import { useState } from "react"
 import type { SearchPlan } from "../api/types"
 import { useMeta } from "../api/useMeta"
 import { categoryName } from "../labels"
-import { where } from "../util"
+import { searchCost, where } from "../util"
 import { AbortButton, Refusals } from "./parts"
 import { PlanEditor } from "./PlanEditor"
 import { useSubmit } from "./submit"
@@ -28,7 +28,7 @@ function EditPlan({ plan, send, onCancel }: { plan: SearchPlan; send: Send; onCa
   )
 }
 
-export function PlanReviewForm({ plan, assumptions, send }: { plan: SearchPlan; assumptions: Assumption[]; send: Send }) {
+export function PlanReviewForm({ plan, assumptions, callsLeft, send }: { plan: SearchPlan; assumptions: Assumption[]; callsLeft: number | null; send: Send }) {
   const [mode, setMode] = useState<"read" | "edit" | "reject">("read")
   const [feedback, setFeedback] = useState("")
   const { busy, refusal, submit } = useSubmit(send)
@@ -58,6 +58,9 @@ export function PlanReviewForm({ plan, assumptions, send }: { plan: SearchPlan; 
         <dt>Category</dt>
         <dd>{plan.category ? categoryName(plan.category) : "Any"}</dd>
       </dl>
+      <p className="muted">
+        {searchCost(plan)}.{callsLeft !== null && ` ${callsLeft} Adzuna calls left today.`}
+      </p>
       {assumptions.length > 0 && (
         <>
           <h3>Assumptions</h3>

@@ -15,6 +15,7 @@ from talent_scout.kernel.types import (
     Model,
     RequestField,
     SearchPlan,
+    Source,
 )
 from talent_scout.request_plan.prompts import INTAKE_SYSTEM, JEV_QUESTIONS, PLAN_SYSTEM, PROBLEMS, QUESTION_SYSTEM
 from talent_scout.request_plan.types import (
@@ -216,7 +217,10 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
 
     async def plan_review(state: State) -> dict:
         # The Assumptions are shown here because this is the last chance to correct one before quota is spent.
-        answer = interrupt(PlanReviewPause(payload=PlanReviewPayload(plan=state.search_plan, assumptions=state.assumptions)))
+        payload = PlanReviewPayload(
+            plan=state.search_plan, assumptions=state.assumptions, calls_left=deps.gateway.calls_left(Source.adzuna),
+        )
+        answer = interrupt(PlanReviewPause(payload=payload))
         # feedback is written even when null, so an approve after a reject clears the old feedback.
         update = {"plan_decision": answer.action, "plan_feedback": answer.feedback}
         if answer.action == PlanAction.edit:

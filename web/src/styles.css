@@ -2,7 +2,7 @@
   /* One surface: depth comes from the shadows, and every control keeps a real --edge border. */
   --bg: #eef0f3; --panel: var(--bg); --ink: #1f2430; --muted: #535c6b; --line: #d5d9e0; --edge: #7d8796;
   --accent: #2f5d50; --accent-soft: #dbe8e3; --warn: #8a4206; --warn-soft: #f7e8d3;
-  --bad: #a3262a; --bad-soft: #f9e4e4; --live: #1f5fd0; --live-soft: #dfe8fa; --focus: #1f5fd0;
+  --chart: #00795f; --chart-2: #2fb08f; --bad: #a3262a; --bad-soft: #f9e4e4; --live: #1f5fd0; --live-soft: #dfe8fa; --focus: #1f5fd0;
   --raised: 5px 5px 12px rgba(150, 160, 178, .38), -5px -5px 12px rgba(255, 255, 255, .85);
   --raised-sm: 2px 2px 5px rgba(150, 160, 178, .4), -2px -2px 5px rgba(255, 255, 255, .85);
   --inset: inset 2px 2px 4px rgba(150, 160, 178, .4), inset -2px -2px 4px rgba(255, 255, 255, .85);
@@ -99,13 +99,39 @@ button.danger { color: var(--bad); border-color: var(--bad); }
 .evidence { margin: 4px 0 12px; font-size: 14px; }
 .brief table { border-collapse: collapse; width: 100%; font-size: 14px; }
 .brief th, .brief td { text-align: left; border-bottom: 1px solid var(--line); padding: 4px 8px; }
+/* Tiles and charts. --chart-2 is under 3:1, so every bar keeps its visible number. */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 12px; }
+.tile { background: var(--bg); border-radius: 12px; box-shadow: var(--raised); padding: 10px 12px; min-width: 0; }
+.tile b { display: block; font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.tile small { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+.tile h3 { font-size: 15px; margin: 0 0 6px; }
+.why summary, .researched > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.note { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 5px 12px; margin: 0 0 6px; font-size: 13px; }
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+.charts .tile { margin: 0; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 38%) 1fr 34px; gap: 8px; align-items: center; width: 100%; font: inherit; font-size: 13px; color: var(--ink); background: none; border: 0; box-shadow: none; padding: 2px 0; cursor: pointer; text-align: left; }
+.bar-row span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track { height: 10px; display: flex; gap: 2px; }
+.track i { display: block; height: 100%; background: var(--chart); border-radius: 0 4px 4px 0; min-width: 2px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.track i.other { background: var(--chart-2); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.range { position: relative; height: 26px; margin: 18px 0 22px; }
+.range .line { position: absolute; top: 12px; left: 0; right: 0; height: 2px; background: var(--edge); }
+.range .box { position: absolute; top: 6px; height: 14px; background: var(--chart); border-radius: 4px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.range .med { position: absolute; top: 1px; width: 3px; height: 24px; background: var(--ink); }
+.range span { position: absolute; font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ins { margin: 0 0 6px; padding: 0; list-style: none; }
+.ins li { padding: 6px 0; border-bottom: 1px solid var(--line); }
 /* The plan editor: four columns on one screen, two on a phone. */
 .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 12px; }
 .span2 { grid-column: span 2; }
 .chips.field { align-items: center; border: 1px solid var(--edge); border-radius: 8px; box-shadow: var(--inset); padding: 4px; margin: 3px 0 10px; }
 .card .chips.field input[type="text"] { flex: 1; min-width: 120px; width: auto; margin: 0; border: 0; box-shadow: none; padding: 2px 4px; background: none; }
 .card .chips.field .chip button { border: 0; box-shadow: none; padding: 0; background: none; }
-@media (max-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .charts { grid-template-columns: 1fr; }
+}
 @media (max-width: 899px) {
   .shell { display: block; }
   .topbar { display: flex; gap: 12px; align-items: center; padding: 10px 16px; font-weight: 600; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; }
@@ -121,6 +147,8 @@ button.danger { color: var(--bad); border-color: var(--bad); }
   :root { --raised: none; --raised-sm: none; --inset: none; }
   body { background: #fff; }
   .column { max-width: none; padding: 0; }
+  .brief .bar-row { display: grid !important; }
+  .tile { border: 1px solid #bbb; background: #fff; break-inside: avoid; }
 }
 /* Run page: the stream's column with the trace panel on its right. */
 .run { display: flex; align-items: flex-start; gap: 24px; max-width: 1100px; margin: 0 auto; }

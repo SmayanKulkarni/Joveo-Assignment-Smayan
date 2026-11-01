@@ -13,6 +13,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from talent_scout.brief.glance import Glance, glance
 from talent_scout.brief.markdown import CONFIDENCE_KEY
 from talent_scout.brief.types import MarketBrief
 from talent_scout.kernel.llm import BalanceTooLow
@@ -86,6 +87,7 @@ class RunDetail(Model):
     live_from: int | None  # the attached handle's log_start; None when no Run is live here
     brief: MarketBrief | None
     sample: list[PostingRef]  # empty unless there is a Brief
+    glance: Glance | None  # computed on read, so earlier Runs get it and brief.json keeps its bytes
 
 
 def _http_url(url: str) -> str | None:
@@ -113,6 +115,7 @@ def _detail(view: RunView, handle: RunHandle | None) -> RunDetail:
         live_from=handle.log_start if handle else None,
         brief=state.brief if state else None,
         sample=sample,
+        glance=glance(state.brief, state.sample_postings) if state and state.brief else None,
     )
 
 

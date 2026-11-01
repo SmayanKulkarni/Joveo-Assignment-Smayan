@@ -36,7 +36,7 @@ from talent_scout.runtime.testing import stub_brief
 
 QUESTION = ClarifyingQuestion(about=RequestField.role, text="Which engineer?", options=["Software"], answer=None)
 PLAN = SearchPlan(
-    titles=["Engineer"], country="us", location="Texas", radius_km=0,
+    titles=["Engineer"], country="us", locations=["Texas"], radius_km=0,
     max_days_old=30, target_postings=50, category=None,
 )
 LOW_DATA = LowDataPayload(

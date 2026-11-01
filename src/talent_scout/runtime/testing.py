@@ -24,7 +24,7 @@ _REQUEST = HiringRequest(
     work_mode=None, currency=None, purpose=None,
 )
 _PLAN = SearchPlan(
-    titles=["Stub role"], country="us", location="Stub city", radius_km=0,
+    titles=["Stub role"], country="us", locations=["Stub city"], radius_km=0,
     max_days_old=30, target_postings=20, category=None,
 )
 _EXTRACTION = Extraction(skills=[], seniority=Seniority.unknown, years_min=None, employer_type=EmployerType.unknown, ungrounded=0)

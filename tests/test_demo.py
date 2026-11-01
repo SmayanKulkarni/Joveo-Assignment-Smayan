@@ -12,7 +12,7 @@ from talent_scout.runtime.events import (
 from talent_scout.runtime.graph import OWNERS, graph_topology
 
 PLAN = {
-    "titles": ["Data Engineer"], "country": "us", "location": "Austin, Texas", "radius_km": 10,
+    "titles": ["Data Engineer"], "country": "us", "locations": ["Austin, Texas"], "radius_km": 10,
     "max_days_old": 30, "target_postings": 20, "category": None,
 }
 APPROVE = {"action": "approve", "plan": None, "feedback": None}

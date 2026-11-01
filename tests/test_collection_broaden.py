@@ -47,11 +47,11 @@ def test_broaden_pins_country_and_target_clears_messages_and_logs_the_change():
 
 
 def test_broaden_keeps_the_place_unless_the_user_ticked_whole_country():
-    drafted = plan(location="", radius_km=60).model_dump_json()
-    for whole, kept in ((False, "Pune"), (True, "")):
+    drafted = plan(locations=[], radius_km=60).model_dump_json()
+    for whole, kept in ((False, ["Pune"]), (True, [])):
         deps, *_ = make_deps(strong=[drafted])
-        update = run(make_nodes(deps)["broaden"], state_with(search_plan=plan(location="Pune"), low_data_whole_country=whole))
-        assert update["broadened_plans"][0].location == kept
+        update = run(make_nodes(deps)["broaden"], state_with(search_plan=plan(locations=["Pune"]), low_data_whole_country=whole))
+        assert update["broadened_plans"][0].locations == kept
 
 
 def test_only_a_broaden_answer_can_carry_whole_country_and_an_old_checkpoint_loads_without_it():
@@ -87,8 +87,8 @@ def test_broaden_input_holds_totals_rejected_titles_and_the_sample_count():
     run(make_nodes(deps)["broaden"], state)
 
     text = strong.seen[0][1].content
-    assert 'adzuna "data analyst" page 1: 3,200 matches' in text
-    assert 'adzuna "bi analyst" page 1: failed: Adzuna is down' in text
+    assert 'adzuna "data analyst" in bangalore page 1: 3,200 matches' in text
+    assert 'adzuna "bi analyst" in bangalore page 1: failed: Adzuna is down' in text
     assert "- Data Entry Analyst" in text and "Sample: 0 relevant Postings, target 20." in text
 
 

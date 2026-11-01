@@ -28,7 +28,7 @@ export type RunRecord = {
 export type SearchPlan = {
   titles: string[]
   country: string
-  location: string
+  locations: string[]
   radius_km: number
   max_days_old: number
   target_postings: number
@@ -39,7 +39,7 @@ export type Question = { about: string; text: string; options: string[]; answer:
 
 export type Pause =
   | { kind: "clarify"; payload: { questions: Question[] } }
-  | { kind: "plan_review"; payload: { plan: SearchPlan; assumptions: { about: string; value: string; reason: string }[] } }
+  | { kind: "plan_review"; payload: { plan: SearchPlan; assumptions: { about: string; value: string; reason: string }[]; calls_left: number | null } }
   | {
       kind: "low_data_review"
       payload: {
@@ -64,6 +64,17 @@ export type RunDetail = {
   live_from: number | null
   brief: Brief | null
   sample: PostingRef[]
+  glance: Glance | null
+}
+
+export type Row = { label: string; count: number; required: number | null; stat_ids: string[]; evidence: Evidence }
+export type RowChart = { caption: string; rows: Row[] }
+export type Glance = {
+  reader_notes: string[]
+  pay: { low: number; median: number; high: number; unit: string; postings: number; stat_ids: string[]; evidence: Evidence } | null
+  skills: RowChart | null
+  places: RowChart | null
+  employers: RowChart | null
 }
 
 export type PostingRef = {

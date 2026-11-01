@@ -266,7 +266,7 @@ Nothing goes in `run_log`, because backend errors are never Caveats (Kernel §9)
 
 ```python
 class NodeStarted(Model):     node: str
-class NodeDone(Model):        node: str; notes: list[str]
+class NodeDone(Model):        node: str; notes: list[str]; results: list[str] = []
 class Token(Model):           node: str; text: str
 class Reasoning(Model):       node: str; text: str
 class ToolCalled(Model):      name: str; summary: str
@@ -285,7 +285,7 @@ Pass 1 maps `NodeDone`, `Paused`, `Done` and `Stopped`. Pass 3 adds the rest. No
 | Event | Source | Rule |
 |---|---|---|
 | `NodeStarted` | `tasks` start | Once per stream for `batch_extract`, not once per branch |
-| `NodeDone` | `updates` | `notes` are the messages of the `run_log` entries that node appended, found by diffing the log length. Skip the `__interrupt__` and `__metadata__` keys. For `batch_extract`, fires once, when `done == total`. |
+| `NodeDone` | `updates` | `notes` are the messages of the `run_log` entries that node appended, found by diffing the log length, and `results` those of kind `result`. Skip the `__interrupt__` and `__metadata__` keys. For `batch_extract`, fires once, when `done == total`. |
 | `Token` | `messages` | `AIMessage` from `fetch_agent` only, text blocks of `content_blocks` |
 | `Reasoning` | `messages` | Reasoning blocks of `content_blocks`, from any node except `batch_extract`. Optional per turn: the view must cope with none. |
 | `ToolCalled`, `ToolReturned`, `ApiCalled` | `custom` | Mapped from `{"type": ...}` dicts; see below |

@@ -400,7 +400,8 @@ The rest already follows: tags from §6, the outlook default from §7, and `None
 6. `## Insights`: `**[High]** text`, its reason and Evidence, then the key: "High: 30+ Postings from 10+ employers. Medium: 10+ from 5+, or capped because pay is estimated, skills come from snippets, data is old or the critic couldn't confirm it. Low: anything thinner, directional only. An Insight takes its weakest cited figure."
 7. `## Run Notes`
 8. `## Evidence`: each reference with its full keys.
-9. `## Postings analysed`: a table of key, title, company and link.
+9. `## Market figures`: pay, skills, places and employers as plain lists, from `brief/glance.py` (Web UI §9), so the charts' data is in the record too.
+10. `## Postings analysed`: a table of key, title, company and link.
 
 **Tracing.** Each part ends in `Evidence: 35 Postings [E3]`, so the first screen reads as a Brief, and every number reaches a real ad in two steps. `E` numbers count by first appearance, and parts with identical Postings share one. Posting text comes from outside, so `|` and newlines are removed from cells, and a link appears only for `http` and `https`.
 
@@ -415,7 +416,7 @@ The rest already follows: tags from §6, the outlook default from §7, and `None
 | Earlier plans | `search_plan` and `broadened_plans[:-1]`, when any broaden ran |
 | Postings analysed, by source | `sample` |
 | Source match counts | The last `collect` note holding `totals` |
-| Caveats, every one, in order, as written | `run_log` entries of kind `caveat` |
+| Caveats, every one, in order, as written. The screen shows at most two plain lines instead (Web UI §9) | `run_log` entries of kind `caveat` |
 | Jobs data attribution, when any Adzuna Posting is in the Sample | `ATTRIBUTION[Source.adzuna]` from `gateway/types.py` |
 
 `match_totals` holds one line per title and source: "Adzuna reported about 3,200 matches for Data Analyst. This is its own count, not a measure of demand." One each, because titles overlap and a sum would double count. It's never a Stat or Evidence (Gateway §3).

@@ -100,7 +100,7 @@ function RunView({ id, detail, state, notice, streaming, answer, resume, stop }:
         {notice && <p className="notice">{notice}</p>}
         <div ref={pauseBox}>{pause && <PauseCard key={`${state.turns.length}-${pause.kind}`} pause={pause} send={answer} />}</div>
         {ending?.kind === "done" &&
-          (detail.brief ? <BriefView id={id} brief={detail.brief} sample={detail.sample} /> : <p>Finishing…</p>)}
+          (detail.brief ? <BriefView id={id} brief={detail.brief} sample={detail.sample} glance={detail.glance} /> : <p>Finishing…</p>)}
         {ending?.kind === "aborted" && (
           <div className="card">
             <h2>This Run ended without a Brief</h2>

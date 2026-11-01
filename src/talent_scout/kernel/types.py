@@ -130,15 +130,24 @@ class Assumption(Model):
 
 class SearchPlan(Model):
     # The limits sit here so the LLM, a user's edit and broaden all pass the same checks.
-    titles: list[str] = Field(min_length=1, max_length=4, description="Job titles to search for, primary title first.")
+    titles: list[str] = Field(min_length=1, description="Job titles to search for, primary title first.")
     country: str = Field(pattern=r"^[a-z]{2}$", description="Lowercase two-letter country code, e.g. us.")
-    location: str = Field(description="Place to search around, as a source-friendly name; blank for country-wide.")
+    locations: list[str] = Field(description="Bare place names to search around, one centre per metro; empty for country-wide.")
     radius_km: int = Field(ge=0, le=100, description="Search radius around the location, in kilometres.")
     max_days_old: int = Field(ge=1, le=60, description="Ignore postings older than this many days.")
     target_postings: int = Field(ge=20, le=200, description="How many relevant postings are enough for analysis.")
     category: str | None = Field(description="Source job category to narrow the search; null for none.")
 
     _known_country = field_validator("country")(check_country)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_location(cls, data):
+        # Earlier checkpoints and Briefs stored one `location`, blank for country-wide.
+        if isinstance(data, dict) and "location" in data and "locations" not in data:
+            old = data["location"]
+            data = {**{k: v for k, v in data.items() if k != "location"}, "locations": [old] if old and old.strip() else []}
+        return data
 
     @field_validator("category")
     @classmethod

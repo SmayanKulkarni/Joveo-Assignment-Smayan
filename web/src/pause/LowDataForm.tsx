@@ -12,7 +12,7 @@ export function LowDataForm({ payload, send }: { payload: Payload; send: Send })
   const [wholeCountry, setWholeCountry] = useState(false)
   const { busy, refusal, submit } = useSubmit(send)
   const { count, target, fetched, rejected, attempts, blocked, calls_left, plans } = payload
-  const hasPlace = plans[plans.length - 1].location.trim() !== ""
+  const hasPlace = plans[plans.length - 1].locations.length > 0
 
   return (
     <section className="card">

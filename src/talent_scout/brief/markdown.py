@@ -1,6 +1,7 @@
 from collections import Counter
 from urllib.parse import quote, urlparse
 
+from talent_scout.brief.glance import Glance, glance
 from talent_scout.brief.rules import SOURCE_NAMES
 from talent_scout.brief.types import ClientRecommendations, HiringOutlook, Insight, MarketBrief
 from talent_scout.kernel.text import plural
@@ -20,7 +21,7 @@ CONFIDENCE_KEY = (
 
 def _plan(p: SearchPlan) -> str:
     return (
-        f"titles {', '.join(p.titles)}; location {p.location or 'country-wide'} ({p.country}); radius {p.radius_km} km; "
+        f"titles {', '.join(p.titles)}; places {', '.join(p.locations) or 'country-wide'} ({p.country}); radius {p.radius_km} km; "
         f"up to {p.max_days_old} days old; target {p.target_postings} Postings; category {p.category or 'none'}"
     )
 
@@ -111,6 +112,17 @@ def _insights(insights: list[Insight], refs: dict[tuple[str, ...], int]) -> str:
     return "## Insights\n\n" + "\n\n".join(items) + "\n\n" + CONFIDENCE_KEY
 
 
+def _figures(g: Glance) -> str:
+    sections = []
+    if g.pay:
+        sections.append(f"- **Pay, middle 50%:** {g.pay.low:,.0f} to {g.pay.high:,.0f} {g.pay.unit}, median {g.pay.median:,.0f}, from {plural(g.pay.postings, 'Posting')}")
+    for title, chart in (("Skills employers ask for", g.skills), ("Where the postings are", g.places), ("Who is hiring most", g.employers)):
+        if chart:
+            rows = [f"  - {r.label}: {r.count}" + (f" ({r.required} required)" if r.required else "") for r in chart.rows]
+            sections.append("\n".join([f"- **{title}** ({chart.caption})", *rows]))
+    return "## Market figures\n\n" + ("\n".join(sections) if sections else "None.")
+
+
 def render_markdown(brief: MarketBrief, postings: list[Posting]) -> str:
     request = brief.hiring_request
     summary = brief.summary
@@ -128,6 +140,7 @@ def render_markdown(brief: MarketBrief, postings: list[Posting]) -> str:
         _insights(brief.insights, refs),
         _run_notes(brief, postings),
         _evidence(refs),
+        _figures(glance(brief, postings)),
         _postings_table(postings),
     ]
     return "\n\n".join(parts) + "\n"

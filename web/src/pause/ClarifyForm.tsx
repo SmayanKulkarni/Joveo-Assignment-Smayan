@@ -12,6 +12,12 @@ export function ClarifyForm({ questions, send }: { questions: Question[]; send: 
   const filled = answers.filter((a) => a.trim()).length
 
   const set = (i: number, value: string) => setAnswers((all) => all.map((a, j) => (j === i ? value : a)))
+  // A place question takes several areas, kept as one string joined with ", ".
+  const picked = (i: number) => answers[i].split(",").map((a) => a.trim()).filter(Boolean)
+  const toggle = (i: number, option: string) => {
+    const now = picked(i)
+    set(i, (now.includes(option) ? now.filter((a) => a !== option) : [...now, option]).join(", "))
+  }
 
   return (
     <form
@@ -29,12 +35,19 @@ export function ClarifyForm({ questions, send }: { questions: Question[]; send: 
           {q.options.length > 0 && (
             <div className="chips">
               {/* Picking a chip fills the box, and typing changes the value so the chip clears. */}
-              {q.options.map((option) => (
-                <label key={option} className="chip choice">
-                  <input type="radio" name={`${group}-${i}`} checked={answers[i] === option} onChange={() => set(i, option)} />
-                  {option}
-                </label>
-              ))}
+              {q.options.map((option) =>
+                q.about === "location" ? (
+                  <label key={option} className="chip choice">
+                    <input type="checkbox" checked={picked(i).includes(option)} onChange={() => toggle(i, option)} />
+                    {option}
+                  </label>
+                ) : (
+                  <label key={option} className="chip choice">
+                    <input type="radio" name={`${group}-${i}`} checked={answers[i] === option} onChange={() => set(i, option)} />
+                    {option}
+                  </label>
+                ),
+              )}
             </div>
           )}
           <input

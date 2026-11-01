@@ -131,11 +131,13 @@ def after_low_data(state):
 
 ## 5. Fetching
 
+**Several places.** Each tool takes a model argument `location`. Blank means the plan's first place, and a value not in the plan is refused with an error `ToolMessage`, so the model can't leave the approved plan. `Fetch.location` stays one place, so cache keys don't change. The per-Attempt cap is `max(MAX_FETCHES, titles x places)`, so a title the user adds gets searched; the daily guard stays the ceiling, and running out reaches `low_data_review` through `fetch_blocked`. The first message lists the combinations in order, the primary title in every place first. A chosen place never searched raises the Caveat "Places not searched: ..." when Collection closes. `match_totals` is per title and place.
+
 ### `search_adzuna` and `search_usajobs`
 
 ```python
 async def _search(source, title, page, plan, attempt) -> FetchRecord:
-    fetch = Fetch(title=title, page=page, country=plan.country, location=plan.location, radius_km=plan.radius_km,
+    fetch = Fetch(title=title, page=page, country=plan.country, location=location, radius_km=plan.radius_km,
                   max_days_old=plan.max_days_old, category=plan.category)
     try:
         return FetchRecord(attempt=attempt, source=source, fetch=fetch, result=await deps.gateway.fetch(fetch, source), error=None)
@@ -279,7 +281,7 @@ plan = draft.model_copy(update={"country": current.country, "target_postings": c
 return {"broadened_plans": [*state.broadened_plans, plan], "messages": [], **log(...)}
 ```
 
-The model can't then reach Sufficiency by lowering the target, or leave the market the user asked about. Both pinned values are already valid, so nothing needs revalidating. The other limits are checked on the output and fed back on the retry (Kernel §12).
+`locations` is pinned too, unless the user ticked `whole_country` at `low_data_review`, which empties it. A Brief headed "Mumbai" once rested on a country-wide search, and only the user may choose that. The model can't then reach Sufficiency by lowering the target, or leave the market the user asked about. Both pinned values are already valid, so nothing needs revalidating. The other limits are checked on the output and fed back on the retry (Kernel §12).
 
 **Input:** `hiring_request`, the current plan, the Sample count and target, for each title and page searched its source totals, up to 10 rejected Posting titles, and `low_data_guidance` when the Pause set one.
 
@@ -294,7 +296,7 @@ Totals per title are what's available, since `Posting` doesn't record which titl
 ```python
 async def low_data_review(state):
     answer = interrupt(LowDataPause(payload=_payload(state)))
-    update = {"low_data_decision": answer.action, "low_data_guidance": answer.guidance}
+    update = {"low_data_decision": answer.action, "low_data_guidance": answer.guidance, "low_data_whole_country": answer.whole_country}
     # plus a `pause` log entry, and the closing Caveats (§11) when the answer is `continue`
     return {**update, ...}
 ```
@@ -350,7 +352,7 @@ Merged Duplicates are a `note`, not a Caveat (Gateway §6).
 |---|---|---|---|
 | `FETCH_SYSTEM` | cheap | §5 first message | Pick the source for each search from the tool descriptions: on a US Run try both for the primary title, spend the metered one carefully, and drop a source whose results are off-role. Search each plan title, primary first. You can't see relevance, so gather about 1.5 × the target raw, stopping early when totals say a title is exhausted. Page a title only if it has more matches. Stop when you have enough or a call is refused. Don't repeat a search you've been told is done. |
 | `RELEVANT_NOUL` | Jev | §7 state | "Yes" means the Posting really is this role, which is the side that must clear the bar (Kernel §11). Ignore level differences. A keyword collision ("Data Entry Analyst" for "Data Analyst") or a general talent pool is no. Set both or neither Noul criteria sides. |
-| `BROADEN_SYSTEM` | strong | §9 input | The moves: more title variants, a wider radius, an older `max_days_old`, dropping `category`, a country-wide search, replacing a noisy title. Use the totals and rejected titles to pick. Follow guidance over the defaults. Keep `country` and `target_postings`; code overrides them anyway. |
+| `BROADEN_SYSTEM` | strong | §9 input | The moves: more title variants, a wider radius, an older `max_days_old`, dropping `category`, replacing a noisy title. Each title is one job title. Use the totals and rejected titles to pick. Follow guidance over the defaults. Keep `country`, `locations` and `target_postings`; code overrides them anyway. |
 
 Stable text comes first, as `Tiers.structured` already enforces (Kernel §12).
 

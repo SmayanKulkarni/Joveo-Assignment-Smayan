@@ -95,7 +95,7 @@ def demo_brief() -> MarketBrief:
     notes = RunNotes(
         questions=[], assumptions=[], focus=[],
         final_plan=SearchPlan(
-            titles=["Data Engineer"], country="us", location=DEMO_LOCATION, radius_km=40, max_days_old=30,
+            titles=["Data Engineer"], country="us", locations=[DEMO_LOCATION], radius_km=40, max_days_old=30,
             target_postings=20, category="it-jobs",
         ),
         earlier_plans=[], postings_analysed=_evidence(*range(6)), match_totals=[], caveats=[DEMO_CAVEAT], attribution=None,
@@ -223,13 +223,13 @@ def demo_nodes(delay: float) -> dict[str, Node]:
         await say(reasoning=f"Searching on {role} first, then the nearest neighbouring titles, within a day's commute.")
         wider = bool(state.plan_feedback)  # a rejected plan comes back with more titles and a longer window
         search_plan = SearchPlan(
-            titles=[role, f"Lead {role}"] if wider else [role], country="us", location=state.hiring_request.location,
+            titles=[role, f"Lead {role}"] if wider else [role], country="us", locations=[state.hiring_request.location],
             radius_km=40, max_days_old=45 if wider else 30, target_postings=20, category="it-jobs",
         )
         return {"search_plan": search_plan, **log(state, "plan", LogKind.note, f"plan: {', '.join(search_plan.titles)}, target 20")}
 
     async def plan_review(state: State) -> dict:
-        answer = interrupt(PlanReviewPause(payload=PlanReviewPayload(plan=state.search_plan, assumptions=state.assumptions)))
+        answer = interrupt(PlanReviewPause(payload=PlanReviewPayload(plan=state.search_plan, assumptions=state.assumptions, calls_left=21)))
         update = {"plan_decision": answer.action, "plan_feedback": answer.feedback}
         if answer.action == PlanAction.edit:
             update["search_plan"] = answer.plan

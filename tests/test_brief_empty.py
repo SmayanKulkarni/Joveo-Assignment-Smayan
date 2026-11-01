@@ -28,7 +28,7 @@ REQUEST = HiringRequest(
 
 def plan(title="Data Analyst", target=30) -> SearchPlan:
     return SearchPlan(
-        titles=[title], country="us", location="Austin", radius_km=10, max_days_old=30, target_postings=target, category=None
+        titles=[title], country="us", locations=["Austin"], radius_km=10, max_days_old=30, target_postings=target, category=None
     )
 
 
@@ -65,7 +65,7 @@ def test_zero_postings_write_brief_makes_no_llm_call_and_render_says_there_are_n
     headings = [line for line in md.splitlines() if line.startswith("#")]
     assert headings == [
         "# Market Brief: Data Analyst, Austin", "## Summary", "## Hiring Outlook", "## Client Recommendations", "## Insights",
-        "## Run Notes", "## Evidence", "## Postings analysed",
+        "## Run Notes", "## Evidence", "## Market figures", "## Postings analysed",
     ]
     assert md.count("Not enough evidence to suggest") == 3
     assert "Weak Sample: 0 Postings against a target of 30" in md

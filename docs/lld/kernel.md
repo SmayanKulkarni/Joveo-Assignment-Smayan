@@ -107,9 +107,9 @@ class Assumption(BaseModel):
     reason: str
 
 class SearchPlan(BaseModel):             # replaced whole, never patched
-    titles: list[str]                    # 1-4, primary first
+    titles: list[str]                    # at least 1, primary first
     country: str                         # a key of ADZUNA_CURRENCY
-    location: str                        # blank = country-wide
+    locations: list[str]                 # [] = country-wide; an old `location` is migrated on load
     radius_km: int                       # 0-100
     max_days_old: int                    # 1-60; also the soft-expiry window
     target_postings: int                 # 20-200; the Sufficiency target
@@ -283,7 +283,7 @@ LangGraph validates what a node *reads* but never what it *writes*, and never `S
 ## 9. `run_log`
 
 ```python
-class LogKind(StrEnum): route, pause, caveat, warning, note
+class LogKind(StrEnum): route, pause, caveat, warning, note, result  # result: written for readers, the only kind on screen
 
 class RunLogEntry(BaseModel):        # frozen, extra="forbid"
     node: str

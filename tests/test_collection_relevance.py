@@ -80,7 +80,7 @@ def test_records_lose_their_postings_but_keep_totals_and_store_totals_are_left_o
     kept = update["fetches"]
     assert [r.result.postings if r.result else None for r in kept] == [[], [], None]
     assert kept[0].result.sources[Source.adzuna].total == 3200 and kept[2].error == "Adzuna is down"
-    assert notes(update, "source totals").data["totals"] == {"data analyst": {"adzuna": 3200}}
+    assert notes(update, "source totals").data["totals"] == {"data analyst in bangalore": {"adzuna": 3200}}
 
 
 # relevance
