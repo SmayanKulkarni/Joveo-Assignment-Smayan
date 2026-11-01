@@ -74,6 +74,7 @@ h1 { font-size: 26px; font-weight: 600; text-align: center; margin: 12vh 0 24px;
 .chip.choice { display: inline-flex; gap: 6px; align-items: center; margin: 0 6px 6px 0; }
 .chip.choice:has(input:checked) { background: var(--accent); border-color: var(--accent); color: #fff; }
 .chip.choice:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.card label.chip { color: var(--ink); margin-bottom: 0; }
 .card .check { display: flex; gap: 6px; align-items: center; color: var(--ink); font-size: inherit; }
 .card .check input { width: auto; margin: 0; box-shadow: none; }
 .plan { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0 0 8px; }

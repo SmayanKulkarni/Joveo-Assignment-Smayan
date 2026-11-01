@@ -321,9 +321,8 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         draft = await broaden_chain.ainvoke(_broaden_input(state))
         # Pinned in code, so broadening can't reach Sufficiency by lowering the target or leave the market asked about.
         # Only the user's whole-country tick may drop the place, and a blank location already means country-wide.
-        pinned = {"country": current.country, "target_postings": current.target_postings}
-        pinned["location"] = "" if state.low_data_whole_country else current.location
-        plan = draft.model_copy(update=pinned)
+        location = "" if state.low_data_whole_country else current.location
+        plan = draft.model_copy(update={"country": current.country, "target_postings": current.target_postings, "location": location})
         return {
             "broadened_plans": [*state.broadened_plans, plan],
             "messages": [],

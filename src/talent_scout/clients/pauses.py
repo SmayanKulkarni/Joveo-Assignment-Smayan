@@ -42,9 +42,10 @@ def _low_data(payload: LowDataPayload) -> str:
     return "\n".join(lines)
 
 
-def low_data_answer(action: str, guidance: str | None) -> dict:
-    """Guidance only feeds a broaden, so any other action sends null; blank counts as skipped."""
-    return {"action": action, "guidance": (guidance or "").strip() or None if action == "broaden" else None}
+def low_data_answer(action: str, guidance: str | None, whole_country: bool = False) -> dict:
+    """Guidance and whole_country only matter to a broaden, so any other action sends null and false; blank guidance counts as skipped."""
+    broaden = action == "broaden"
+    return {"action": action, "guidance": (guidance or "").strip() or None if broaden else None, "whole_country": whole_country and broaden}
 
 
 def render_pause(pause: Pause) -> str:

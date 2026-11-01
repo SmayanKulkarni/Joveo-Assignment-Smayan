@@ -230,7 +230,12 @@ def prompt(pause) -> dict:
             return _ask_plan_review(pause.payload.plan)
         case "low_data_review":
             action = _choose(LOW_DATA_CHOICES)
-            return low_data_answer(action, input("Guidance for the broaden (Enter to skip): ") if action == "broaden" else None)
+            if action != "broaden":
+                return low_data_answer(action, None)
+            guidance = input("Guidance for the broaden (Enter to skip): ")
+            # Only offered when there is a place to drop; this is the one way to leave it.
+            wider = pause.payload.plans[-1].location.strip() != "" and input("Search the whole country? [y/N]: ").strip().lower() == "y"
+            return low_data_answer(action, guidance, wider)
 
 
 def _ago(moment: datetime) -> str:

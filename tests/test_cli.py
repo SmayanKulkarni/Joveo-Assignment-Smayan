@@ -223,14 +223,14 @@ def test_low_data_answers_send_guidance_only_on_broaden_and_leave_it_null_when_s
         count=3, target=20, attempts=2, plans=[plan(), plan(radius_km=60)], fetched=9, rejected=6, calls_left=4, blocked="Adzuna is down",
     ))
     for replies, expected in [
-        (("b", "try BI roles"), {"action": "broaden", "guidance": "try BI roles"}),
-        (("b", ""), {"action": "broaden", "guidance": None}),
-        (("c",), {"action": "continue", "guidance": None}),
+        (("b", "try BI roles", ""), {"action": "broaden", "guidance": "try BI roles", "whole_country": False}),
+        (("b", "", "y"), {"action": "broaden", "guidance": None, "whole_country": True}),
+        (("c",), {"action": "continue", "guidance": None, "whole_country": False}),
     ]:
         type_replies(monkeypatch, *replies)
         assert cli.prompt(pause) == expected
     # The Streamlit form builds its answer with the same helper.
-    assert low_data_answer("abort", "ignored") == {"action": "abort", "guidance": None}
+    assert low_data_answer("abort", "ignored", True) == {"action": "abort", "guidance": None, "whole_country": False}
 
 
 def test_the_low_data_pause_shows_counts_every_plan_and_the_block_reason():

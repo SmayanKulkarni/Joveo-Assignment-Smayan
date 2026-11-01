@@ -42,3 +42,9 @@ test("each status places the cursor", () => {
   expect(fromLog(detail("running", { live_from: 0 })).ending).toBeNull()
   expect(fromLog(detail("done", { live_from: 3 })).ending).toBeNull()
 })
+
+test("only result lines become a turn's results, and a log with none still opens", () => {
+  const run_log = [line("plan"), { node: "collect", kind: "result", message: "Found 80 postings" }, line("relevance", "51 of 80 (route: analyse)")]
+  expect(fromLog(detail("running", { run_log })).turns.map((t) => t.results)).toEqual([[], [], ["Found 80 postings"]])
+  expect(fromLog(detail("done", { run_log: [line("plan"), line("collect")] })).turns.every((t) => t.results.length === 0)).toBe(true)
+})

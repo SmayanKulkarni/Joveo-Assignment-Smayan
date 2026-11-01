@@ -6,6 +6,7 @@ import { Refusals } from "./parts"
 import type { Refusal } from "./submit"
 
 const MAX_TITLES = 4
+const has = (titles: string[], title: string) => titles.some((t) => t.toLowerCase() === title.toLowerCase())
 const RADII = [5, 10, 25, 50, 100]
 const DAYS = [7, 14, 30, 60]
 
@@ -47,7 +48,7 @@ export function PlanEditor({ plan, countries, categories, busy, refusal, onUse, 
 
   const addTitle = () => {
     const title = draft.trim()
-    if (title && titles.length < MAX_TITLES && !titles.includes(title)) setTitles((all) => [...all, title])
+    if (title && titles.length < MAX_TITLES && !has(titles, title)) setTitles((all) => [...all, title])
     setDraft("")
   }
 
@@ -61,7 +62,7 @@ export function PlanEditor({ plan, countries, categories, busy, refusal, onUse, 
     event.preventDefault()
     const typed = draft.trim() // a title typed but not yet added still counts
     onUse({
-      titles: typed && !titles.includes(typed) ? [...titles, typed] : titles,
+      titles: typed && !has(titles, typed) ? [...titles, typed] : titles,
       country,
       location: location.trim(),
       radius_km: Number(radius),
@@ -87,7 +88,7 @@ export function PlanEditor({ plan, countries, categories, busy, refusal, onUse, 
       <div className="grid">
         <div className="span2">
           <label htmlFor="add-title">Job titles</label>
-          <div className="chips field" {...invalid("titles")}>
+          <div className="chips field">
             {titles.map((title, i) => (
               <span className="chip" key={title}>
                 {title}
@@ -109,6 +110,7 @@ export function PlanEditor({ plan, countries, categories, busy, refusal, onUse, 
               placeholder={titles.length >= MAX_TITLES ? `Up to ${MAX_TITLES} titles` : "Add a title, press Enter"}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={onKey}
+              {...invalid("titles")}
             />
           </div>
           {error("titles")}
