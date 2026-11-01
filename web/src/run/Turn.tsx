@@ -3,7 +3,6 @@ import { DUR, EASE, gsap, useAnimate, useMotion } from "../motion"
 import { streams } from "./reducer"
 import type { Texts, Turn as TurnData } from "./reducer"
 import { Bar } from "../trace/Bar"
-import { ToolCard } from "./ToolCard"
 
 // The only motion on prose: a stepped blink, gone as soon as the turn stops being live.
 function Caret() {
@@ -53,8 +52,6 @@ export const Turn = memo(function Turn({ turn, text, label, mode }: { turn: Turn
           {mode === "live" && streams(turn.node) && <Caret />}
         </p>
       )}
-      {turn.tools.map((tool, i) => <ToolCard key={i} tool={tool} />)}
-      {turn.pills.length > 0 && <p>{turn.pills.map((pill) => <span key={pill} className="pill">{pill}</span>)}</p>}
       {turn.progress && (
         <p className="progress">
           <Bar value={turn.progress.done} max={turn.progress.total} label="Batches read" className="mini" /> {turn.progress.done} of {turn.progress.total} batches

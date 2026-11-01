@@ -228,7 +228,8 @@ def make_tiers(settings: Settings) -> Tiers:
                 model=i,
                 api_key=settings.openrouter_api_key,
                 reasoning={"effort": effort},
-                openrouter_provider={"require_parameters": True},
+                # sort=price picks the cheapest host that still takes strict json_schema; the other hosts stay as fallbacks.
+                openrouter_provider={"require_parameters": True, "sort": "price"},
                 timeout=TIMEOUT_MS,
                 max_retries=0,  # our with_retry owns retries
             )

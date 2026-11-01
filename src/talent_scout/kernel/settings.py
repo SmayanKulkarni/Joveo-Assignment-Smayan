@@ -28,12 +28,12 @@ class Settings(BaseSettings):
 
     # NoDecode stops pydantic-settings parsing the .env value as JSON, so the comma list reaches the validator.
     llm_cheap: Annotated[list[str], NoDecode] = [
-        "deepseek/deepseek-v4.1-flash",
-        "minimax/minimax-m3.1-flash",
+        "deepseek/deepseek-v4-flash",
+        "z-ai/glm-5.3-flash",
     ]
     llm_strong: Annotated[list[str], NoDecode] = [
-        "deepseek/deepseek-v4.1-flash",
-        "minimax/minimax-m3.1-flash",
+        "deepseek/deepseek-v4-flash",
+        "z-ai/glm-5.3-flash",
     ]
     reasoning_cheap: str = "low"
     reasoning_strong: str = "medium"
@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     l2_fresh_days: int = 7
     runs_db: Path = Path(".cache/runs.sqlite")
     runs_dir: Path = Path("runs")
+    seed_dir: Path | None = None  # sample Runs to load on start; the Docker image sets it
     # Used when the user gives no place, or none the clarify loop could pin down.
     default_country: str = "us"
     demo: bool = False

@@ -71,7 +71,7 @@ function RunView({ id, detail, state, notice, streaming, answer, resume, stop }:
   return (
     <AnimateContext.Provider value={state.animate}>
     <div className="run">
-      <div className="column">
+      <div className={`column${ending?.kind === "done" ? " wide" : ""}`}>
         {meta && narrow && (
           <div className="trace-strip">
             <StageStrip trace={state.trace} graph={meta.graph} />

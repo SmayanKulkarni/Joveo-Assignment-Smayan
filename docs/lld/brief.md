@@ -472,7 +472,7 @@ The Analysis stage comes first, and is already built. Each step leaves one small
 6. `write_brief`, with fake chains. Test: zero makes no call, a bad reply passes on the feedback retry, bad output gives `rule_draft` and the Caveat, transient raises, and the stored draft is a plain `BriefDraft`. Then the full input order and formatted values, and a thin cap.
 7. `render` and `markdown.py`. Test: `_fill_gaps`, Evidence as a union, every Caveat kept and in order, the banner only on replay, a zero-Posting Brief, a stripped `|`, a non-http link left out, the totals line, and two renders giving identical bytes.
 8. Pass-through `critic` and `after_critic`. A graph test with other stages stubbed reaches `done` with `brief.json` and `brief.md`.
-9. Live smoke, `scripts/smoke_brief.py` (not in CI, spends no job API calls): fixture Postings through Analysis then the writer with `minimax/minimax-m3.1-flash`, printing the Brief, the outlook and how often the checks retried. Run 5 times.
+9. Live smoke, `scripts/smoke_brief.py` (not in CI, spends no job API calls): fixture Postings through Analysis then the writer with `z-ai/glm-5.3-flash`, printing the Brief, the outlook and how often the checks retried. Run 5 times.
 
 **Pass 2:**
 1. `focus`: the input line, the sort and the Run Notes line.

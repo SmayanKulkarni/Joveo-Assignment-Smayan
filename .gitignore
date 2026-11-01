@@ -8,3 +8,6 @@ graphify-out/
 runs/
 web/node_modules/
 web/dist/
+!seed/seed.sqlite
+docs/Talent_Market_Scout_Study_Guide.pdf
+docs/study-guide/

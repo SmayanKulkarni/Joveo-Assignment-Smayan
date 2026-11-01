@@ -28,6 +28,7 @@ from talent_scout.runtime.graph import build_graph
 from talent_scout.runtime.guard import RunLocked, take_lock
 from talent_scout.runtime.pause import ALLOWED_MSGPACK, ANSWERS, Pause
 from talent_scout.runtime.registry import RESUMABLE, Registry, RunRecord, RunStatus, derive_status
+from talent_scout.runtime.seed import seed_runs
 from talent_scout.runtime.testing import fake_deps
 
 logger = logging.getLogger(__name__)
@@ -185,6 +186,7 @@ class RunController:
             ):
                 registry = Registry(registry_conn)
                 await registry.setup()
+                seed_runs(settings)
                 store = AsyncSqliteStore(store_conn)
                 await _setup_with_retry(store)
                 controller = cls(settings, build_graph(deps, saver, store), registry)

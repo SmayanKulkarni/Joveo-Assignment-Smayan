@@ -112,7 +112,7 @@ class SearchPlan(BaseModel):             # replaced whole, never patched
     locations: list[str]                 # [] = country-wide; an old `location` is migrated on load
     radius_km: int                       # 0-100
     max_days_old: int                    # 1-60; also the soft-expiry window
-    target_postings: int                 # 20-200; the Sufficiency target
+    target_postings: int                 # 20-600; the Sufficiency target
     category: str | None                 # in ADZUNA_CATEGORIES
 
 class Dimension(StrEnum): demand, compensation, skills, competition, titles_seniority
@@ -367,7 +367,7 @@ class LLMExhausted(Exception): tier, name, attempts, bad_output   # chained to t
 
 - **Two entry points, async only.** `structured` serves intake, plan, extraction, brief writing and Jev's LLM fallback. `chat` exists only for `fetch_agent`, which needs tools and its own message history; tools are bound to each model *before* the chain is built, because a fallback wrapper has no `bind_tools`. Stages own every prompt.
 - **Prompt prefix by signature.** `structured` takes its fixed `system` text when built, and its input is only the variable user content, so stable instructions and schema always come first (HLD §5). No Claude `cache_control` (future-scope).
-- **Models, testing phase.** Both tiers run `deepseek/deepseek-v4.1-flash` ($0.045/$0.50 per M) → `minimax/minimax-m3.1-flash` ($0.15/$0.60): two providers, 1M context, both verified live with strict `json_schema` under `provider.require_parameters: true`. The tier names stay in code, so `LLM_CHEAP` / `LLM_STRONG` in `.env` restore the research picks (future-scope).
+- **Models, testing phase.** Both tiers run `deepseek/deepseek-v4-flash` ($0.04/$0.08 per M on StreamLake, the cheapest host that takes strict `json_schema`, picked by `provider.sort: "price"`; list price is $0.091/$0.182, and `v4.1-flash` has the cheaper input but a pricier output, and reasoning tokens bill as output) → `z-ai/glm-5.3-flash` ($0.03/$0.16 per M on OpenInference, the cheapest host with strict `json_schema`; MiniMax was dropped as too dear): two providers, 1M context, both verified live with strict `json_schema` under `provider.require_parameters: true`. The tier names stay in code, so `LLM_CHEAP` / `LLM_STRONG` in `.env` restore the research picks (future-scope).
 - **Reasoning and output room.** Every call sends `reasoning: {effort}`, `low` for cheap and `medium` for strong. Live, DeepSeek at default effort spent 178 of 200 output tokens reasoning on a 3-field extraction, and MiniMax rejects `reasoning.enabled: false`. `max_tokens` defaults to 2,048 (cheap) and 8,192 (strong), overridable per call, never below 1,000. It is a ceiling, not a charge: about $0.02 per heavy Run at low effort, about $0.12 if every call used 1,000 output tokens.
 - **Structured call, parsed by us.** The model is bound to a strict `json_schema` response format built from the schema with `convert_to_openai_tool(schema, strict=True)`, and the factory validates the raw content with `schema.model_validate_json`. `with_structured_output`'s parser is not used, because in json_schema mode it raises inside the call and loses the raw output the retry needs. Schemas follow the LLM-schema policy in §3.
 - **Validation retry.** On a `ValidationError`, resend the same prompt plus the bad output as an `AIMessage` and a `HumanMessage` with the Pydantic error text and "return corrected JSON". One feedback retry per model, so at most 4 attempts over the 2-model chain. A reply with `finish_reason=length` skips the retry and goes to the next model, because a rerun would pay the full token limit again.
@@ -387,7 +387,7 @@ One `Settings(BaseSettings)` (`pydantic-settings`) read from the root `.env`. `g
 |---|---|
 | `openrouter_api_key`, `adzuna_app_id`, `adzuna_app_key`, `usajobs_api_key`, `usajobs_user_agent`, `langsmith_api_key` | required from `.env` (`adzuna_app_key` is read from `ADZUNA_API_KEY`) |
 | `langsmith_tracing`, `langsmith_project` | from `.env`; exported with `langsmith_api_key` |
-| `llm_cheap`, `llm_strong` (comma list in `.env`) | `deepseek/deepseek-v4.1-flash,minimax/minimax-m3.1-flash` |
+| `llm_cheap`, `llm_strong` (comma list in `.env`) | `deepseek/deepseek-v4-flash,z-ai/glm-5.3-flash` |
 | `reasoning_cheap`, `reasoning_strong` | `low`, `medium` |
 | `max_tokens_cheap`, `max_tokens_strong` (each ≥ 1,000) | 2,048, 8,192 |
 | `llm_concurrency`, `jev_concurrency` | 20, 64 |
@@ -419,7 +419,7 @@ Every external call is injected through a constructor, so tests swap fakes witho
 | Jev | `make_jev(settings)` | `Jev(fake_classifier({...}), cuts)` |
 | Jobs APIs | `make_gateway(settings)` | `make_gateway(settings, transport=httpx.MockTransport(...))` for Gateway tests, `FakeGateway(results)` for stage tests ([Gateway LLD](gateway.md) §15) |
 
-Live smoke tests use `minimax/minimax-m3.1-flash` and spend cents.
+Live smoke tests use `z-ai/glm-5.3-flash` and spend cents.
 
 ## 16. Build checklist (walking skeleton, pass 1)
 

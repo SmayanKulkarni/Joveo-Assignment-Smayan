@@ -11,7 +11,7 @@ function Form({ pause, send }: { pause: Pause; send: Send }) {
     case "clarify":
       return <ClarifyForm questions={pause.payload.questions} send={send} />
     case "plan_review":
-      return <PlanReviewForm plan={pause.payload.plan} assumptions={pause.payload.assumptions} callsLeft={pause.payload.calls_left} send={send} />
+      return <PlanReviewForm plan={pause.payload.plan} assumptions={pause.payload.assumptions} send={send} />
     case "low_data_review":
       return <LowDataForm payload={pause.payload} send={send} />
   }

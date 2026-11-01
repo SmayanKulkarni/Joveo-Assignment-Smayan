@@ -4,7 +4,7 @@ import { useMeta } from "../api/useMeta"
 import { Cited } from "./Evidence"
 import type { Ctx } from "./Evidence"
 
-const FIRST = 3
+const FIRST = 6
 const RANK: Confidence[] = ["high", "medium", "low"]
 // A word and a meter each, so nothing rests on colour.
 const METER: Record<Confidence, string> = { high: "●●●", medium: "●●○", low: "●○○" }
@@ -28,11 +28,11 @@ export function Insights({ insights, ctx }: { insights: Brief["insights"]; ctx: 
               <li key={i}>
                 <span className={`pill ${insight.confidence}`}>
                   <span aria-hidden>{METER[insight.confidence]} </span>
-                  {insight.confidence[0].toUpperCase() + insight.confidence.slice(1)}
-                </span>{" "}
-                {insight.text}
+                  {insight.confidence[0].toUpperCase() + insight.confidence.slice(1)} confidence
+                </span>
+                <p>{insight.text}</p>
                 <details className="why">
-                  <summary>Why</summary>
+                  <summary>Why this rating</summary>
                   <p>{insight.confidence_reason}</p>
                   <Cited cited={insight} ctx={ctx} />
                 </details>

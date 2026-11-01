@@ -77,7 +77,7 @@ def test_market_stats_reject_duplicate_ids():
         {"country": "USA"}, {"country": "US"}, {"country": "jp"},
         {"radius_km": -1}, {"radius_km": 101},
         {"max_days_old": 0}, {"max_days_old": 61},
-        {"target_postings": 19}, {"target_postings": 201},
+        {"target_postings": 19}, {"target_postings": 601},
         {"category": "basket-weaving-jobs"},
     ],
 )
@@ -87,7 +87,7 @@ def test_search_plan_rejects(bad):
 
 
 @pytest.mark.parametrize(
-    "edge", [{"titles": list("abcdefgh")}, {"radius_km": 100}, {"max_days_old": 60}, {"target_postings": 200}, {"category": "it-jobs"}]
+    "edge", [{"titles": list("abcdefgh")}, {"radius_km": 100}, {"max_days_old": 60}, {"target_postings": 600}, {"category": "it-jobs"}]
 )
 def test_search_plan_accepts_the_limits(edge):
     plan(**edge)

@@ -48,7 +48,7 @@ function Pay({ pay, ctx }: { pay: NonNullable<Glance["pay"]>; ctx: Ctx }) {
   const at = (v: number) => `${(v / (pay.high * 1.15)) * 100}%`
   return (
     <section className="tile">
-      <h3>Pay, middle 50%</h3>
+      <h3>Typical pay</h3>
       <div className="range" aria-hidden>
         <div className="line" />
         <div className="box" style={{ left: at(pay.low), width: `calc(${at(pay.high)} - ${at(pay.low)})` }} />
@@ -57,7 +57,7 @@ function Pay({ pay, ctx }: { pay: NonNullable<Glance["pay"]>; ctx: Ctx }) {
         <span style={{ left: at(pay.high), top: 28, transform: "translateX(-100%)" }}>{money(pay.high)}</span>
       </div>
       <p className="muted">
-        Median {money(pay.median)} {pay.unit}, from {pay.postings} postings. The dark line marks the median.
+        Half of the {pay.postings} postings that list pay fall inside the green bar. The dark line is the midpoint, {money(pay.median)} {pay.unit}.
       </p>
       <Evidence evidence={pay.evidence} statIds={pay.stat_ids} stats={ctx.stats} sample={ctx.sample} />
     </section>

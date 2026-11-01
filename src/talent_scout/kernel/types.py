@@ -135,7 +135,7 @@ class SearchPlan(Model):
     locations: list[str] = Field(description="Bare place names to search around, one centre per metro; empty for country-wide.")
     radius_km: int = Field(ge=0, le=100, description="Search radius around the location, in kilometres.")
     max_days_old: int = Field(ge=1, le=60, description="Ignore postings older than this many days.")
-    target_postings: int = Field(ge=20, le=200, description="How many relevant postings are enough for analysis.")
+    target_postings: int = Field(ge=20, le=600, description="How many relevant postings are enough for analysis.")
     category: str | None = Field(description="Source job category to narrow the search; null for none.")
 
     _known_country = field_validator("country")(check_country)

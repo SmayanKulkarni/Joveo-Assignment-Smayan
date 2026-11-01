@@ -42,7 +42,7 @@ async def run_case(deps: Deps, request: str) -> State:
 
 async def main():
     # Both tiers pinned to one model so the spend stays at cents; pass a model id to check another chain model.
-    model = [sys.argv[1] if len(sys.argv) > 1 else "minimax/minimax-m3.1-flash"]
+    model = [sys.argv[1] if len(sys.argv) > 1 else "z-ai/glm-5.3-flash"]
     settings = get_settings().model_copy(update={"llm_cheap": model, "llm_strong": model})
     tiers = make_tiers(settings)
     deps = Deps(tiers, make_jev(settings, tiers), FakeGateway([]), settings)

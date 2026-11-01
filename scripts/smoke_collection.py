@@ -25,7 +25,7 @@ REQUEST = "Data Analyst, Bangalore"
 
 async def main():
     # Both tiers pinned to one model so the spend stays at cents; replay off so Adzuna is really called.
-    model = [sys.argv[1] if len(sys.argv) > 1 else "minimax/minimax-m3.1-flash"]
+    model = [sys.argv[1] if len(sys.argv) > 1 else "z-ai/glm-5.3-flash"]
     settings = get_settings().model_copy(update={"llm_cheap": model, "llm_strong": model, "replay_cache": None})
     tiers = make_tiers(settings)
     async with make_gateway(settings) as gateway:

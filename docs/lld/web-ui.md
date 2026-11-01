@@ -404,7 +404,7 @@ Every card posts `{answer: <payload>}` to `resume`. `PlanReviewAnswer` has no de
 | `country` | Select from `/meta` `countries`, showing names |
 | `locations` | Chips with an add box; none means country-wide |
 | `radius_km`, `max_days_old` | Selects, 5, 10, 25, 50, 100 km and 7, 14, 30, 60 days, adding the plan's value if it isn't a preset. Radius is disabled with no place |
-| `target_postings` | Number input, 20 to 200 |
+| `target_postings` | Number input, 20 to 600 |
 | `category` | Select from `/meta` `categories` showing labels, plus "Any" (null) |
 
 Short fields share a 4-column grid, two on a phone. HTML limits only help, and the server stays the check. "Use this plan" submits.

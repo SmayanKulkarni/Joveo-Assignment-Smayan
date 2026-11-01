@@ -11,22 +11,18 @@ export function LowDataForm({ payload, send }: { payload: Payload; send: Send })
   const [guidance, setGuidance] = useState("")
   const [wholeCountry, setWholeCountry] = useState(false)
   const { busy, refusal, submit } = useSubmit(send)
-  const { count, target, fetched, rejected, attempts, blocked, calls_left, plans } = payload
+  const { count, target, blocked, plans } = payload
   const hasPlace = plans[plans.length - 1].locations.length > 0
 
   return (
     <section className="card">
-      <h2>Too few Postings</h2>
+      <h2>Only a few matching postings</h2>
       <p>
-        Only {plural(count, "relevant Posting")} found; the target is {target}.
-      </p>
-      <p>
-        Fetched {fetched}, rejected {rejected} as not the role, over {plural(attempts, "Attempt")}.
+        We found {plural(count, "relevant posting")} and were aiming for {target}. A small sample is a rougher guide.
       </p>
       {blocked && <p className="refusal">{blocked}</p>}
-      {calls_left !== null && <p>Adzuna calls left: {calls_left}</p>}
       <details>
-        <summary>Plans tried ({plans.length})</summary>
+        <summary>Searches already tried ({plans.length})</summary>
         <ol>
           {plans.map((plan, i) => (
             <li key={i}>{planLine(plan)}</li>

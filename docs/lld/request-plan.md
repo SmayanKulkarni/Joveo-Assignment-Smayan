@@ -168,7 +168,7 @@ async def clarify(state):
 | `country` | in `ADZUNA_CURRENCY` | `Fetch` rejects anything else |
 | `radius_km` | 0–100 | A wider radius stops being one market |
 | `max_days_old` | 1–60 | USAJOBS's `DatePosted` caps at 60 |
-| `target_postings` | 20–200 | Below 20, a Stat means little. Above 200, Sufficiency can force a broaden on a healthy market. |
+| `target_postings` | 20–600 | Below 20, a Stat means little. Above 600, Sufficiency can force a broaden on a healthy market, and the fetch budget (6 pages of 50 per Attempt) could not reach it anyway. |
 | `category` | in `ADZUNA_CATEGORIES`, or null | A tag the source doesn't know would silently find nothing |
 
 These sit on `SearchPlan` itself, so the LLM's output, a user's edit and Collection's `broaden` all pass the same checks. A violation from the LLM is fed back on the retry (Kernel §12). A violation in an edit is `InvalidAnswer`, which re-prompts.

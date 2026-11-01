@@ -1,0 +1,1415 @@
+{
+  "hiring_request": {
+    "role": "Data Analyst",
+    "location": "Mumbai, Thane and Navi Mumbai",
+    "country": "in",
+    "seniority": null,
+    "employment_type": null,
+    "work_mode": null,
+    "currency": null,
+    "purpose": null
+  },
+  "replayed": false,
+  "summary": "The Mumbai, Thane and Navi Mumbai market is competitive, with 26 postings from the last 30 days out of 27 sampled. The sample is below the target of 100.",
+  "summary_stat_ids": [
+    "demand.posted_30d",
+    "demand.sample_size"
+  ],
+  "insights": [
+    {
+      "text": "Recent sample activity includes 11 postings from the last 7 days and 26 from the last 30 days.",
+      "dimension": "demand",
+      "stat_ids": [
+        "demand.posted_7d",
+        "demand.posted_30d"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5912386667",
+          "adzuna:5916868574",
+          "adzuna:5920509399",
+          "adzuna:5922943471",
+          "adzuna:5925610431",
+          "adzuna:5935215355",
+          "adzuna:5935551683",
+          "adzuna:5935552918",
+          "adzuna:5936315842",
+          "adzuna:5936318961",
+          "adzuna:5938158034",
+          "adzuna:5938158160",
+          "adzuna:5939116355",
+          "adzuna:5939456581",
+          "adzuna:5941322944",
+          "adzuna:5944176929",
+          "adzuna:5945165163",
+          "adzuna:5945381878",
+          "adzuna:5945887172",
+          "adzuna:5946609800",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688",
+          "adzuna:5947075088",
+          "adzuna:5947748150",
+          "adzuna:5948170641"
+        ]
+      },
+      "confidence": "medium",
+      "confidence_reason": "Medium: weakest cited Stat has 11 Postings from 7 employers"
+    },
+    {
+      "text": "Rising trend: 21 postings in the newest 14 days versus 5 in the prior 14; live ads may skew counts.",
+      "dimension": "demand",
+      "stat_ids": [
+        "demand.trend"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5912386667",
+          "adzuna:5916868574",
+          "adzuna:5920509399",
+          "adzuna:5922943471",
+          "adzuna:5925610431",
+          "adzuna:5935215355",
+          "adzuna:5935551683",
+          "adzuna:5935552918",
+          "adzuna:5936315842",
+          "adzuna:5936318961",
+          "adzuna:5938158034",
+          "adzuna:5938158160",
+          "adzuna:5939116355",
+          "adzuna:5939456581",
+          "adzuna:5941322944",
+          "adzuna:5944176929",
+          "adzuna:5945165163",
+          "adzuna:5945381878",
+          "adzuna:5945887172",
+          "adzuna:5946609800",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688",
+          "adzuna:5947075088",
+          "adzuna:5947748150",
+          "adzuna:5948170641"
+        ]
+      },
+      "confidence": "medium",
+      "confidence_reason": "Medium: weakest cited Stat has 26 Postings from 18 employers"
+    },
+    {
+      "text": "In a small sample, Citigroup has 4 postings, ahead of Experian and IDFC FIRST Bank with 3 each.",
+      "dimension": "competition",
+      "stat_ids": [
+        "competition.employer.citigroup",
+        "competition.employer.experian",
+        "competition.employer.idfc-first-bank"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5912386667",
+          "adzuna:5925610431",
+          "adzuna:5936315842",
+          "adzuna:5939116355",
+          "adzuna:5945381878",
+          "adzuna:5946609800",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688",
+          "adzuna:5947748150"
+        ]
+      },
+      "confidence": "low",
+      "confidence_reason": "Low: weakest cited Stat has 3 Postings from 1 employer"
+    },
+    {
+      "text": "Direct employers account for 96.3% of postings, while staffing agencies account for 3.7%.",
+      "dimension": "competition",
+      "stat_ids": [
+        "competition.direct_share",
+        "competition.agency_share"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5907834264",
+          "adzuna:5912386667",
+          "adzuna:5916868574",
+          "adzuna:5920509399",
+          "adzuna:5922943471",
+          "adzuna:5925610431",
+          "adzuna:5935215355",
+          "adzuna:5935551683",
+          "adzuna:5935552918",
+          "adzuna:5936315842",
+          "adzuna:5936318961",
+          "adzuna:5938158034",
+          "adzuna:5938158160",
+          "adzuna:5939116355",
+          "adzuna:5939456581",
+          "adzuna:5941322944",
+          "adzuna:5944176929",
+          "adzuna:5945165163",
+          "adzuna:5945381878",
+          "adzuna:5945887172",
+          "adzuna:5946609800",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688",
+          "adzuna:5947075088",
+          "adzuna:5947748150",
+          "adzuna:5948170641"
+        ]
+      },
+      "confidence": "low",
+      "confidence_reason": "Low: weakest cited Stat has 1 Posting from 1 employer"
+    },
+    {
+      "text": "Senior-level postings represent 22.2% of extracted postings, but 63.0% have unknown level.",
+      "dimension": "titles_seniority",
+      "stat_ids": [
+        "seniority.senior",
+        "seniority.unknown"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5907834264",
+          "adzuna:5912386667",
+          "adzuna:5916868574",
+          "adzuna:5920509399",
+          "adzuna:5922943471",
+          "adzuna:5925610431",
+          "adzuna:5935215355",
+          "adzuna:5935551683",
+          "adzuna:5935552918",
+          "adzuna:5936318961",
+          "adzuna:5938158160",
+          "adzuna:5939116355",
+          "adzuna:5941322944",
+          "adzuna:5944176929",
+          "adzuna:5945165163",
+          "adzuna:5945381878",
+          "adzuna:5946609800",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688",
+          "adzuna:5947075088",
+          "adzuna:5947748150",
+          "adzuna:5948170641"
+        ]
+      },
+      "confidence": "low",
+      "confidence_reason": "Low: weakest cited Stat has 6 Postings from 5 employers"
+    },
+    {
+      "text": "Advanced analytics appears in 11 postings from 8 employers and is required in 1 posting; snippets undercount skills.",
+      "dimension": "skills",
+      "stat_ids": [
+        "skills.advanced-analytics.count",
+        "skills.advanced-analytics.must"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5907834264",
+          "adzuna:5916868574",
+          "adzuna:5935215355",
+          "adzuna:5935551683",
+          "adzuna:5935552918",
+          "adzuna:5936318961",
+          "adzuna:5939456581",
+          "adzuna:5941322944",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688"
+        ]
+      },
+      "confidence": "low",
+      "confidence_reason": "Low: weakest cited Stat has 1 Posting from 1 employer; skills come from snippets"
+    },
+    {
+      "text": "Data governance appears in 8 postings from 6 employers; machine learning appears in 6 from 3.",
+      "dimension": "skills",
+      "stat_ids": [
+        "skills.data-governance.count",
+        "skills.machine-learning.count"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5912386667",
+          "adzuna:5925610431",
+          "adzuna:5935551683",
+          "adzuna:5935552918",
+          "adzuna:5936318961",
+          "adzuna:5938158160",
+          "adzuna:5939456581",
+          "adzuna:5944176929",
+          "adzuna:5945165163",
+          "adzuna:5945381878",
+          "adzuna:5946609800",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688"
+        ]
+      },
+      "confidence": "low",
+      "confidence_reason": "Low: weakest cited Stat has 6 Postings from 3 employers; skills come from snippets"
+    },
+    {
+      "text": "Advertised pay covers 7.4% of postings; no Adzuna-estimated pay appears, and no pay group has 5 salaries.",
+      "dimension": "compensation",
+      "stat_ids": [
+        "comp.disclosed_share",
+        "comp.estimated_share"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5907834264",
+          "adzuna:5912386667",
+          "adzuna:5916868574",
+          "adzuna:5920509399",
+          "adzuna:5922943471",
+          "adzuna:5925610431",
+          "adzuna:5935215355",
+          "adzuna:5935551683",
+          "adzuna:5935552918",
+          "adzuna:5936315842",
+          "adzuna:5936318961",
+          "adzuna:5938158034",
+          "adzuna:5938158160",
+          "adzuna:5939116355",
+          "adzuna:5939456581",
+          "adzuna:5941322944",
+          "adzuna:5944176929",
+          "adzuna:5945165163",
+          "adzuna:5945381878",
+          "adzuna:5945887172",
+          "adzuna:5946609800",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688",
+          "adzuna:5947075088",
+          "adzuna:5947748150",
+          "adzuna:5948170641"
+        ]
+      },
+      "confidence": "medium",
+      "confidence_reason": "Medium: weakest cited Stat has 27 Postings from 19 employers"
+    }
+  ],
+  "recommendations": {
+    "job_title": null,
+    "salary_band": null,
+    "top_skills": {
+      "reason": "Asked for by the most employers: advanced analytics (11 Postings), data governance (8 Postings), reporting (5 Postings), machine learning (6 Postings). Skills come from Adzuna snippets, so counts are partial.",
+      "stat_ids": [
+        "skills.advanced-analytics.count",
+        "skills.data-governance.count",
+        "skills.reporting.count",
+        "skills.machine-learning.count"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5907834264",
+          "adzuna:5912386667",
+          "adzuna:5916868574",
+          "adzuna:5920509399",
+          "adzuna:5925610431",
+          "adzuna:5935215355",
+          "adzuna:5935551683",
+          "adzuna:5935552918",
+          "adzuna:5936318961",
+          "adzuna:5938158160",
+          "adzuna:5939456581",
+          "adzuna:5941322944",
+          "adzuna:5944176929",
+          "adzuna:5945165163",
+          "adzuna:5945381878",
+          "adzuna:5946609800",
+          "adzuna:5946960674",
+          "adzuna:5946960679",
+          "adzuna:5946960688",
+          "adzuna:5947075088"
+        ]
+      },
+      "skills": [
+        "advanced analytics",
+        "data governance",
+        "reporting",
+        "machine learning"
+      ]
+    }
+  },
+  "outlook": {
+    "rating": "competitive",
+    "reason": "19 employers across 27 Postings, with 26% of extracted Postings at senior level or above, a rising trend. Postings show demand, not candidates, so this is an estimate of the talent market.",
+    "stat_ids": [
+      "competition.distinct_employers",
+      "seniority.entry",
+      "seniority.lead",
+      "seniority.mid",
+      "seniority.senior",
+      "seniority.unknown",
+      "demand.trend"
+    ],
+    "evidence": {
+      "posting_keys": [
+        "adzuna:5907834264",
+        "adzuna:5912386667",
+        "adzuna:5916868574",
+        "adzuna:5920509399",
+        "adzuna:5922943471",
+        "adzuna:5925610431",
+        "adzuna:5935215355",
+        "adzuna:5935551683",
+        "adzuna:5935552918",
+        "adzuna:5936315842",
+        "adzuna:5936318961",
+        "adzuna:5938158034",
+        "adzuna:5938158160",
+        "adzuna:5939116355",
+        "adzuna:5939456581",
+        "adzuna:5941322944",
+        "adzuna:5944176929",
+        "adzuna:5945165163",
+        "adzuna:5945381878",
+        "adzuna:5945887172",
+        "adzuna:5946609800",
+        "adzuna:5946960674",
+        "adzuna:5946960679",
+        "adzuna:5946960688",
+        "adzuna:5947075088",
+        "adzuna:5947748150",
+        "adzuna:5948170641"
+      ]
+    }
+  },
+  "run_notes": {
+    "questions": [],
+    "assumptions": [],
+    "focus": [],
+    "final_plan": {
+      "titles": [
+        "Data Analyst",
+        "Business Data Analyst",
+        "Marketing Data Analyst",
+        "Junior Data Analyst"
+      ],
+      "country": "in",
+      "locations": [
+        "Mumbai"
+      ],
+      "radius_km": 50,
+      "max_days_old": 30,
+      "target_postings": 100,
+      "category": null
+    },
+    "earlier_plans": [],
+    "postings_analysed": {
+      "posting_keys": [
+        "adzuna:5907834264",
+        "adzuna:5912386667",
+        "adzuna:5916868574",
+        "adzuna:5920509399",
+        "adzuna:5922943471",
+        "adzuna:5925610431",
+        "adzuna:5935215355",
+        "adzuna:5935551683",
+        "adzuna:5935552918",
+        "adzuna:5936315842",
+        "adzuna:5936318961",
+        "adzuna:5938158034",
+        "adzuna:5938158160",
+        "adzuna:5939116355",
+        "adzuna:5939456581",
+        "adzuna:5941322944",
+        "adzuna:5944176929",
+        "adzuna:5945165163",
+        "adzuna:5945381878",
+        "adzuna:5945887172",
+        "adzuna:5946609800",
+        "adzuna:5946960674",
+        "adzuna:5946960679",
+        "adzuna:5946960688",
+        "adzuna:5947075088",
+        "adzuna:5947748150",
+        "adzuna:5948170641"
+      ]
+    },
+    "match_totals": [
+      "Adzuna reported about 25 matches for data analyst in mumbai. This is its own count, not a measure of demand.",
+      "Adzuna reported about 2 matches for business data analyst in mumbai. This is its own count, not a measure of demand.",
+      "Adzuna reported about 0 matches for marketing data analyst in mumbai. This is its own count, not a measure of demand.",
+      "Adzuna reported about 1 matches for junior data analyst in mumbai. This is its own count, not a measure of demand.",
+      "Adzuna reported about 4 matches for business intelligence analyst in mumbai. This is its own count, not a measure of demand."
+    ],
+    "caveats": [
+      "Too few Postings: 27 relevant of a target of 100",
+      "Skills from snippets: 27 Adzuna Postings give 500-character snippets, which undercount skills",
+      "Too little pay data: no pay group has 5 salaries",
+      "Pay period assumed: treated as annual for 2 advertised figures with no pay period"
+    ],
+    "attribution": "Jobs data provided by The Adzuna API"
+  },
+  "stats": {
+    "sample_size": 27,
+    "stats": [
+      {
+        "id": "demand.sample_size",
+        "dimension": "demand",
+        "label": "Postings in the Sample",
+        "value": 27.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "demand.posted_7d",
+        "dimension": "demand",
+        "label": "Postings from the last 7 days",
+        "value": 11.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "demand.posted_30d",
+        "dimension": "demand",
+        "label": "Postings from the last 30 days",
+        "value": 26.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "demand.median_age_days",
+        "dimension": "demand",
+        "label": "Median age of Postings in the Sample",
+        "value": 9.0,
+        "unit": "days",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "demand.trend",
+        "dimension": "demand",
+        "label": "Posting trend, newest 14 days (21 Postings) against the 14 before (5). Ads still live, which tilts recent because filled ads disappear.",
+        "value": "rising",
+        "unit": null,
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "comp.disclosed_share",
+        "dimension": "compensation",
+        "label": "Adzuna Postings with advertised pay: 7.4% (2 of 27)",
+        "value": 0.074,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "comp.estimated_share",
+        "dimension": "compensation",
+        "label": "Adzuna Postings with Adzuna-estimated pay: 0.0% (0 of 27)",
+        "value": 0.0,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "skills.advanced-analytics.count",
+        "dimension": "skills",
+        "label": "advanced analytics: 11 of 27 extracted Postings, from 8 employers",
+        "value": 11.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5916868574",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936318961",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688"
+          ]
+        }
+      },
+      {
+        "id": "skills.advanced-analytics.must",
+        "dimension": "skills",
+        "label": "advanced analytics: required in 1 of 27 extracted Postings",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5939456581"
+          ]
+        }
+      },
+      {
+        "id": "skills.data-governance.count",
+        "dimension": "skills",
+        "label": "data governance: 8 of 27 extracted Postings, from 6 employers",
+        "value": 8.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5912386667",
+            "adzuna:5925610431",
+            "adzuna:5938158160",
+            "adzuna:5939456581",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5946609800"
+          ]
+        }
+      },
+      {
+        "id": "skills.data-governance.must",
+        "dimension": "skills",
+        "label": "data governance: required in 1 of 27 extracted Postings",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5939456581"
+          ]
+        }
+      },
+      {
+        "id": "skills.reporting.count",
+        "dimension": "skills",
+        "label": "reporting: 5 of 27 extracted Postings, from 5 employers",
+        "value": 5.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5935551683",
+            "adzuna:5939456581",
+            "adzuna:5947075088"
+          ]
+        }
+      },
+      {
+        "id": "skills.reporting.must",
+        "dimension": "skills",
+        "label": "reporting: required in 1 of 27 extracted Postings",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5939456581"
+          ]
+        }
+      },
+      {
+        "id": "skills.machine-learning.count",
+        "dimension": "skills",
+        "label": "machine learning: 6 of 27 extracted Postings, from 3 employers",
+        "value": 6.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936318961",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688"
+          ]
+        }
+      },
+      {
+        "id": "skills.user-acceptance-testing.count",
+        "dimension": "skills",
+        "label": "user acceptance testing: 3 of 27 extracted Postings, from 2 employers",
+        "value": 3.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088"
+          ]
+        }
+      },
+      {
+        "id": "skills.risk-management.count",
+        "dimension": "skills",
+        "label": "risk management: 2 of 27 extracted Postings, from 2 employers",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946609800",
+            "adzuna:5946960674"
+          ]
+        }
+      },
+      {
+        "id": "skills.model-development.count",
+        "dimension": "skills",
+        "label": "model development: 3 of 27 extracted Postings, from 1 employer",
+        "value": 3.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688"
+          ]
+        }
+      },
+      {
+        "id": "skills.ai.count",
+        "dimension": "skills",
+        "label": "AI: 2 of 27 extracted Postings, from 1 employer",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935552918",
+            "adzuna:5936318961"
+          ]
+        }
+      },
+      {
+        "id": "skills.automation.count",
+        "dimension": "skills",
+        "label": "automation: 2 of 27 extracted Postings, from 1 employer",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935552918",
+            "adzuna:5936318961"
+          ]
+        }
+      },
+      {
+        "id": "skills.continuous-monitoring.count",
+        "dimension": "skills",
+        "label": "continuous monitoring: 2 of 27 extracted Postings, from 1 employer",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935552918",
+            "adzuna:5936318961"
+          ]
+        }
+      },
+      {
+        "id": "skills.nlp.count",
+        "dimension": "skills",
+        "label": "NLP: 2 of 27 extracted Postings, from 1 employer",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935552918",
+            "adzuna:5936318961"
+          ]
+        }
+      },
+      {
+        "id": "skills.productisation.count",
+        "dimension": "skills",
+        "label": "productisation: 2 of 27 extracted Postings, from 1 employer",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946960679",
+            "adzuna:5946960688"
+          ]
+        }
+      },
+      {
+        "id": "skills.prototyping.count",
+        "dimension": "skills",
+        "label": "prototyping: 2 of 27 extracted Postings, from 1 employer",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946960679",
+            "adzuna:5946960688"
+          ]
+        }
+      },
+      {
+        "id": "skills.3d-cameras.count",
+        "dimension": "skills",
+        "label": "3D cameras: 1 of 27 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5945887172"
+          ]
+        }
+      },
+      {
+        "id": "skills.advanced-computational-methods.count",
+        "dimension": "skills",
+        "label": "advanced computational methods: 1 of 27 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5939116355"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.citigroup",
+        "dimension": "competition",
+        "label": "Citigroup: 4 of 27 Postings in the Sample",
+        "value": 4.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5936315842",
+            "adzuna:5945381878",
+            "adzuna:5946609800",
+            "adzuna:5947748150"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.experian",
+        "dimension": "competition",
+        "label": "Experian: 3 of 27 Postings in the Sample",
+        "value": 3.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.idfc-first-bank",
+        "dimension": "competition",
+        "label": "IDFC FIRST Bank: 3 of 27 Postings in the Sample",
+        "value": 3.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5912386667",
+            "adzuna:5925610431",
+            "adzuna:5939116355"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.tiaa",
+        "dimension": "competition",
+        "label": "TIAA: 2 of 27 Postings in the Sample",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935552918",
+            "adzuna:5936318961"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.chemours",
+        "dimension": "competition",
+        "label": "Chemours: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5922943471"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.colgate-palmolive",
+        "dimension": "competition",
+        "label": "Colgate-Palmolive: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5944176929"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.colgate-palmolive-company",
+        "dimension": "competition",
+        "label": "Colgate-Palmolive Company: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5945165163"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.csb-bank",
+        "dimension": "competition",
+        "label": "CSB Bank: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935551683"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.delhi",
+        "dimension": "competition",
+        "label": "Delhi: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5938158034"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.foyforyou",
+        "dimension": "competition",
+        "label": "Foyforyou: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5916868574"
+          ]
+        }
+      },
+      {
+        "id": "competition.distinct_employers",
+        "dimension": "competition",
+        "label": "Distinct employers in the Sample",
+        "value": 19.0,
+        "unit": "employers",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "competition.direct_share",
+        "dimension": "competition",
+        "label": "Postings from direct employers: 96.3% (26 of 27 in the Sample)",
+        "value": 0.963,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "competition.agency_share",
+        "dimension": "competition",
+        "label": "Postings from staffing agencies: 3.7% (1 of 27 in the Sample)",
+        "value": 0.037,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935215355"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.risk-analyst-data-science-analytics",
+        "dimension": "titles_seniority",
+        "label": "Risk Analyst – Data Science & Analytics: 3 of 27 Postings in the Sample",
+        "value": 3.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.analyst-global-data-management",
+        "dimension": "titles_seniority",
+        "label": "Analyst, Global Data Management: 2 of 27 Postings in the Sample",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5944176929",
+            "adzuna:5945165163"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.internal-audit-data-analyst",
+        "dimension": "titles_seniority",
+        "label": "Internal Audit Data Analyst: 2 of 27 Postings in the Sample",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935552918",
+            "adzuna:5936318961"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.associate-business-intelligence-analyst",
+        "dimension": "titles_seniority",
+        "label": "Associate Business Intelligence Analyst: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5938158034"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.business-data-intermediate-analyst",
+        "dimension": "titles_seniority",
+        "label": "Business Data Intermediate Analyst: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5936315842"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.business-intelligence-analyst",
+        "dimension": "titles_seniority",
+        "label": "Business Intelligence Analyst: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5947748150"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.business-intelligence-analyst-data-engineering",
+        "dimension": "titles_seniority",
+        "label": "Business Intelligence Analyst -Data Engineering: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5941322944"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.commercial-data-transformation-analyst",
+        "dimension": "titles_seniority",
+        "label": "Commercial Data & Transformation Analyst: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5947075088"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.data-analyst-data-governance",
+        "dimension": "titles_seniority",
+        "label": "Data Analyst-Data Governance: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5912386667"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.data-analyst-operations-product-manager",
+        "dimension": "titles_seniority",
+        "label": "Data Analyst & Operations Product Manager: 1 of 27 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5916868574"
+          ]
+        }
+      },
+      {
+        "id": "titles.distinct",
+        "dimension": "titles_seniority",
+        "label": "Distinct titles in the Sample",
+        "value": 23.0,
+        "unit": "titles",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5912386667",
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5925610431",
+            "adzuna:5935215355",
+            "adzuna:5935551683",
+            "adzuna:5935552918",
+            "adzuna:5936315842",
+            "adzuna:5936318961",
+            "adzuna:5938158034",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5939456581",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5945887172",
+            "adzuna:5946609800",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "seniority.entry",
+        "dimension": "titles_seniority",
+        "label": "Share of extracted Postings at entry level: 7.4% (2 of 27)",
+        "value": 0.074,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5938158034",
+            "adzuna:5945887172"
+          ]
+        }
+      },
+      {
+        "id": "seniority.lead",
+        "dimension": "titles_seniority",
+        "label": "Share of extracted Postings at lead level: 3.7% (1 of 27)",
+        "value": 0.037,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5939456581"
+          ]
+        }
+      },
+      {
+        "id": "seniority.mid",
+        "dimension": "titles_seniority",
+        "label": "Share of extracted Postings at mid level: 3.7% (1 of 27)",
+        "value": 0.037,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5936315842"
+          ]
+        }
+      },
+      {
+        "id": "seniority.senior",
+        "dimension": "titles_seniority",
+        "label": "Share of extracted Postings at senior level: 22.2% (6 of 27)",
+        "value": 0.222,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5907834264",
+            "adzuna:5912386667",
+            "adzuna:5925610431",
+            "adzuna:5935551683",
+            "adzuna:5946609800",
+            "adzuna:5948170641"
+          ]
+        }
+      },
+      {
+        "id": "seniority.unknown",
+        "dimension": "titles_seniority",
+        "label": "Share of extracted Postings at unknown level: 63.0% (17 of 27)",
+        "value": 0.63,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5916868574",
+            "adzuna:5920509399",
+            "adzuna:5922943471",
+            "adzuna:5935215355",
+            "adzuna:5935552918",
+            "adzuna:5936318961",
+            "adzuna:5938158160",
+            "adzuna:5939116355",
+            "adzuna:5941322944",
+            "adzuna:5944176929",
+            "adzuna:5945165163",
+            "adzuna:5945381878",
+            "adzuna:5946960674",
+            "adzuna:5946960679",
+            "adzuna:5946960688",
+            "adzuna:5947075088",
+            "adzuna:5947748150"
+          ]
+        }
+      }
+    ]
+  }
+}

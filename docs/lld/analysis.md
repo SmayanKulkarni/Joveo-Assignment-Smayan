@@ -358,7 +358,7 @@ The Collection pass 1 comes first, since this stage needs `sample`, `fetches` an
 7. The rest of `stats.py`. Test: an alias and its canonical name in one Posting count once, skills rank by employers before Postings, a Booz-style split resolves by majority, a tie is `unknown`, Randstad is an agency with any model answer, USAJOBS is direct, the trend's minimums and thresholds, "now" comes from `fetched_at`, and two runs give identical Stats.
 8. Each Caveat in §10, with its trigger and non-trigger, and zero Postings giving an empty `MarketStats`.
 9. A graph test with a checkpointer and other stages stubbed: one Batch raising transiently stops the Run, `resume` reruns only that Batch, `normalise_skills` runs once, and every Stat's Evidence is within the Sample.
-10. Live smoke, `scripts/smoke_analysis.py` (not in CI, spends no job API calls): fixture Postings through `minimax/minimax-m3.1-flash`. It prints the top skills, every merge, and employer types, and asserts that `AWS` and `S3`, and `Git` and `GitLab`, stay apart when both appear.
+10. Live smoke, `scripts/smoke_analysis.py` (not in CI, spends no job API calls): fixture Postings through `z-ai/glm-5.3-flash`. It prints the top skills, every merge, and employer types, and asserts that `AWS` and `S3`, and `Git` and `GitLab`, stay apart when both appear.
 11. On the first live Run with real advertised Adzuna pay, check that its `unknown` period really is annual.
 
 ## 14. Excluded and deferred

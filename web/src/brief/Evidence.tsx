@@ -25,7 +25,7 @@ export function Evidence({ evidence, statIds, stats, sample, open }: Props) {
 
   return (
     <details className="evidence" open={open}>
-      <summary>Evidence: {plural(keys.length, "Posting")}</summary>
+      <summary>See the {plural(keys.length, "posting")} behind this</summary>
       {cited.length > 0 && (
         <ul>
           {cited.map((s) => (

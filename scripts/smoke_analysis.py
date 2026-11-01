@@ -82,7 +82,7 @@ def check_stay_apart(state: State) -> None:
 
 
 async def main():
-    model = sys.argv[1] if len(sys.argv) > 1 else "minimax/minimax-m3.1-flash"
+    model = sys.argv[1] if len(sys.argv) > 1 else "z-ai/glm-5.3-flash"
     state = await run_analysis(initial_state(), model)
 
     extracted = len(state.extractions)

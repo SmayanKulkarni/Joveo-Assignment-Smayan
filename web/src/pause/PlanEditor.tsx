@@ -170,7 +170,7 @@ export function PlanEditor({ plan, countries, categories, busy, refusal, onUse, 
         </label>
         <label>
           Target Postings
-          <input type="number" min={20} max={200} value={target} onChange={(e) => setTarget(e.target.value)} {...invalid("target_postings")} />
+          <input type="number" min={20} max={600} value={target} onChange={(e) => setTarget(e.target.value)} {...invalid("target_postings")} />
           {error("target_postings")}
         </label>
         <label className="span2">

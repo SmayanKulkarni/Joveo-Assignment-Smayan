@@ -74,7 +74,7 @@ export function BriefView({ id, brief, sample, glance }: Props) {
         </div>
       </div>
       <Tiles brief={brief} ctx={ctx} />
-      <div>
+      <div className="notes-row">
         {brief.replayed && <p className="notice">{REPLAY_BANNER}</p>}
         {/* The Weak Sample notice is one of these, so it never shows twice. */}
         {glance?.reader_notes.map((note) => (
@@ -86,12 +86,12 @@ export function BriefView({ id, brief, sample, glance }: Props) {
       </div>
       <section>
         <h2>Summary</h2>
-        <p>{brief.summary}</p>
+        <p className="lead">{brief.summary}</p>
       </section>
       {glance && <Charts glance={glance} ctx={ctx} />}
       <Insights insights={brief.insights} ctx={ctx} />
       <details className="researched">
-        <summary>How this was researched</summary>
+        <summary>How this was researched, and the postings we read</summary>
         <RunNotes notes={brief.run_notes} />
         <PostingsTable sample={sample} />
       </details>

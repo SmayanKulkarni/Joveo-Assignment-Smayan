@@ -1,4 +1,4 @@
-"""Live smoke test, not run in CI. Spends cents on minimax/minimax-m3.1-flash."""
+"""Live smoke test, not run in CI. Spends cents on z-ai/glm-5.3-flash."""
 import asyncio
 
 from langchain_core.messages import HumanMessage
@@ -26,7 +26,7 @@ def get_weather(city: str) -> str:
 async def main():
     s = get_settings()
     # Both tiers pinned to the cheap smoke model so the spend stays at cents.
-    s = s.model_copy(update={"llm_cheap": ["minimax/minimax-m3.1-flash"], "llm_strong": ["minimax/minimax-m3.1-flash"]})
+    s = s.model_copy(update={"llm_cheap": ["z-ai/glm-5.3-flash"], "llm_strong": ["z-ai/glm-5.3-flash"]})
     print("balance:", await check_balance(s))
     tiers = make_tiers(s)
     for tier in ("cheap", "strong"):
