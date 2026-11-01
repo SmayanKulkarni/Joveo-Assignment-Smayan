@@ -19,7 +19,7 @@ Runtime owns:
 - `RunEvent` and the mapping from stream chunks to it
 - the stub-node skeleton
 
-Clients own the CLI and a thin Streamlit page. Neither owns any state.
+Clients own the CLI and the browser UI ([Web UI LLD](web-ui.md)). Neither owns any state.
 
 They do **not** own:
 - node bodies, or each Pause's payload and answer fields (stage LLDs)
@@ -44,16 +44,15 @@ src/talent_scout/
     testing.py             # stub_nodes, STUB_ROUTERS, fake_deps
   clients/
     cli.py                 # argparse, `scout` entry point
-    pauses.py              # plain text of each Pause payload, shared by both clients
-    streamlit_app.py       # pass 2
-    streamlit_bridge.py    # pass 2
+    pauses.py              # plain text of each Pause payload, for the CLI
+    web.py                 # the web API, see the Web UI LLD
   request_plan/types.py    # stub payload and answer models at their final path
   collection/types.py      # same
 ```
 
 - **Import direction:** `runtime/graph.py` imports the stages' `make_nodes`. Stages import only `runtime/deps.py` and `runtime/pause.py`, which never import `graph.py`, so nothing loops. `runtime/pause.py` imports only stage `types.py` modules.
 - **Strict msgpack is set in the package `__init__.py`,** because it must be in the environment before langgraph is first imported, and any `talent_scout.*` import runs that file first.
-- **Dependencies:** `rich` in pass 1, `streamlit` in a `streamlit` dependency group in pass 2. `aiosqlite` is already there through `langgraph-checkpoint-sqlite`; pin it.
+- **Dependencies:** `rich` in pass 1, `fastapi` and `uvicorn` for the web UI. `aiosqlite` is already there through `langgraph-checkpoint-sqlite`; pin it.
 
 ## 3. Stage contract
 
@@ -172,9 +171,13 @@ class RunController:
     async def get_pause(self, thread_id: str) -> Pause | None: ...
     async def get_run(self, thread_id: str) -> RunView: ...
     async def list_runs(self, resumable_only: bool = False) -> list[RunRecord]: ...   # newest first
+    def attached(self, thread_id: str) -> "RunHandle | None": ...                     # the live handle in this process
+    def brief_paths(self, thread_id: str) -> list[Path]: ...
 
 class RunHandle:
     thread_id: str
+    log_start: int     # run_log length when this handle started; its buffer covers what comes after
+    buffered: int      # the buffer's length, for marking where a replay ends
     def events(self) -> AsyncIterator[RunEvent]: ...   # replays the buffer, then live
     async def wait(self) -> RunEvent: ...              # the terminal event
     async def cancel(self) -> Stopped: ...
@@ -193,6 +196,7 @@ class RunHandle:
 
 The Controller owns the graph task, so closing a subscription never cancels the Run. `astream` is consumed only inside that task.
 
+- **Re-attach:** `attached` returns a running Run's handle, and `events()` on it replays and goes live. A resumed Run has a new handle with a fresh buffer, so a client rebuilds what came before from `run_log[:log_start]`.
 - **Buffer:** one `deque(maxlen=5000)` per active Run in this process. Oldest events drop first, and the terminal event is always newest, so it stays. Nothing is persisted: a reloaded client rebuilds from `get_run` (`run_log`, pending Pause, status).
 - **Subscribers:** each `events()` call takes a snapshot of the buffer and registers its own `asyncio.Queue`, with no `await` between the two. `Token` and `Reasoning` go only to subscribers, never the buffer, because one `fetch_agent` turn could otherwise push out everything else.
 - **`cancel()`** cancels the task, writes `failed` with error `cancelled` (`aborted` if there is no checkpoint yet, since nothing could rerun), releases the lock, and returns the `Stopped` event.
@@ -320,7 +324,7 @@ def emit(event: dict) -> None:
 4. From pass 6, the Store: raw `AsyncSqliteStore` on `runs_db`, on its own connection with `isolation_level=None` and a 5 s busy timeout, and `setup()` under the saver's retry. It must be autocommit: on a default connection `setup()` leaves a transaction open, and the Store's next write fails.
 5. `build_graph` compiles once.
 
-The CLI opens one Controller per `asyncio.run`. Streamlit holds one on a background loop for the process lifetime.
+The CLI opens one Controller per `asyncio.run`. The web server holds one in its app lifespan for the process lifetime.
 
 ## 12. CLI (`clients/cli.py`)
 
@@ -386,17 +390,11 @@ while isinstance(outcome, Paused):
 
 The spinner stops on the first `Token` or `Reasoning` and restarts on the next `NodeStarted`, because raw text can't print under a `rich` live display.
 
-## 13. Streamlit (pass 2)
+## 13. Web UI
 
-Streamlit is thin and disposable: a simple web UI is future scope and will replace it. It gets no Controller changes and no event types of its own, and it renders a subset of what the CLI does.
+The browser client is designed in the [Web UI LLD](web-ui.md). It replaces the thin Streamlit page of pass 2, whose files are deleted in that LLD's last build pass. It adds no event types, and its Controller changes are the ones in §6: `attached`, `log_start`, `buffered` and a public `brief_paths`.
 
-- **Bridge (`streamlit_bridge.py`).** `st.cache_resource` holds a background thread running an event loop, with one `RunController` open on it. A sync wrapper calls it through `asyncio.run_coroutine_threadsafe`. A subscriber coroutine feeds a `queue.Queue` that the script reads.
-- **Pages.** The thread ID lives in `st.query_params["thread"]`.
-  - No ID: a request box, a focus multiselect, and a table of Runs linking to `?thread=<id>`.
-  - With an ID: render from `get_run`. `paused` shows its form, `failed` shows the error and a Resume button, `done` shows the Brief with JSON and Markdown downloads.
-- **Live view.** The handle sits in `st.session_state`. Node lines go in `st.status`, and from pass 3 tool and API lines too, with `st.progress` for extraction. Tokens and reasoning are ignored.
-- **Pauses.** One `st.form` per kind, with a JSON `text_area` for `edit`. `InvalidAnswer` shows `st.error` above the same form.
-- **Cut on purpose.** No re-attach, no Cancel button, no token placeholder. Reloading a running Run shows "Run in progress" with a Refresh button until it reaches a Pause or finishes. Closing the tab doesn't stop the Run, since the Controller owns the task.
+Its server holds one Controller for the process lifetime, so unlike the CLI, a client can close and re-attach without stopping a Run. A server exit still stops live Runs, leaving them `failed` and resumable.
 
 ## 14. Settings
 
@@ -406,6 +404,8 @@ Added to the Kernel's `Settings` (Kernel §13):
 |---|---|
 | `runs_db` (path) | `.cache/runs.sqlite`, separate from `gateway_db`; locks live in `locks/` beside it |
 | `runs_dir` (path) | `runs` |
+| `demo` | `False`: run the paced demo graph, for building the web UI with no LLM or jobs API |
+| `demo_delay` | `0.4` seconds per demo node |
 
 ## 15. Test seams and the skeleton proof
 
@@ -438,7 +438,7 @@ Each step leaves one small `pytest` file behind. No test calls an LLM or a jobs 
 
 **Pass 2:**
 1. `--focus` through to `State.focus`. Test: the value is in the checkpoint.
-2. Add the `streamlit` group, `streamlit_bridge.py`, `streamlit_app.py`. Check by hand through a stub Run: start, each Pause form, a bad answer, reload at a Pause, and download. No automated tests: the page is disposable.
+2. Add the `streamlit` group, `streamlit_bridge.py`, `streamlit_app.py`. Check by hand through a stub Run: start, each Pause form, a bad answer, reload at a Pause, and download. No automated tests: the page is disposable, and the [Web UI LLD](web-ui.md) replaces it.
 
 **Pass 3 (event stream):**
 1. `kernel/events.py`. Test: a no-op outside a graph, delivered inside one and through `owned()`.
@@ -455,4 +455,4 @@ Each step leaves one small `pytest` file behind. No test calls an LLM or a jobs 
   - **Analysis:** settled in the [Analysis LLD](analysis.md): `fan_out(state)` (§4), and the `normalise_skills` node it adds to the graph.
   - **Brief:** settled in the [Brief LLD](brief.md): `critic` pass-through until pass 5 (§10), and `done` still depends on `render` writing `brief`.
   - ⏳ **Long-term memory:** what the Store holds, and which nodes read it.
-  - ⏳ **Infra shell:** the API and workers wrap `RunController`. A worker owning the task is what would make a client detach possible.
+  - ⏳ **Infra shell:** queue, workers and multi-user wrap `RunController`. A worker owning the task is what would let a Run outlive the server process.

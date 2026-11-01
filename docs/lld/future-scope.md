@@ -75,12 +75,21 @@ Work deliberately left out of an LLD, with why and what would bring it back. One
 
 | Item | Why it's left out | Brings it back |
 |---|---|---|
-| A simple web UI replacing Streamlit | Streamlit is enough for now, and a real UI needs the Infra shell's API | The Infra shell phase; Streamlit is deleted then |
-| Streamlit re-attach, Cancel button and token display | The page is disposable, and re-attach would add a Controller method only it uses | The web UI needing them, built on its own API |
 | Persisted event history | `get_run` rebuilds what matters from `run_log`, the pending Pause and status | A client that must show tokens or tool lines after a reload |
 | Detaching a CLI from a live Run | The Controller lives in the CLI process and dies with it | Infra shell workers owning the task |
 | Partial-field display of structured output | Fragments stay provisional until the node finishes, and a drafting state reads fine | Wanting the Brief to appear as it's written |
 | Message IDs on `Token`, to clear an abandoned attempt | A retried `fetch_agent` turn is rare, and the cost is cosmetic | Retried text proving confusing in live use |
-| Friendly node labels | Raw names are clear enough for this audience | Showing the live view to clients |
 | Balance checks between nodes | A Run's spend is small next to the floor, and a mid-Run failure resumes cleanly | Costlier production tier models |
 | Deleting lock files | Empty files are harmless, and deleting one races a concurrent lock on Windows | A Run count that makes the directory a nuisance |
+
+## Web UI
+
+| Item | Why it's left out | Brings it back |
+|---|---|---|
+| Dark mode | A second palette needs its own contrast checks. Colours are all custom properties, so it stays cheap | A user asking for it |
+| Deleting, renaming or searching Runs | The Controller has no such methods, and read-only history is enough | A Run list long enough to need it |
+| A global event feed for the sidebar | Polling one small SQLite read is enough, and the Controller offers no such feed | Many tabs or Runs making the polling noticeable |
+| Tool call IDs on events | `tools` emits results in call order, so pairing by name is exact | Tools that return out of order |
+| Resuming a stream from an event ID | Events have no sequence number and tokens aren't buffered, so a reconnect rebuilds | A Run long enough to overflow the 5,000-event buffer |
+| Exposing answer models as JSON Schema | Three typed forms read better than generated ones | A Pause kind added often enough to justify a generic form |
+| Auth, remote access and a `--host` flag | One local user, and the server can spend quota, so it binds loopback only | The Infra shell's multi-user phase |

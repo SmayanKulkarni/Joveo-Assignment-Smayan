@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: trace graph</title>
+<!--
+  PROTOTYPE, throwaway. Question: how does the user-level trace graph show which step or tool the system is on, and what remains?
+  Real RunEvent shapes are replayed through one pure reducer (reduce) into a hand-written SVG animated by GSAP 3.15.0.
+  Topology below is a copy of runtime/graph.py as GET /graph would serve it; STEP_OF is the UI's label table.
+  Serve this folder over http (the GSAP files load from jsDelivr). Fake events only.
+-->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/DrawSVGPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/MotionPathPlugin.min.js"></script>
+<style>
+  :root { --bg:#f6f4ef; --panel:#fff; --ink:#1d1c1a; --muted:#6e6a62; --line:#e4e0d6; --accent:#2f5d50; --accent-soft:#e3eee9;
+          --warn:#b4540a; --warn-soft:#fbeedd; --bad:#a3262a; --bad-soft:#f9e4e4; --live:#1f6feb; --live-soft:#e5eefc; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); display:flex; flex-wrap:wrap; gap:24px; padding:20px; min-height:100vh; }
+  h3 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .ctl { width:330px; flex:none; display:flex; flex-direction:column; gap:12px; }
+  .box { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  button, select { font:inherit; padding:5px 11px; border:1px solid var(--line); border-radius:7px; background:#fff; cursor:pointer; }
+  button.pri { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:8px; }
+  #log { height:230px; overflow:auto; font:11px/1.5 ui-monospace,Consolas,monospace; color:#444; }
+  #log div { white-space:nowrap; } #log .k { color:var(--live); } #log .p { color:var(--warn); } #log .f { color:var(--bad); }
+  #json { font:11px/1.4 ui-monospace,Consolas,monospace; max-height:150px; overflow:auto; white-space:pre; color:#444; }
+  .stage { display:flex; flex-direction:column; gap:16px; }
+  .frame { width:316px; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+  .frame header { padding:12px 14px 10px; border-bottom:1px solid var(--line); }
+  .frame header b { display:block; font-size:13px; }
+  .bar { height:6px; border-radius:4px; background:var(--line); overflow:hidden; margin-top:8px; }
+  .bar i { display:block; height:100%; width:0; background:var(--accent); }
+  #scroller { height:640px; overflow-y:auto; padding:4px 0 12px; }
+  #svg text { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .strip { display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin-top:2px; }
+  .chip { font-size:12px; padding:2px 9px; border-radius:6px; border:1px solid var(--line); color:var(--muted); background:#fff; }
+  .chip.done { background:var(--accent-soft); color:var(--accent); border-color:transparent; } .chip.active { background:var(--live-soft); color:var(--live); border-color:var(--live); font-weight:600; }
+  .chip.waiting { background:var(--warn-soft); color:var(--warn); border-color:var(--warn); font-weight:600; } .chip.failed { background:var(--bad-soft); color:var(--bad); border-color:var(--bad); font-weight:600; }
+  .legend { display:flex; flex-wrap:wrap; gap:10px; font-size:11px; color:var(--muted); }
+  .legend i { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
+</style>
+</head>
+<body>
+<div class="ctl">
+  <div class="box"><h3>Scenario</h3>
+    <select id="scn" style="width:100%"></select>
+    <div class="row"><button class="pri" id="play">Play</button><button id="reset">Reset</button><button id="reload" title="Reconnect: replay the buffer instantly, then go on live">Reload tab mid-run</button></div>
+    <div class="row"><label><input type="checkbox" id="auto" checked> auto-answer Pauses</label><button id="answer" style="display:none">Answer Pause</button></div>
+    <div class="row"><label>Speed <select id="speed"><option value="1">1×</option><option value="3" selected>3×</option><option value="8">8×</option></select></label>
+      <label><input type="checkbox" id="rm"> reduced motion</label></div></div>
+  <div class="box"><h3>Events in</h3><div id="log"></div></div>
+  <div class="box"><h3>Reducer state</h3><div id="json"></div></div>
+  <div class="box legend"><span><i style="background:#cfcabd"></i>idle</span><span><i style="background:var(--live)"></i>active</span><span><i style="background:var(--accent)"></i>done</span><span><i style="background:var(--warn)"></i>waiting for you</span><span><i style="background:var(--bad)"></i>failed</span><span><i style="border:1px dashed #aaa"></i>optional / skipped</span></div>
+</div>
+
+<div class="stage">
+  <div class="frame"><header><b id="title">Trace</b><div class="muted" id="now" style="color:var(--muted)">Not started</div><div class="bar"><i id="fill"></i></div></header>
+    <div id="scroller"><svg id="svg" width="316" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+  <div class="frame"><header><b>Narrow layout (under ~900 px)</b><div class="strip" id="strip" style="margin-top:8px"></div><div id="now2" style="color:var(--muted);margin-top:6px">Not started</div><div class="bar"><i id="fill2"></i></div></header></div>
+</div>
+
+<script>
+// ===== topology as GET /graph would serve it (owner picks the band; array order is the band's order) =====
+const TOPOLOGY = {
+  nodes: [
+    ...['intake','clarity_check','clarify','plan','plan_review'].map(id => ({ id, owner: 'request_plan' })),
+    ...['fetch_agent','tools','collect','relevance','broaden','low_data_review'].map(id => ({ id, owner: 'collection' })),
+    ...['batch_extract','normalise_skills','stats'].map(id => ({ id, owner: 'analysis' })),
+    ...['write_brief','critic','render'].map(id => ({ id, owner: 'brief' })),
+  ],
+  edges: [
+    ['__start__','intake'],['intake','clarity_check'],['clarify','intake'],['plan','plan_review'],['tools','fetch_agent'],['collect','relevance'],
+    ['broaden','fetch_agent'],['batch_extract','normalise_skills'],['normalise_skills','stats'],['stats','write_brief'],['write_brief','critic'],['render','__end__'],
+    ...Object.entries({ clarity_check:['clarify','plan','__end__'], plan_review:['fetch_agent','plan','__end__'], fetch_agent:['tools','collect'],
+      relevance:['batch_extract','stats','broaden','low_data_review'], low_data_review:['broaden','batch_extract','stats','__end__'], critic:['write_brief','render'] })
+      .flatMap(([s, ts]) => ts.map(t => [s, t])),
+  ].map(([source, target]) => ({ source, target })),
+};
+
+// ===== UI label table: raw nodes merge into user-level steps =====
+const BAND_LABEL = { request_plan: 'Understand', collection: 'Collect', analysis: 'Analyse', brief: 'Brief' };
+const STEP_OF = { intake:'read', clarity_check:'read', clarify:'ask', plan:'plan', plan_review:'approve',
+  fetch_agent:'search', tools:'search', collect:'filter', relevance:'filter', broaden:'widen', low_data_review:'few',
+  batch_extract:'postings', normalise_skills:'normalise', stats:'stats', write_brief:'write', critic:'check', render:'finish' };
+const STEP = { // label, idle sub-text, weight in the progress bar (0 = optional steps never move the bar)
+  read:{ label:'Read your request', sub:'Role, place, details', w:1 }, ask:{ label:'Ask you', sub:'Only if something is unclear', w:0, optional:true },
+  plan:{ label:'Plan the search', sub:'Titles, area, dates', w:1 }, approve:{ label:'Your approval', sub:'You review the plan', w:.5 },
+  search:{ label:'Search job boards', sub:'Adzuna, USAJOBS', w:3 }, filter:{ label:'Filter postings', sub:'Drop duplicates and misfits', w:1 },
+  widen:{ label:'Widen the search', sub:'Only if too few postings', w:0, optional:true }, few:{ label:'Too few postings?', sub:'You decide', w:0, optional:true },
+  postings:{ label:'Read postings', sub:'Skills, seniority, pay', w:4 }, normalise:{ label:'Tidy skill names', sub:'Merge spelling variants', w:1 },
+  stats:{ label:'Compute the numbers', sub:'Medians, counts, shares', w:1 }, write:{ label:'Write the brief', sub:'Summary and insights', w:2 },
+  check:{ label:'Check every claim', sub:'Against the numbers', w:1 }, finish:{ label:'Finish', sub:'Brief ready', w:.5 },
+};
+const PAUSE_STEP = { clarify:'ask', plan_review:'approve', low_data_review:'few' };
+const SOURCE = { search_adzuna:'Adzuna', search_usajobs:'USAJOBS', adzuna:'Adzuna', usajobs:'USAJOBS' };
+
+// Steps in band order (the order of the topology's nodes), edges mapped to steps. Back-edges go to an earlier step.
+const STEPS = [], BAND_OF = {};
+for (const n of TOPOLOGY.nodes) { const s = STEP_OF[n.id]; if (!STEPS.includes(s)) { STEPS.push(s); BAND_OF[s] = n.owner; } }
+const ORD = Object.fromEntries(STEPS.map((s, i) => [s, i]));
+const STEP_EDGES = [...new Set(TOPOLOGY.edges.filter(e => STEP_OF[e.source] && STEP_OF[e.target] && STEP_OF[e.source] !== STEP_OF[e.target])
+  .map(e => STEP_OF[e.source] + '>' + STEP_OF[e.target]))].map(k => k.split('>'));
+const BACK = STEP_EDGES.filter(([a, b]) => ORD[b] < ORD[a]);
+console.assert(BACK.map(e => e.join('>')).sort().join() === 'approve>plan,ask>read,check>write,few>widen,widen>search', 'unexpected back-edges', BACK);
+
+// ===== pure reducer: RunEvent in, view state out =====
+const fresh = () => ({ steps: Object.fromEntries(STEPS.map(s => [s, { status: 'idle', runs: 0, detail: '' }])), current: null, taken: {}, progress: 0,
+  extract: { done: 0, total: 0 }, tool: { live: null, calls: 0, postings: 0 }, sources: {}, finished: null, fx: [] });
+function weightDone(st) {
+  const total = STEPS.reduce((a, s) => a + STEP[s].w, 0); let got = 0;
+  for (const s of STEPS) { const x = st.steps[s]; if (x.status === 'done') got += STEP[s].w;
+    else if (x.status === 'active') got += STEP[s].w * (s === 'postings' && st.extract.total ? st.extract.done / st.extract.total : .35); }
+  return got / total;
+}
+function reduce(prev, ev) {
+  const st = structuredClone(prev); st.fx = [];
+  const S = st.steps;
+  const enter = node => {
+    const s = STEP_OF[node]; if (!s || st.current === s) return;
+    const cur = st.current;
+    if (cur) {
+      if (S[cur].status === 'active' || S[cur].status === 'waiting') S[cur].status = 'done';
+      const [lo, hi] = [Math.min(ORD[cur], ORD[s]), Math.max(ORD[cur], ORD[s])];
+      for (let i = lo; i < hi; i++) st.taken[STEPS[i] + '>' + STEPS[i + 1]] = true;
+      if (ORD[s] < ORD[cur]) { // a loop: everything from the target to where we were runs again
+        st.fx.push({ type: 'loop', from: cur, to: s });
+        // optional steps that ran (ask, widen, few) stay done, so they are not later marked skipped
+        for (const x of STEPS.slice(ORD[s] + 1, ORD[cur] + 1)) if (S[x].status === 'done' && !STEP[x].optional) { S[x].status = 'idle'; S[x].detail = ''; }
+      }
+    }
+    for (const x of STEPS) if (ORD[x] < ORD[s] && STEP[x].optional && S[x].status === 'idle') S[x].status = 'skipped';
+    if (S[s].status !== 'active') S[s].detail = ''; // a rerun starts without last pass's note
+    S[s].status = 'active'; S[s].runs += 1; st.current = s;
+  };
+  switch (ev.type) {
+    case 'node_started': enter(ev.node); break;
+    case 'node_done': { const s = STEP_OF[ev.node]; if (s && ev.notes.length) S[s].detail = ev.notes.at(-1); break; }
+    case 'tool_called': st.tool.live = { name: ev.name, summary: ev.summary }; break;
+    case 'tool_returned': st.tool.live = null; st.tool.calls += 1; break;
+    case 'api_called': st.sources[ev.source] = { cached: ev.cached, count: ev.count, failed: ev.failed }; st.tool.postings += ev.count; break;
+    case 'extract_progress': st.extract = { done: ev.done, total: ev.total }; break;
+    case 'paused': { const s = PAUSE_STEP[ev.pause.kind]; if (s) { if (st.current !== s) enter({ ask:'clarify', approve:'plan_review', few:'low_data_review' }[s]); S[s].status = 'waiting'; } break; }
+    case 'done': if (st.current) S[st.current].status = 'done';
+      for (const s of STEPS) if (S[s].status === 'idle') S[s].status = STEP[s].optional || ev.status === 'aborted' ? 'skipped' : 'done';
+      st.finished = ev.status; break;
+    case 'stopped': { const s = STEP_OF[ev.node] || st.current; if (s) S[s].status = 'failed'; st.finished = 'failed'; break; }
+  }
+  st.progress = Math.max(prev.progress, st.finished === 'done' ? 1 : weightDone(st));
+  return st;
+}
+
+// A reopened Run has no event history: rebuild coarse state from get_run (status, stopped node, and State fields:
+// questions = the user was asked, broadened_plans = widen ran N times, low_data_decision = the low-data Pause was answered).
+function fromView(view) {
+  const st = fresh(), v = view.state;
+  const asked = v.questions.length > 0, broadened = v.broadened_plans.length, lowData = v.low_data_decision !== null;
+  const at = view.status === 'done' ? STEPS.length : ORD[STEP_OF[view.stopped_at || view.pause_node]] ?? 0;
+  STEPS.forEach((s, i) => {
+    const x = st.steps[s];
+    if (i < at) x.status = STEP[s].optional && !({ ask: asked, widen: broadened > 0, few: lowData }[s]) ? 'skipped' : 'done';
+    else if (i === at) x.status = view.status === 'failed' ? 'failed' : 'waiting';
+    x.runs = x.status === 'done' ? (s === 'search' ? broadened + 1 : s === 'widen' ? broadened : 1) : 0;
+  });
+  st.current = STEPS[Math.min(at, STEPS.length - 1)]; st.finished = view.status === 'done' ? 'done' : view.status === 'failed' ? 'failed' : null;
+  st.progress = view.status === 'done' ? 1 : weightDone(st);
+  return st;
+}
+
+// ===== scripted event feeds (real RunEvent shapes) =====
+const N = n => ({ type:'node_started', node:n }), D = (n, notes = []) => ({ type:'node_done', node:n, notes });
+const T = (name, summary) => ({ type:'tool_called', name, summary }), R = (name, summary) => ({ type:'tool_returned', name, summary });
+const A = (source, cached, count, failed = false) => ({ type:'api_called', source, cached, count, failed });
+const X = (done, total) => ({ type:'extract_progress', done, total }), P = kind => ({ type:'paused', pause:{ kind } });
+const search = (title, n = 50) => [N('fetch_agent'), T('search_adzuna', `"${title}" page 1`), N('tools'), A('adzuna', false, n), R('search_adzuna', `${n} postings`),
+  N('fetch_agent'), T('search_usajobs', `"${title}" page 1`), N('tools'), A('usajobs', true, 6), R('search_usajobs', '6 postings'), N('fetch_agent')];
+const extract = total => [N('batch_extract'), ...Array.from({ length: total }, (_, i) => X(i + 1, total)), D('batch_extract', ['extracted 142 Postings'])];
+const tail = [N('normalise_skills'), D('normalise_skills', ['merged 9 spellings']), N('stats'), D('stats', ['41 Stats computed']), N('write_brief'), D('write_brief', ['3 Insights drafted']),
+  N('critic'), D('critic', ['1 Insight not supported']), N('write_brief'), D('write_brief', ['revised 1 Insight']), N('critic'), D('critic', ['all supported']), N('render'), D('render', ['Brief ready'])];
+const front = [N('intake'), D('intake'), N('clarity_check'), D('clarity_check', ['asking location']), N('clarify'), P('clarify'),
+  N('intake'), D('intake'), N('clarity_check'), D('clarity_check', ['request is final']), N('plan'), D('plan', ['3 title variants']), N('plan_review'), P('plan_review')];
+const SCENARIOS = {
+  'Happy path (one question, approve, one critic revision)': [...front, ...search('data engineer'), N('collect'), D('collect', ['kept 142 Postings']), N('relevance'), D('relevance', ['38 of 142 relevant (route: enough)']), ...extract(6), ...tail, { type:'done', status:'done', paths:[] }],
+  'Too few postings: widen twice, then ask the user': [N('intake'), D('intake'), N('clarity_check'), D('clarity_check', ['request is final']), N('plan'), D('plan'), N('plan_review'), P('plan_review'),
+    ...search('barista'), N('collect'), N('relevance'), D('relevance', ['9 of 60 relevant (route: broaden)']), N('broaden'), D('broaden', ['radius 25 km to 50 km']),
+    ...search('barista'), N('collect'), N('relevance'), D('relevance', ['14 of 80 relevant (route: ask)']), N('low_data_review'), P('low_data_review'),
+    N('broaden'), D('broaden', ['dropped the date limit']), ...search('barista'), N('collect'), N('relevance'), D('relevance', ['31 of 140 relevant (route: enough)']), ...extract(4), ...tail, { type:'done', status:'done', paths:[] }],
+  'Fails during extraction (resume later)': [...front, ...search('data engineer'), N('collect'), N('relevance'), D('relevance', ['38 of 142 relevant']), N('batch_extract'), X(1, 6), X(2, 6), X(3, 6), { type:'stopped', node:'batch_extract', reason:'LLMExhausted: every model in the cheap tier failed' }],
+};
+const VIEWS = {
+  'Reopen a finished Run (no events, rebuilt from get_run)': { status:'done', state:{ questions:['where?'], broadened_plans:['wider'], low_data_decision:null } },
+  'Reopen a Run stopped in extraction (rebuilt from get_run)': { status:'failed', stopped_at:'batch_extract', state:{ questions:[], broadened_plans:[], low_data_decision:null } },
+  'Reopen a Run waiting at plan approval (rebuilt from get_run)': { status:'paused', pause_node:'plan_review', state:{ questions:[], broadened_plans:[], low_data_decision:null } },
+};
+
+// ===== SVG panel: layout is a fixed vertical rail, band by band =====
+const NS = 'http://www.w3.org/2000/svg', $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+const X0 = 18, NW = 214, GAP = 22, RAIL = X0 + 21;
+const HEIGHT = s => s === 'search' ? 66 : s === 'postings' ? 54 : 44;
+const pos = {}; let y = 8; const bandY = {};
+for (const band of Object.keys(BAND_LABEL)) { bandY[band] = y; y += 22; for (const s of STEPS.filter(x => BAND_OF[x] === band)) { pos[s] = y; y += HEIGHT(s) + GAP; } y += 6; }
+const svg = $('#svg'); svg.setAttribute('height', y); svg.setAttribute('viewBox', `0 0 316 ${y}`);
+const nodeEl = {}, railEl = {}, backEl = {};
+
+el('defs', {}, svg).innerHTML = '<marker id="arr" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8z" fill="context-stroke"/></marker>';
+for (const [band, label] of Object.entries(BAND_LABEL)) el('text', { x: X0, y: bandY[band] + 12, 'font-size': 11, 'font-weight': 700, fill: '#8a8579', 'letter-spacing': '.07em' }, svg).textContent = label.toUpperCase();
+// rail segments between consecutive steps (the timeline spine), then back-edges bowed to the right, then nodes on top
+STEPS.slice(0, -1).forEach((s, i) => { const n = STEPS[i + 1], key = s + '>' + n;
+  railEl[n] = el('path', { d: `M${RAIL} ${pos[s] + HEIGHT(s)} V${pos[n]}`, fill: 'none', stroke: '#d9d4c7', 'stroke-width': 2, 'stroke-linecap': 'round' }, svg); railEl[n].dataset.key = key; });
+for (const [a, b] of BACK) { const ya = pos[a] + HEIGHT(a) / 2, yb = pos[b] + HEIGHT(b) / 2, r = Math.min(52, 22 + 10 * (ORD[a] - ORD[b])), x = X0 + NW;
+  const p = el('path', { d: `M${x} ${ya} C${x + r} ${ya} ${x + r} ${yb} ${x + 2} ${yb}`, fill: 'none', stroke: '#d9d4c7', 'stroke-width': 1.5, 'stroke-dasharray': '3 4', 'marker-end': 'url(#arr)' }, svg); backEl[a + '>' + b] = p; }
+const dot = el('circle', { r: 5, fill: '#b4540a', opacity: 0 }, svg);
+for (const s of STEPS) {
+  const h = HEIGHT(s), g = el('g', { class: 'node' }, svg); nodeEl[s] = g;
+  g.ring = el('rect', { x: X0 - 3, y: pos[s] - 3, width: NW + 6, height: h + 6, rx: 12, fill: 'none', stroke: 'var(--live)', 'stroke-width': 2, opacity: 0 }, g);
+  g.bg = el('rect', { x: X0, y: pos[s], width: NW, height: h, rx: 10, fill: '#fff', stroke: '#e4e0d6', 'stroke-width': 1.5, 'stroke-dasharray': STEP[s].optional ? '4 3' : '' }, g);
+  const cx = RAIL, cy = pos[s] + 22;
+  g.ic = el('circle', { cx, cy, r: 9, fill: '#fff', stroke: '#cfcabd', 'stroke-width': 2 }, g);
+  g.spin = el('path', { d: `M${cx} ${cy - 9} A9 9 0 0 1 ${cx + 9} ${cy}`, fill: 'none', stroke: 'var(--live)', 'stroke-width': 2.5, 'stroke-linecap': 'round', opacity: 0 }, g);
+  g.chk = el('path', { d: `M${cx - 4} ${cy} L${cx - 1} ${cy + 3} L${cx + 4.5} ${cy - 3}`, fill: 'none', stroke: '#fff', 'stroke-width': 2.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0 }, g);
+  g.x = el('path', { d: `M${cx - 3.5} ${cy - 3.5} L${cx + 3.5} ${cy + 3.5} M${cx + 3.5} ${cy - 3.5} L${cx - 3.5} ${cy + 3.5}`, fill: 'none', stroke: '#fff', 'stroke-width': 2.2, 'stroke-linecap': 'round', opacity: 0 }, g);
+  g.wait = el('path', { d: `M${cx - 2.5} ${cy - 4} V${cy + 4} M${cx + 2.5} ${cy - 4} V${cy + 4}`, fill: 'none', stroke: '#fff', 'stroke-width': 2.2, 'stroke-linecap': 'round', opacity: 0 }, g);
+  g.label = el('text', { x: X0 + 40, y: pos[s] + 19, 'font-size': 13, 'font-weight': 600, fill: '#1d1c1a' }, g); g.label.textContent = STEP[s].label;
+  g.detail = el('text', { x: X0 + 40, y: pos[s] + 34, 'font-size': 11, fill: '#6e6a62' }, g); g.detail.textContent = STEP[s].sub;
+  g.badge = el('g', { opacity: 0 }, g); el('rect', { x: X0 + NW - 34, y: pos[s] + 8, width: 26, height: 16, rx: 8, fill: '#fbeedd' }, g.badge);
+  g.badgeT = el('text', { x: X0 + NW - 21, y: pos[s] + 20, 'font-size': 10, 'font-weight': 700, 'text-anchor': 'middle', fill: '#b4540a' }, g.badge);
+  if (s === 'postings') { el('rect', { x: X0 + 40, y: pos[s] + h - 10, width: NW - 56, height: 4, rx: 2, fill: '#e4e0d6' }, g); g.pbar = el('rect', { x: X0 + 40, y: pos[s] + h - 10, width: 0, height: 4, rx: 2, fill: 'var(--live)' }, g); }
+  if (s === 'search') { g.pills = {}; ['adzuna', 'usajobs'].forEach((k, i) => { const px = X0 + 40 + i * 78, py = pos[s] + 42;
+      const gp = el('g', { opacity: 0 }, g); el('rect', { x: px, y: py, width: 72, height: 17, rx: 8.5, fill: '#fff', stroke: '#cfcabd' }, gp);
+      gp.t = el('text', { x: px + 36, y: py + 12, 'font-size': 10, 'text-anchor': 'middle', fill: '#444' }, gp); g.pills[k] = gp; }); }
+}
+
+// ===== render: state in, GSAP tweens out =====
+const tweens = {}; let shown = fresh(), reduced = false;
+const dur = d => reduced ? 0 : d;
+const COLOR = { idle: '#cfcabd', active: 'var(--live)', done: 'var(--accent)', waiting: 'var(--warn)', failed: 'var(--bad)', skipped: '#cfcabd' };
+function kill(key) { (tweens[key] || []).forEach(t => t.kill()); tweens[key] = []; }
+function setStatus(s, x, was) {
+  const g = nodeEl[s], c = COLOR[x.status]; kill(s);
+  const filled = x.status === 'done' || x.status === 'failed' || x.status === 'waiting';
+  gsap.set(g.ring, { opacity: 0, scale: 1, transformOrigin: '50% 50%', attr: { stroke: x.status === 'waiting' ? 'var(--warn)' : 'var(--live)' } });
+  gsap.to(g.ic, { duration: dur(.25), attr: { fill: filled ? c : '#fff', stroke: c } });
+  gsap.to(g.bg, { duration: dur(.25), attr: { stroke: x.status === 'active' ? 'var(--live)' : x.status === 'waiting' ? 'var(--warn)' : x.status === 'failed' ? 'var(--bad)' : '#e4e0d6', fill: x.status === 'waiting' ? '#fffaf3' : x.status === 'failed' ? '#fff6f6' : '#fff' } });
+  gsap.to(g, { duration: dur(.25), opacity: x.status === 'skipped' ? .45 : 1 });
+  gsap.set([g.spin, g.chk, g.x, g.wait], { opacity: 0, rotation: 0, transformOrigin: `${RAIL}px ${pos[s] + 22}px` });
+  if (x.status === 'active') {
+    gsap.set(g.spin, { opacity: 1 });
+    if (!reduced) tweens[s] = [gsap.to(g.spin, { rotation: 360, duration: .9, ease: 'none', repeat: -1 }),
+      gsap.fromTo(g.ring, { opacity: .55, scale: 1 }, { opacity: 0, scale: 1.04, duration: 1.3, repeat: -1, ease: 'power1.out' })];
+  } else if (x.status === 'done') {
+    gsap.set(g.chk, { opacity: 1 });
+    if (!reduced && was !== 'done' && window.DrawSVGPlugin) gsap.fromTo(g.chk, { drawSVG: '0%' }, { drawSVG: '100%', duration: .35, ease: 'power1.out' });
+    if (!reduced && was === 'active') gsap.fromTo(g.ic, { attr: { r: 9 } }, { attr: { r: 11 }, duration: .12, yoyo: true, repeat: 1 });
+  } else if (x.status === 'waiting') {
+    gsap.set(g.wait, { opacity: 1 });
+    if (!reduced) tweens[s] = [gsap.fromTo(g.ring, { opacity: .6, scale: 1 }, { opacity: 0, scale: 1.05, duration: 2, repeat: -1, ease: 'sine.out' })];
+  } else if (x.status === 'failed') {
+    gsap.set(g.x, { opacity: 1 });
+    if (!reduced) gsap.fromTo(g, { x: -3 }, { x: 0, duration: .5, ease: 'elastic.out(1.2,.3)' });
+  }
+}
+function detailText(s, st) {
+  const x = st.steps[s];
+  if (s === 'search' && st.tool.live) return `${SOURCE[st.tool.live.name]} · ${st.tool.live.summary.replace(' page ', ' p')}`.slice(0, 32);
+  if (s === 'postings' && x.status === 'active' && st.extract.total) return `${st.extract.done} of ${st.extract.total} batches`;
+  if (x.status === 'waiting') return s === 'approve' ? 'Waiting for you to approve' : s === 'ask' ? 'Waiting for your answers' : 'Waiting for your choice';
+  if (x.status === 'failed') return 'Stopped. Resume retries it';
+  if (x.status === 'skipped') return 'Not needed';
+  return x.detail || STEP[s].sub;
+}
+function render(st, { animate = true } = {}) {
+  const prev = shown; shown = st; const was = animate ? prev : fresh();
+  for (const s of STEPS) {
+    const x = st.steps[s], o = was.steps[s];
+    const t = detailText(s, st); if (nodeEl[s].detail.textContent !== t) nodeEl[s].detail.textContent = t;
+    if (x.status !== o.status) setStatus(s, x, o.status);
+    if (x.runs > 1 && x.runs !== o.runs) { const b = nodeEl[s].badge; nodeEl[s].badgeT.textContent = '×' + x.runs; gsap.set(b, { opacity: 1 }); if (!reduced) gsap.fromTo(b, { scale: 1.6, transformOrigin: '50% 50%' }, { scale: 1, duration: .4, ease: 'back.out(3)' }); }
+    if (x.runs <= 1) gsap.set(nodeEl[s].badge, { opacity: 0 });
+    // rail into this step: coloured once passed, dashed flow while it is the live segment
+    const key = STEPS[ORD[s] - 1] + '>' + s, r = railEl[s]; if (r) {
+      kill('rail' + s); const taken = st.taken[key], live = st.current === s && x.status === 'active';
+      gsap.to(r, { duration: dur(.3), attr: { stroke: live ? '#1f6feb' : taken ? '#2f5d50' : '#d9d4c7' } });
+      gsap.set(r, { attr: { 'stroke-dasharray': live && !reduced ? '5 5' : '' } });
+      if (live && !reduced) tweens['rail' + s] = [gsap.fromTo(r, { attr: { 'stroke-dashoffset': 10 } }, { attr: { 'stroke-dashoffset': 0 }, duration: .6, ease: 'none', repeat: -1 })]; }
+    // postings progress bar
+    if (nodeEl[s].pbar) gsap.to(nodeEl[s].pbar, { duration: dur(.3), attr: { fill: x.status === 'done' ? '#2f5d50' : '#1f6feb', width: (NW - 56) * (x.status === 'done' ? 1 : st.extract.total ? st.extract.done / st.extract.total : 0) } });
+  }
+  // source pills on the search step: filled = live call, hollow = from cache, red = failed
+  for (const [k, gp] of Object.entries(nodeEl.search.pills)) { const o = st.sources[k]; if (!o) { gsap.set(gp, { opacity: 0 }); continue; }
+    gp.t.textContent = `${SOURCE[k]} ${o.failed ? '✕' : o.count}${o.cached ? ' · cached' : ''}`.slice(0, 20);
+    gp.firstChild.setAttribute('fill', o.failed ? '#f9e4e4' : o.cached ? '#fff' : '#e5eefc'); gp.firstChild.setAttribute('stroke', o.failed ? '#a3262a' : o.cached ? '#cfcabd' : '#1f6feb'); gsap.to(gp, { opacity: 1, duration: dur(.3) }); }
+  // back-edges taken light up; a loop event sends a dot back along its edge
+  for (const [k, p] of Object.entries(backEl)) { const [a, b] = k.split('>'); const loopTaken = st.steps[a].runs > 0 && st.steps[b].runs > 1 || (k === 'ask>read' && st.steps.read.runs > 1) || (k === 'few>widen' && st.steps.widen.runs > 0 && st.steps.few.runs > 0);
+    gsap.to(p, { duration: dur(.3), attr: { stroke: loopTaken ? '#b4540a' : '#d9d4c7', 'stroke-width': loopTaken ? 2 : 1.5 } }); }
+  if (animate && !reduced) for (const f of st.fx) if (f.type === 'loop') { const p = backEl[f.from + '>' + f.to]; if (!p) continue;
+    gsap.set(dot, { opacity: 1 }); gsap.fromTo(dot, { motionPath: { path: p, align: p, alignOrigin: [.5, .5], start: 0, end: 0 } }, { motionPath: { path: p, align: p, alignOrigin: [.5, .5], start: 0, end: 1 }, duration: .9, ease: 'power1.inOut', onComplete: () => gsap.set(dot, { opacity: 0 }) }); }
+  // header: current step, progress, narrow strip
+  const cur = st.current, cs = cur && st.steps[cur];
+  const now = !cur ? 'Not started' : st.finished === 'done' ? 'Finished' : st.finished === 'failed' ? `Stopped at “${STEP[cur].label}”` : cs.status === 'waiting' ? 'Waiting for you: ' + STEP[cur].label : STEP[cur].label + '…';
+  $('#now').textContent = $('#now2').textContent = now;
+  for (const id of ['#fill', '#fill2']) gsap.to(id, { duration: dur(.5), width: Math.round(st.progress * 100) + '%', background: st.finished === 'failed' ? '#a3262a' : cs && cs.status === 'waiting' ? '#b4540a' : '#2f5d50', ease: 'power2.out' });
+  $('#strip').innerHTML = Object.entries(BAND_LABEL).map(([band, label]) => { const ss = STEPS.filter(s => BAND_OF[s] === band).map(s => st.steps[s].status);
+    const c = ss.includes('failed') ? 'failed' : ss.includes('waiting') ? 'waiting' : ss.includes('active') ? 'active' : ss.every(v => v === 'done' || v === 'skipped') && ss.some(v => v === 'done') ? 'done' : '';
+    return `<span class="chip ${c}">${label}</span>`; }).join('<span style="color:#d9d4c7">›</span>');
+  // keep the live step in view in the panel
+  if (cur && animate) { const top = pos[cur] - 120; $('#scroller').scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' }); }
+  $('#json').textContent = JSON.stringify({ current: st.current, progress: +st.progress.toFixed(2), finished: st.finished, extract: st.extract,
+    steps: Object.fromEntries(STEPS.map(s => [s, st.steps[s].status + (st.steps[s].runs > 1 ? ' ×' + st.steps[s].runs : '')])) }, null, 1);
+}
+
+// ===== player =====
+let feed = [], cursor = 0, timer = null, state = fresh(), view = null;
+const log = (ev) => { const d = document.createElement('div'); d.className = ev.type === 'paused' ? 'p' : ev.type === 'stopped' ? 'f' : ev.type.startsWith('node') ? 'k' : '';
+  d.textContent = ev.type + ' ' + (ev.node || ev.name || ev.source || (ev.pause && ev.pause.kind) || (ev.type === 'extract_progress' ? ev.done + '/' + ev.total : '') || ''); $('#log').appendChild(d); $('#log').scrollTop = 1e6; };
+const delayFor = ev => ({ node_started: 520, node_done: 260, tool_called: 450, tool_returned: 350, api_called: 250, extract_progress: 380, paused: 400, done: 300, stopped: 300 })[ev.type] / +$('#speed').value;
+function push(ev, animate = true) { state = reduce(state, ev); log(ev); render(state, { animate }); }
+function stop() { clearTimeout(timer); timer = null; $('#play').textContent = 'Play'; }
+function tick() {
+  if (cursor >= feed.length) { stop(); return; }
+  const ev = feed[cursor++]; push(ev);
+  if (ev.type === 'paused') { if ($('#auto').checked) timer = setTimeout(tick, 2200 / +$('#speed').value); else { $('#answer').style.display = ''; timer = null; } return; }
+  timer = setTimeout(tick, delayFor(ev));
+}
+function start() { if (feed.length === 0) return; if (cursor >= feed.length) reset(); $('#play').textContent = 'Pause'; tick(); }
+function reset() { stop(); cursor = 0; state = fresh(); $('#log').innerHTML = ''; $('#answer').style.display = 'none'; Object.keys(tweens).forEach(kill); shown = fresh();
+  for (const s of STEPS) setStatus(s, state.steps[s], 'idle'); render(state, { animate: false }); }
+function load(name) { reset(); if (SCENARIOS[name]) { feed = SCENARIOS[name]; } else { feed = []; state = fromView(VIEWS[name]); shown = fresh(); render(state, { animate: false }); $('#log').textContent = 'get_run → no events; state rebuilt'; } }
+
+const sel = $('#scn'); for (const n of [...Object.keys(SCENARIOS), ...Object.keys(VIEWS)]) sel.add(new Option(n, n));
+sel.onchange = () => load(sel.value);
+$('#play').onclick = () => timer ? stop() : start();
+$('#reset').onclick = () => load(sel.value);
+$('#answer').onclick = () => { $('#answer').style.display = 'none'; tick(); };
+$('#reload').onclick = () => { // a reconnect: the buffer replays at once, with no animation, then the Run carries on
+  const n = cursor, running = !!timer; stop(); state = fresh(); shown = fresh(); $('#log').innerHTML = '';
+  for (const s of STEPS) setStatus(s, state.steps[s], 'idle'); for (let i = 0; i < n; i++) { state = reduce(state, feed[i]); } render(state, { animate: false });
+  $('#log').textContent = `reconnected: ${n} buffered events applied at once`; if (running) start(); };
+$('#rm').onchange = e => { reduced = e.target.checked; for (const s of STEPS) { kill(s); kill('rail' + s); } const st = shown; shown = fresh(); render(st, { animate: false }); };
+load(sel.value);
+</script>
+</body>
+</html>

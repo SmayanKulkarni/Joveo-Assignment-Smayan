@@ -6,7 +6,10 @@ from talent_scout.analysis.types import EmployerType, ExtractBatch, Extraction, 
 from talent_scout.brief.types import BriefDraft, BriefRevision, Confidence, InsightVerdict, MarketBrief, OutlookRating
 from talent_scout.collection.types import FetchRecord, LowDataAnswer, LowDataPayload
 from talent_scout.gateway.types import CacheStatus
-from talent_scout.kernel.types import Dimension, Model, PayPeriod, RequestField, Source, WorkMode
+from talent_scout.kernel.state import LogKind, RunLogEntry
+from talent_scout.kernel.types import (
+    ClarifyingQuestion, Dimension, HiringRequest, MarketStats, Model, PayPeriod, RequestField, SearchPlan, Source, WorkMode,
+)
 from talent_scout.request_plan.types import (
     ClarifyAnswer,
     ClarifyPayload,
@@ -43,5 +46,6 @@ ALLOWED_MSGPACK = [
         ClarifyPause, PlanReviewPause, LowDataPause, *ANSWERS.values(), PlanAction, RequestField, RequestDraft, WorkMode,
         FetchRecord, CacheStatus, Source, PayPeriod, ExtractBatch, Extraction, Seniority, EmployerType, Requirement,
         BriefDraft, BriefRevision, InsightVerdict, MarketBrief, Confidence, OutlookRating, Dimension,
+        HiringRequest, LogKind, RunLogEntry, ClarifyingQuestion, SearchPlan, MarketStats,
     )
 ]

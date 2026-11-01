@@ -1,0 +1,194 @@
+{
+  "nodes": [
+    {
+      "id": "intake",
+      "owner": "request_plan"
+    },
+    {
+      "id": "clarity_check",
+      "owner": "request_plan"
+    },
+    {
+      "id": "clarify",
+      "owner": "request_plan"
+    },
+    {
+      "id": "plan",
+      "owner": "request_plan"
+    },
+    {
+      "id": "plan_review",
+      "owner": "request_plan"
+    },
+    {
+      "id": "fetch_agent",
+      "owner": "collection"
+    },
+    {
+      "id": "tools",
+      "owner": "collection"
+    },
+    {
+      "id": "collect",
+      "owner": "collection"
+    },
+    {
+      "id": "relevance",
+      "owner": "collection"
+    },
+    {
+      "id": "broaden",
+      "owner": "collection"
+    },
+    {
+      "id": "low_data_review",
+      "owner": "collection"
+    },
+    {
+      "id": "batch_extract",
+      "owner": "analysis"
+    },
+    {
+      "id": "normalise_skills",
+      "owner": "analysis"
+    },
+    {
+      "id": "stats",
+      "owner": "analysis"
+    },
+    {
+      "id": "write_brief",
+      "owner": "brief"
+    },
+    {
+      "id": "critic",
+      "owner": "brief"
+    },
+    {
+      "id": "render",
+      "owner": "brief"
+    }
+  ],
+  "edges": [
+    {
+      "source": "__start__",
+      "target": "intake"
+    },
+    {
+      "source": "intake",
+      "target": "clarity_check"
+    },
+    {
+      "source": "clarify",
+      "target": "intake"
+    },
+    {
+      "source": "plan",
+      "target": "plan_review"
+    },
+    {
+      "source": "tools",
+      "target": "fetch_agent"
+    },
+    {
+      "source": "collect",
+      "target": "relevance"
+    },
+    {
+      "source": "broaden",
+      "target": "fetch_agent"
+    },
+    {
+      "source": "batch_extract",
+      "target": "normalise_skills"
+    },
+    {
+      "source": "normalise_skills",
+      "target": "stats"
+    },
+    {
+      "source": "stats",
+      "target": "write_brief"
+    },
+    {
+      "source": "write_brief",
+      "target": "critic"
+    },
+    {
+      "source": "render",
+      "target": "__end__"
+    },
+    {
+      "source": "clarity_check",
+      "target": "clarify"
+    },
+    {
+      "source": "clarity_check",
+      "target": "plan"
+    },
+    {
+      "source": "clarity_check",
+      "target": "__end__"
+    },
+    {
+      "source": "plan_review",
+      "target": "fetch_agent"
+    },
+    {
+      "source": "plan_review",
+      "target": "plan"
+    },
+    {
+      "source": "plan_review",
+      "target": "__end__"
+    },
+    {
+      "source": "fetch_agent",
+      "target": "tools"
+    },
+    {
+      "source": "fetch_agent",
+      "target": "collect"
+    },
+    {
+      "source": "relevance",
+      "target": "batch_extract"
+    },
+    {
+      "source": "relevance",
+      "target": "stats"
+    },
+    {
+      "source": "relevance",
+      "target": "broaden"
+    },
+    {
+      "source": "relevance",
+      "target": "low_data_review"
+    },
+    {
+      "source": "low_data_review",
+      "target": "broaden"
+    },
+    {
+      "source": "low_data_review",
+      "target": "batch_extract"
+    },
+    {
+      "source": "low_data_review",
+      "target": "stats"
+    },
+    {
+      "source": "low_data_review",
+      "target": "__end__"
+    },
+    {
+      "source": "critic",
+      "target": "write_brief"
+    },
+    {
+      "source": "critic",
+      "target": "render"
+    }
+  ]
+}

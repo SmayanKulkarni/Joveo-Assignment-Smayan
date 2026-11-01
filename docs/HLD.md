@@ -15,7 +15,7 @@ flowchart LR
   user([CSM / user])
   subgraph clients [Clients]
     cli[CLI]
-    st[Streamlit · optional]
+    web[Web UI]
   end
   rc[Run Controller]
   graph[LangGraph StateGraph]
@@ -51,7 +51,7 @@ The system is split by concern, not one component per node. The Kernel declares 
 | E | **Analysis** | `batch_extract` (Send fan-out and its reducer), `normalise_skills`, `stats` | per-Posting extractions, skill aliases, stats |
 | F | **Brief** | `write_brief`, `critic`, `render`, building the Run Notes from `run_log` | brief draft, critic verdicts, final JSON and Markdown |
 | G | **Runtime** | Graph wiring and compile, SQLite checkpointer and Store, run registry, Run Controller, event stream, Pause protocol, concurrent-resume guard | nothing in graph state; owns threads and the registry |
-| H | **Clients** | CLI (Pause UX, `scout resume`, `--focus`, progress); Streamlit later | none |
+| H | **Clients** | CLI (Pause UX, `scout resume`, `--focus`, progress); the web UI and its thin API ([Web UI LLD](lld/web-ui.md)) | none |
 | I | **Long-term memory** | Preferences namespace in the Store, read by `intake` | preferences |
 | J | **Infra shell** *(future phase)* | API, queue and workers on MiniStack, wrapping the Run Controller | none |
 
@@ -197,7 +197,7 @@ Being able to close the client at any Pause and resume exactly there is non-nego
   - Each Pause node makes exactly one `interrupt()` call, never inside `try/except`, and only writes the answer.
   - Anything generative, such as drafting questions, happens in the node before. The paused node re-runs from the top when resumed.
 - **Returning re-shows the same Pause**: the Run Controller loads the thread, reads the pending payload from `get_state(...).interrupts`, re-displays it and resumes with `Command(resume=answer)`.
-- **Run registry**: a plain `runs` table in the same file records thread, request summary, status and last-updated time. It's an index: the checkpoint is the truth, and disagreements reconcile on read. `scout resume` lists the resumable Runs, and Streamlit keeps the thread ID in the URL. ([Run Controller API and wiring](../.scratch/runtime-lld/issues/02-run-controller-and-wiring.md))
+- **Run registry**: a plain `runs` table in the same file records thread, request summary, status and last-updated time. It's an index: the checkpoint is the truth, and disagreements reconcile on read. `scout resume` lists the resumable Runs, and the web UI keeps the thread ID in the URL. ([Run Controller API and wiring](../.scratch/runtime-lld/issues/02-run-controller-and-wiring.md))
 - **Concurrent resume guard**: LangGraph does not stop two processes from resuming the same thread at once, so the Run Controller does.
 - **Kill mid-node**: only that node re-runs, and any repeated fetches are served from the L1 cache at no quota cost.
 
@@ -211,7 +211,7 @@ LangSmith traces everything. Separately, the graph keeps a `run_log` in state: r
 flowchart LR
   subgraph core [Core · built now]
     cli[CLI] --> rc
-    st[Streamlit] --> rc
+    web[Web UI] --> rc
     rc[Run Controller] --> g[Graph] --> gw[Jobs Data Gateway]
     rc --> db[(SQLite)]
   end
@@ -225,7 +225,7 @@ flowchart LR
 
 - The core graph never depends on the infra shell. The shell wraps the core only through the Run Controller, which makes it an addition rather than a rewrite. ([Build priority order](../.scratch/talent-scout-hld/issues/02-build-priority-order.md), [Client surfaces and the Run Controller](../.scratch/talent-scout-hld/issues/09-client-surfaces-and-run-controller.md))
 - In this phase, the expiry sweep also runs as a scheduled job, and persistence moves off SQLite.
-- The infra shell's own LLD decides the API surface, queue technology, worker model, threading vs async, how concurrent Runs share the daily Adzuna budget, and the web UI.
+- The infra shell's own LLD decides the API surface, queue technology, worker model, threading vs async, and how concurrent Runs share the daily Adzuna budget across workers. The web UI was pulled forward as a thin client over one local Controller ([Web UI LLD](lld/web-ui.md)), and this phase would only change what hosts it.
 
 ## 11. Build order
 
@@ -234,11 +234,12 @@ Requirement tiers come in priority order ([Build priority order](../.scratch/tal
 Each component's LLD covers all of its tiers, but the build goes in **passes across components**, not one finished component at a time. ([Component breakdown and build order](../.scratch/talent-scout-hld/issues/16-component-breakdown-and-build-order.md))
 
 1. **Must-have walking skeleton**: Kernel → Gateway (L1, budget guard, replay, Adzuna) → Runtime + CLI (SQLite and the Pause protocol from day one) → Request & Plan (clarify only) → Collection → Analysis (with its Send fan-out, [Analysis LLD](lld/analysis.md) §5) → Brief (no critic).
-2. **Recommended**: `plan_review` and `low_data_review` Pauses, fallbacks, `--focus`, USAJOBS, Streamlit, Gateway L2.
+2. **Recommended**: `plan_review` and `low_data_review` Pauses, fallbacks, `--focus`, USAJOBS, Streamlit (replaced by the web UI), Gateway L2.
 3. **Streaming progress**: the Runtime event stream, rendered by the clients.
 4. **Infra shell** (J).
 5. **Critic pass** (F).
 6. **Long-term memory** (I).
+7. **Web UI** (H), replacing Streamlit, built from the [Web UI LLD](lld/web-ui.md). It needs only the first three passes, so it may land at any point after them.
 
 After that come the `samples/`, README and write-up, as a delivery task.
 

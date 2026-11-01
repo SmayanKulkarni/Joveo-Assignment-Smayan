@@ -27,7 +27,7 @@ Decided by the agent (the user delegated every decision on 2026-10-31) after rev
 - C's "Needs you" group is the best idea in the set: a user with five Runs open needs to see which ones are waiting on them. Its flat History list lost the date groups, so those stay from A.
 
 **Layout.**
-- Left: sidebar, 272 px. Centre: one column, max 740 px, holding the request bubble, the live stream or the Pause card, then the Brief. Right: the trace panel, 250 px, shown on any opened Run and absent on a new one.
+- Left: sidebar, 272 px. Centre: one column, max 740 px, holding the request bubble, the live stream or the Pause card, then the Brief. Right: the trace panel, 316 px, shown on any opened Run and absent on a new one.
 - Under about 900 px wide, the sidebar becomes a slide-over opened from a header button (with a count of Runs needing the user), and the trace panel collapses to a one-line stage strip under the header, with the thin progress bar below it. This settles most of the "responsive depth" fog.
 
 **Sidebar.**

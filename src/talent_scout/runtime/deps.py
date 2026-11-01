@@ -18,6 +18,8 @@ class Deps:
     settings: Settings
     # Tests set this to run every stage as its stub, even one that has landed.
     stub_stages: bool = False
+    # A Demo Run overlays paced nodes on the stubs, so the web UI can be built without an LLM or jobs API.
+    demo: bool = False
 
 
 Node = Callable[..., Awaitable[dict]]

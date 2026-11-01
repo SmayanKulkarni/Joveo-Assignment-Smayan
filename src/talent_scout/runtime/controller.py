@@ -4,6 +4,7 @@ import sqlite3
 from collections import deque
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from pathlib import Path
 from uuid import uuid4
 
@@ -27,6 +28,7 @@ from talent_scout.runtime.graph import build_graph
 from talent_scout.runtime.guard import RunLocked, take_lock
 from talent_scout.runtime.pause import ALLOWED_MSGPACK, ANSWERS, Pause
 from talent_scout.runtime.registry import RESUMABLE, Registry, RunRecord, RunStatus, derive_status
+from talent_scout.runtime.testing import fake_deps
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +66,9 @@ class RunView(Model):
 
 @asynccontextmanager
 async def open_deps(settings: Settings) -> AsyncIterator[Deps]:
+    if settings.demo:  # no LLM or jobs API behind a Demo Run
+        yield replace(fake_deps(settings), demo=True)
+        return
     tiers = make_tiers(settings)
     async with make_gateway(settings) as gateway:
         yield Deps(tiers, make_jev(settings, tiers), gateway, settings)
@@ -98,12 +103,18 @@ def _stopped_node(snapshot) -> str | None:
 
 
 class RunHandle:
-    def __init__(self, thread_id: str):
+    def __init__(self, thread_id: str, log_start: int):
         self.thread_id = thread_id
+        # The run_log length when this handle began: what the replay builds on, and what a client already holds.
+        self.log_start = log_start
         self._buffer: deque[RunEvent] = deque(maxlen=BUFFER_SIZE)
         self._subscribers: set[asyncio.Queue] = set()
         self._task: asyncio.Task | None = None
         self._stream_ended = False
+
+    @property
+    def buffered(self) -> int:
+        return len(self._buffer)
 
     def _attach(self, task: asyncio.Task) -> None:
         self._task = task
@@ -156,7 +167,7 @@ class RunController:
         self._settings = settings
         self._graph = graph
         self._registry = registry
-        self._live: set[RunHandle] = set()
+        self._live: dict[str, RunHandle] = {}
 
     @classmethod
     @asynccontextmanager
@@ -181,7 +192,7 @@ class RunController:
                     yield controller
                 finally:
                     # The connections close next, and a live task still needs them to record its end.
-                    await asyncio.gather(*(h.cancel() for h in list(controller._live)), return_exceptions=True)
+                    await asyncio.gather(*(h.cancel() for h in list(controller._live.values())), return_exceptions=True)
 
     async def start(self, request_text: str, focus: list[Dimension] = []) -> RunHandle:
         await self._check_balance()
@@ -214,6 +225,10 @@ class RunController:
             raise
         return self._spawn(thread_id, command, lock, log_len=len(snapshot.values.get("run_log", [])))
 
+    def attached(self, thread_id: str) -> RunHandle | None:
+        """The handle of a Run whose task is still running, so a client can re-attach to its events."""
+        return self._live.get(thread_id)
+
     async def get_pause(self, thread_id: str) -> Pause | None:
         await self._record(thread_id)
         return _pending_pause(await self._graph.aget_state(_config(thread_id)))
@@ -236,8 +251,8 @@ class RunController:
         return records
 
     async def _check_balance(self) -> None:
-        # A replayed Run makes no LLM calls, so it must work without OpenRouter.
-        if self._settings.replay_cache is None:
+        # A replayed or Demo Run makes no LLM calls, so it must work without OpenRouter.
+        if self._settings.replay_cache is None and not self._settings.demo:
             await check_balance(self._settings)
 
     async def _record(self, thread_id: str) -> RunRecord:
@@ -279,25 +294,26 @@ class RunController:
         await self._registry.reconcile(thread_id, status, error)
         return await self._registry.get(thread_id)
 
-    def _brief_paths(self, thread_id: str) -> list[Path]:
+    def brief_paths(self, thread_id: str) -> list[Path]:
         folder = self._settings.runs_dir / thread_id
         return [folder / "brief.json", folder / "brief.md"]
 
     def _write_brief(self, thread_id: str, values: dict) -> None:
         state = State.model_validate(values)
-        json_path, markdown_path = self._brief_paths(thread_id)
+        json_path, markdown_path = self.brief_paths(thread_id)
         json_path.parent.mkdir(parents=True, exist_ok=True)
         json_path.write_text(state.brief.model_dump_json(indent=2), encoding="utf-8")
         markdown_path.write_text(state.brief_markdown or "", encoding="utf-8")
 
     def _spawn(self, thread_id: str, graph_input, lock: sqlite3.Connection, log_len: int) -> RunHandle:
-        handle = RunHandle(thread_id)
+        handle = RunHandle(thread_id, log_len)
         # Eager, so the body's try is entered at once: a task cancelled before its first step
         # would never run its finally, and would keep the lock.
         drive = self._drive(handle, graph_input, lock, ChunkMapper(log_len))
         task = asyncio.Task(drive, loop=asyncio.get_running_loop(), eager_start=True)
-        self._live.add(handle)
-        task.add_done_callback(lambda _: self._live.discard(handle))
+        self._live[thread_id] = handle
+        # Only its own entry: a resume may already have replaced it.
+        task.add_done_callback(lambda _: self._live.pop(thread_id) if self._live.get(thread_id) is handle else None)
         handle._attach(task)
         return handle
 
@@ -330,7 +346,7 @@ class RunController:
         status = (await self._reconcile(thread_id, snapshot)).status
         if status is RunStatus.paused:
             return Paused(pause=_pending_pause(snapshot))
-        return Done(status=status.value, paths=self._brief_paths(thread_id) if status is RunStatus.done else [])
+        return Done(status=status.value, paths=self.brief_paths(thread_id) if status is RunStatus.done else [])
 
     async def _record_stop(self, thread_id: str, reason: str) -> Stopped:
         snapshot = await self._graph.aget_state(_config(thread_id))

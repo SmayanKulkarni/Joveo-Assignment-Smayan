@@ -27,11 +27,21 @@ Parent: [Talent Market Scout: HLD](../talent-scout-hld/map.md) (the web UI that 
 
 <!-- one line per closed ticket -->
 
+- [Research: delivering Run events over FastAPI SSE](issues/01-research-sse-over-fastapi.md): use `EventSource` on a GET stream with FastAPI's `EventSourceResponse`, one unnamed message per `RunEvent` and no event IDs; disconnect needs no code but the client must `close()` on `Paused`, `Done` and `Stopped`; the sidebar must not hold its own stream (6 connections per origin); uvicorn needs `timeout_graceful_shutdown` on Windows.
+- [Research: graph rendering and GSAP in React](issues/02-research-graph-rendering-and-gsap.md): hand-written SVG on a fixed column grid built from the backend topology, with no React Flow or layout library; `gsap` 3.15.0 and `@gsap/react` 2.1.2 on React 19, all plugins free, one scoped `useGSAP` with `gsap.matchMedia` for reduced motion; about 97 kB gzip against 156 kB for React Flow.
+- [Trace graph](issues/05-trace-graph.md): 14 user-level steps in four bands, merged from the 17 raw nodes by a UI label table over a backend-served topology; a vertical rail with only back-edges drawn, a counter badge and travelling dot on loops, one bar for extraction, a weighted never-decreasing progress bar, and a reopened Run rebuilt from `get_run` state, so no event history is stored.
+- [App shell and history sidebar](issues/04-app-shell-and-history-sidebar.md): a fixed sidebar with a pinned "Needs you" group above Today, Yesterday and earlier groups, a centred Run column, a right trace panel (a strip and slide-over below about 900 px), routes `/` and `/runs/:id`, and the sidebar polling the Run list; the prototype is linked there.
+- [Web API and hosting](issues/03-web-api-and-hosting.md): nine `/api` endpoints that only adapt the Controller, with five small Controller changes (re-attach through `attached`, `log_start`, `buffered`); a synthetic `caught_up` message and 204 when nothing is live; a slim `RunDetail`, rebuilding reloads from `run_log[:live_from]`; loopback plus Host and Origin guards; `scout serve --demo` on a paced demo graph. Checked on the real Controller.
+- [Live Run view](issues/06-live-run-view.md): a turn is one visit to one Step, with typed blocks from one pure reducer batched per frame; `onopen` resets to a `base` state while live text survives; the client trusts terminal events because the status row lags them.
+- [Pause forms](issues/07-pause-forms.md): three typed cards posting exact payloads, a structured form for plan edits rather than JSON, two-step abort, and field-level `InvalidAnswer` errors; `pauses.py` stays for the CLI.
+- [Brief view](issues/08-brief-view.md): rendered from structured data in `brief.md`'s section order, with inline Evidence (cited Stats and linked Postings), never colour alone, Run Notes open with Caveats first, and print as a stylesheet only.
+- [Motion with GSAP](issues/09-motion-with-gsap.md): React renders the final state and GSAP only plays the way in, through one `useMotion` helper; an animation table with shared tokens, and no per-token tween.
+- [Frontend build and verification](issues/10-frontend-build-and-verification.md): npm with exact pins, no router, store or CSS library; FastAPI in the main dependencies; Vitest, API tests, a contract file and one browser smoke; Streamlit goes last; dark mode deferred.
+- [Write docs/lld/web-ui.md](issues/11-write-web-ui-lld-doc.md): the LLD and its 8-pass checklist are written, and the Runtime, HLD, future-scope and glossary docs agree with it. The map is complete.
+
 ## Not yet specified
 
-- **Persisted event history.** Future scope defers it. If a finished Run's trace and tool lines must survive a reload, the Controller needs to store events; [Trace graph](issues/05-trace-graph.md) decides whether `run_log` and state are enough. Revisit once that ticket closes.
-- **Responsive depth.** How far the layout bends below tablet width. Revisit after the shell prototype.
-- **Dark mode and theming.** Revisit after the shell prototype, and only if it costs little.
+Nothing: the fog is clear. Dark mode was deferred in [Frontend build and verification](issues/10-frontend-build-and-verification.md).
 
 ## Out of scope
 

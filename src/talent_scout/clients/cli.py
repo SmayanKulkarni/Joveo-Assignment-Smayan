@@ -359,6 +359,28 @@ def _show(args) -> int:
     return 0
 
 
+def _serve(args) -> int:
+    # Imported here so the other commands don't load FastAPI.
+    import uvicorn
+
+    from talent_scout.clients.web import make_app
+
+    if args.demo:
+        # Dummy credentials and its own files, so a Demo Run needs no .env and never reaches real history.
+        from talent_scout.kernel.testing import make_settings
+
+        settings = make_settings(
+            demo=True, runs_db=Path(".cache/demo/runs.sqlite"), runs_dir=Path(".cache/demo/runs"),
+            gateway_db=Path(".cache/demo/gateway.sqlite"),
+        )
+    else:
+        settings = get_settings()
+    # Loopback only, one worker and no reload: a reload would stop live Runs. The grace period is
+    # needed because on Windows a shutdown with an open stream otherwise hangs.
+    uvicorn.run(make_app(settings), host="127.0.0.1", port=args.port, timeout_graceful_shutdown=3)
+    return 0
+
+
 def _request(text: str) -> str:
     if not text.strip():
         raise argparse.ArgumentTypeError("the request can't be blank")
@@ -382,6 +404,11 @@ def _parser() -> argparse.ArgumentParser:
     show.add_argument("thread_id")
     show.add_argument("--log", action="store_true", help="also print the run log")
     show.set_defaults(command=_show)
+
+    serve = commands.add_parser("serve", help="serve the web app on localhost")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.add_argument("--demo", action="store_true", help="scripted Runs, with no .env, LLM or jobs API")
+    serve.set_defaults(command=_serve)
     return parser
 
 

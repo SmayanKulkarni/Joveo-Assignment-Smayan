@@ -6,3 +6,5 @@ __pycache__/
 .cache/
 graphify-out/
 runs/
+web/node_modules/
+web/dist/

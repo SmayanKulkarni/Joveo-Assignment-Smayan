@@ -14,6 +14,7 @@ from talent_scout.kernel.state import State, owned
 from talent_scout.request_plan.nodes import ROUTERS as REQUEST_PLAN_ROUTERS
 from talent_scout.request_plan.nodes import make_nodes as request_plan_nodes
 from talent_scout.runtime.deps import Deps, Node, Router
+from talent_scout.runtime.demo import DEMO_ROUTERS, demo_nodes
 from talent_scout.runtime.testing import STUB_ROUTERS, stub_nodes
 
 FAN_OUT_ROUTERS = ("relevance", "low_data_review")
@@ -43,6 +44,15 @@ OWNERS = {
 _OWNER_OF = {node: owner for owner, nodes in OWNERS.items() for node in nodes}
 
 
+def graph_topology() -> dict:
+    """The nodes and edges a client draws, in OWNERS order. START and END are left in for the client to drop."""
+    edges = [*EDGES, *((source, target) for source, targets in CONDITIONAL.items() for target in targets)]
+    return {
+        "nodes": [{"id": node, "owner": owner} for node, owner in _OWNER_OF.items()],
+        "edges": [{"source": source, "target": target} for source, target in edges],
+    }
+
+
 def _with_fan_out(router: Router) -> Router:
     # Collection returns "analyse" because Send payloads belong to Analysis, and a stage can't import another.
     def routed(state: State):
@@ -67,6 +77,9 @@ def build_graph(deps: Deps, saver: BaseCheckpointSaver | None, store: BaseStore 
         real_routers.update(BRIEF_ROUTERS)
     nodes = {**stub_nodes(), **real_nodes}
     routers = {**STUB_ROUTERS, **real_routers}
+    if deps.demo:
+        nodes.update(demo_nodes(deps.settings.demo_delay))
+        routers.update(DEMO_ROUTERS)
     for name in FAN_OUT_ROUTERS:
         routers[name] = _with_fan_out(routers[name])
 

@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     runs_dir: Path = Path("runs")
     # Used when the user gives no place, or none the clarify loop could pin down.
     default_country: str = "us"
+    demo: bool = False
+    demo_delay: float = 0.4  # seconds each Demo node waits, so a person can follow the Run
 
     _known_country = field_validator("default_country")(check_country)
 

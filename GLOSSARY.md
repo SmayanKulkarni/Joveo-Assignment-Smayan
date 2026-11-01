@@ -110,3 +110,11 @@ _Avoid_: Try, round, iteration
 **Pause**:
 A point where a Run stops and waits for the user: clarification, plan approval or low-data review.
 _Avoid_: Interrupt, checkpoint, stop
+
+**Step**:
+One user-level stage of a Run in the web UI, such as "Search job boards", merging one or more graph nodes under a friendly label.
+_Avoid_: Node (in the UI), stage
+
+**Demo Run**:
+A Run on the scripted, paced demo graph, using no LLM or jobs API, kept apart from real Run history so the web UI can be built and checked offline.
+_Avoid_: Mock run, fake run
