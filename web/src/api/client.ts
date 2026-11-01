@@ -1,4 +1,4 @@
-import type { Dimension, Meta, RunDetail } from "./types"
+import type { Dimension, Meta, RunDetail, RunRecord } from "./types"
 
 export class ApiError extends Error {
   constructor(
@@ -26,7 +26,9 @@ export const startRun = (request_text: string, focus: Dimension[]) =>
     body: JSON.stringify({ request_text, focus }),
   })
 
-export const getRun = (id: string) => call<RunDetail>(`/runs/${id}`)
+export const listRuns = () => call<RunRecord[]>("/runs")
+
+export const getRun =(id: string) => call<RunDetail>(`/runs/${id}`)
 
 export const getMeta = () => call<Meta>("/meta")
 

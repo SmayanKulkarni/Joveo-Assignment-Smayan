@@ -22,6 +22,17 @@ const indexOfNode = new Map(STEPS.flatMap((step, i) => step.nodes.map((node) => 
 
 export const stepOf = (node: string) => STEPS[indexOfNode.get(node) ?? -1]
 
+export const stepLabel = (id: string) => STEPS.find((s) => s.id === id)?.label ?? id
+
+// Nodes whose model output is a JSON draft: the stream shows this line instead of the fragments.
+export const DRAFTING: Record<string, string> = {
+  clarity_check: "Working out what's unclear…",
+  plan: "Drafting the search plan…",
+  broaden: "Working out how to widen the search…",
+  write_brief: "Drafting the brief…",
+  critic: "Checking claims against the numbers…",
+}
+
 // An edge to an earlier Step is a back-edge. Self-edges and the graph's START and END drop out.
 export function backEdges(graph: Graph): string[] {
   const edges = graph.edges.flatMap(({ source, target }) => {

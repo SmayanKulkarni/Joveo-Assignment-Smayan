@@ -4,6 +4,7 @@ import { startRun } from "../api/client"
 import type { Dimension } from "../api/types"
 import { DIMENSIONS } from "../dimensions"
 import { navigate } from "../router"
+import { refreshRuns } from "../sidebar/useRuns"
 
 export function Composer() {
   const [text, setText] = useState("")
@@ -17,7 +18,9 @@ export function Composer() {
     setBusy(true)
     setError(null)
     try {
-      navigate(`/runs/${(await startRun(text.trim(), focus)).thread_id}`)
+      const { thread_id } = await startRun(text.trim(), focus)
+      refreshRuns()
+      navigate(`/runs/${thread_id}`)
     } catch (e) {
       setError((e as Error).message)
       setBusy(false)

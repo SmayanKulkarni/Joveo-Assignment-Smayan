@@ -202,3 +202,11 @@ def test_resume_refusals_use_the_one_body(client, monkeypatch, error, status, co
     monkeypatch.setattr(client.app.state.controller, "resume", refuse)
     response = client.post("/api/runs/abc/resume", json={"answer": None})
     assert response.status_code == status and response.json()["code"] == code
+
+
+def test_live_from_follows_the_handle_across_a_resume(client):
+    thread_id = start(client)
+    paused = wait_for(client, thread_id, "paused")
+    client.post(f"/api/runs/{thread_id}/resume", json={"answer": {"answers": ["Austin, Texas"]}})
+    # The resumed handle starts where the log stood when the Run paused; history before it is not replayed.
+    assert client.get(f"/api/runs/{thread_id}").json()["live_from"] == len(paused["run_log"])

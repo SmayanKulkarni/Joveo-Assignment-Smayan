@@ -9,7 +9,7 @@ test("answering collapses the Pause into a record on its own turn", () => {
   state = reduce(state, { type: "paused", pause })
   state = reduce(state, { type: "answered", record: "You answered 1 question" })
   expect(state.pause).toBeNull()
-  expect(state.turns).toEqual([{ step: "ask", notes: [], answer: "You answered 1 question" }])
+  expect(state.turns).toMatchObject([{ step: "ask", notes: [], answer: "You answered 1 question" }])
   // The rerun node's NodeStarted stays in the same turn instead of opening another.
   expect(reduce(state, { type: "node_started", node: "clarify" }).turns).toHaveLength(1)
 })

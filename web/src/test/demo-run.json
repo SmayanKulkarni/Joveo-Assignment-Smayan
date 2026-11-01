@@ -1,0 +1,714 @@
+{
+ "meta": {
+  "graph": {
+   "nodes": [
+    {
+     "id": "intake",
+     "owner": "request_plan"
+    },
+    {
+     "id": "clarity_check",
+     "owner": "request_plan"
+    },
+    {
+     "id": "clarify",
+     "owner": "request_plan"
+    },
+    {
+     "id": "plan",
+     "owner": "request_plan"
+    },
+    {
+     "id": "plan_review",
+     "owner": "request_plan"
+    },
+    {
+     "id": "fetch_agent",
+     "owner": "collection"
+    },
+    {
+     "id": "tools",
+     "owner": "collection"
+    },
+    {
+     "id": "collect",
+     "owner": "collection"
+    },
+    {
+     "id": "relevance",
+     "owner": "collection"
+    },
+    {
+     "id": "broaden",
+     "owner": "collection"
+    },
+    {
+     "id": "low_data_review",
+     "owner": "collection"
+    },
+    {
+     "id": "batch_extract",
+     "owner": "analysis"
+    },
+    {
+     "id": "normalise_skills",
+     "owner": "analysis"
+    },
+    {
+     "id": "stats",
+     "owner": "analysis"
+    },
+    {
+     "id": "write_brief",
+     "owner": "brief"
+    },
+    {
+     "id": "critic",
+     "owner": "brief"
+    },
+    {
+     "id": "render",
+     "owner": "brief"
+    }
+   ],
+   "edges": [
+    {
+     "source": "__start__",
+     "target": "intake"
+    },
+    {
+     "source": "intake",
+     "target": "clarity_check"
+    },
+    {
+     "source": "clarify",
+     "target": "intake"
+    },
+    {
+     "source": "plan",
+     "target": "plan_review"
+    },
+    {
+     "source": "tools",
+     "target": "fetch_agent"
+    },
+    {
+     "source": "collect",
+     "target": "relevance"
+    },
+    {
+     "source": "broaden",
+     "target": "fetch_agent"
+    },
+    {
+     "source": "batch_extract",
+     "target": "normalise_skills"
+    },
+    {
+     "source": "normalise_skills",
+     "target": "stats"
+    },
+    {
+     "source": "stats",
+     "target": "write_brief"
+    },
+    {
+     "source": "write_brief",
+     "target": "critic"
+    },
+    {
+     "source": "render",
+     "target": "__end__"
+    },
+    {
+     "source": "clarity_check",
+     "target": "clarify"
+    },
+    {
+     "source": "clarity_check",
+     "target": "plan"
+    },
+    {
+     "source": "clarity_check",
+     "target": "__end__"
+    },
+    {
+     "source": "plan_review",
+     "target": "fetch_agent"
+    },
+    {
+     "source": "plan_review",
+     "target": "plan"
+    },
+    {
+     "source": "plan_review",
+     "target": "__end__"
+    },
+    {
+     "source": "fetch_agent",
+     "target": "tools"
+    },
+    {
+     "source": "fetch_agent",
+     "target": "collect"
+    },
+    {
+     "source": "relevance",
+     "target": "batch_extract"
+    },
+    {
+     "source": "relevance",
+     "target": "stats"
+    },
+    {
+     "source": "relevance",
+     "target": "broaden"
+    },
+    {
+     "source": "relevance",
+     "target": "low_data_review"
+    },
+    {
+     "source": "low_data_review",
+     "target": "broaden"
+    },
+    {
+     "source": "low_data_review",
+     "target": "batch_extract"
+    },
+    {
+     "source": "low_data_review",
+     "target": "stats"
+    },
+    {
+     "source": "low_data_review",
+     "target": "__end__"
+    },
+    {
+     "source": "critic",
+     "target": "write_brief"
+    },
+    {
+     "source": "critic",
+     "target": "render"
+    }
+   ]
+  },
+  "demo": true
+ },
+ "events": [
+  {
+   "type": "node_started",
+   "node": "intake"
+  },
+  {
+   "type": "node_done",
+   "node": "intake",
+   "notes": [
+    "Read the request"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "clarity_check"
+  },
+  {
+   "type": "node_done",
+   "node": "clarity_check",
+   "notes": [
+    "one question to ask first"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "clarify"
+  },
+  {
+   "type": "paused",
+   "pause": {
+    "kind": "clarify",
+    "payload": {
+     "questions": [
+      {
+       "about": "location",
+       "text": "Where will this person work?",
+       "options": [
+        "Austin, Texas",
+        "Remote, United States"
+       ],
+       "answer": null
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "node_started",
+   "node": "clarify"
+  },
+  {
+   "type": "node_done",
+   "node": "clarify",
+   "notes": [
+    "answered 1 questions"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "intake"
+  },
+  {
+   "type": "node_done",
+   "node": "intake",
+   "notes": [
+    "Read the request"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "clarity_check"
+  },
+  {
+   "type": "node_done",
+   "node": "clarity_check",
+   "notes": [
+    "request is final"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "plan"
+  },
+  {
+   "type": "node_done",
+   "node": "plan",
+   "notes": [
+    "plan: Data Engineer, target 20"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "plan_review"
+  },
+  {
+   "type": "paused",
+   "pause": {
+    "kind": "plan_review",
+    "payload": {
+     "plan": {
+      "titles": [
+       "Data Engineer"
+      ],
+      "country": "us",
+      "location": "Austin, Texas",
+      "radius_km": 40,
+      "max_days_old": 30,
+      "target_postings": 20,
+      "category": "it-jobs"
+     },
+     "assumptions": [
+      {
+       "about": "seniority",
+       "value": "mid-level",
+       "reason": "the request doesn't say"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "node_started",
+   "node": "plan_review"
+  },
+  {
+   "type": "node_done",
+   "node": "plan_review",
+   "notes": [
+    "plan approve"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "fetch_agent"
+  },
+  {
+   "type": "node_done",
+   "node": "fetch_agent",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "tools"
+  },
+  {
+   "type": "tool_called",
+   "name": "search_adzuna",
+   "summary": "\"Data Engineer\" page 1"
+  },
+  {
+   "type": "api_called",
+   "source": "adzuna",
+   "cached": false,
+   "count": 63,
+   "failed": false
+  },
+  {
+   "type": "tool_returned",
+   "name": "search_adzuna",
+   "summary": "63 Postings"
+  },
+  {
+   "type": "node_done",
+   "node": "tools",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "fetch_agent"
+  },
+  {
+   "type": "node_done",
+   "node": "fetch_agent",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "tools"
+  },
+  {
+   "type": "tool_called",
+   "name": "search_usajobs",
+   "summary": "\"Data Engineer\" page 1"
+  },
+  {
+   "type": "api_called",
+   "source": "usajobs",
+   "cached": true,
+   "count": 14,
+   "failed": false
+  },
+  {
+   "type": "tool_returned",
+   "name": "search_usajobs",
+   "summary": "14 Postings"
+  },
+  {
+   "type": "node_done",
+   "node": "tools",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "fetch_agent"
+  },
+  {
+   "type": "node_done",
+   "node": "fetch_agent",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "collect"
+  },
+  {
+   "type": "node_done",
+   "node": "collect",
+   "notes": [
+    "kept 3 Postings, merged 0 Duplicates",
+    "source totals"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "relevance"
+  },
+  {
+   "type": "node_done",
+   "node": "relevance",
+   "notes": [
+    "3 of 3 Postings relevant"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "low_data_review"
+  },
+  {
+   "type": "paused",
+   "pause": {
+    "kind": "low_data_review",
+    "payload": {
+     "count": 3,
+     "target": 20,
+     "attempts": 1,
+     "plans": [
+      {
+       "titles": [
+        "Data Engineer"
+       ],
+       "country": "us",
+       "location": "Austin, Texas",
+       "radius_km": 40,
+       "max_days_old": 30,
+       "target_postings": 20,
+       "category": "it-jobs"
+      }
+     ],
+     "fetched": 3,
+     "rejected": 0,
+     "calls_left": 21,
+     "blocked": null
+    }
+   }
+  },
+  {
+   "type": "node_started",
+   "node": "low_data_review"
+  },
+  {
+   "type": "node_done",
+   "node": "low_data_review",
+   "notes": [
+    "user chose broaden"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "broaden"
+  },
+  {
+   "type": "node_done",
+   "node": "broaden",
+   "notes": [
+    "broadened: radius_km: 40 -> 80; max_days_old: 30 -> 60"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "fetch_agent"
+  },
+  {
+   "type": "node_done",
+   "node": "fetch_agent",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "tools"
+  },
+  {
+   "type": "tool_called",
+   "name": "search_adzuna",
+   "summary": "\"Data Engineer\" page 1"
+  },
+  {
+   "type": "api_called",
+   "source": "adzuna",
+   "cached": false,
+   "count": 63,
+   "failed": false
+  },
+  {
+   "type": "tool_returned",
+   "name": "search_adzuna",
+   "summary": "63 Postings"
+  },
+  {
+   "type": "node_done",
+   "node": "tools",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "fetch_agent"
+  },
+  {
+   "type": "node_done",
+   "node": "fetch_agent",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "tools"
+  },
+  {
+   "type": "tool_called",
+   "name": "search_usajobs",
+   "summary": "\"Data Engineer\" page 1"
+  },
+  {
+   "type": "api_called",
+   "source": "usajobs",
+   "cached": true,
+   "count": 14,
+   "failed": false
+  },
+  {
+   "type": "tool_returned",
+   "name": "search_usajobs",
+   "summary": "14 Postings"
+  },
+  {
+   "type": "node_done",
+   "node": "tools",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "fetch_agent"
+  },
+  {
+   "type": "node_done",
+   "node": "fetch_agent",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "collect"
+  },
+  {
+   "type": "node_done",
+   "node": "collect",
+   "notes": [
+    "kept 6 Postings, merged 0 Duplicates",
+    "source totals"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "relevance"
+  },
+  {
+   "type": "node_done",
+   "node": "relevance",
+   "notes": [
+    "6 of 6 Postings relevant"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "batch_extract"
+  },
+  {
+   "type": "extract_progress",
+   "done": 1,
+   "total": 6
+  },
+  {
+   "type": "extract_progress",
+   "done": 2,
+   "total": 6
+  },
+  {
+   "type": "extract_progress",
+   "done": 3,
+   "total": 6
+  },
+  {
+   "type": "extract_progress",
+   "done": 4,
+   "total": 6
+  },
+  {
+   "type": "extract_progress",
+   "done": 5,
+   "total": 6
+  },
+  {
+   "type": "extract_progress",
+   "done": 6,
+   "total": 6
+  },
+  {
+   "type": "node_done",
+   "node": "batch_extract",
+   "notes": []
+  },
+  {
+   "type": "node_started",
+   "node": "normalise_skills"
+  },
+  {
+   "type": "node_done",
+   "node": "normalise_skills",
+   "notes": [
+    "2 skill names, no duplicates"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "stats"
+  },
+  {
+   "type": "node_done",
+   "node": "stats",
+   "notes": [
+    "6 Stats from 6 Postings",
+    "Demo data: these Postings are invented for the walkthrough"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "write_brief"
+  },
+  {
+   "type": "node_done",
+   "node": "write_brief",
+   "notes": [
+    "3 Insights from the draft"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "critic"
+  },
+  {
+   "type": "node_done",
+   "node": "critic",
+   "notes": [
+    "2 of 3 Insights supported (route: write_brief)"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "write_brief"
+  },
+  {
+   "type": "node_done",
+   "node": "write_brief",
+   "notes": [
+    "1 Insight reworded"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "critic"
+  },
+  {
+   "type": "node_done",
+   "node": "critic",
+   "notes": [
+    "3 of 3 Insights supported (route: render)"
+   ]
+  },
+  {
+   "type": "node_started",
+   "node": "render"
+  },
+  {
+   "type": "node_done",
+   "node": "render",
+   "notes": [
+    "3 Insights"
+   ]
+  },
+  {
+   "type": "done",
+   "status": "done",
+   "paths": [
+    "brief.json",
+    "brief.md"
+   ]
+  }
+ ]
+}
