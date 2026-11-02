@@ -219,8 +219,10 @@ class Tiers:
         )
 
 
-def make_tiers(settings: Settings) -> Tiers:
-    install_llm_cache(settings)
+def make_tiers(settings: Settings, *, cache: bool | None = None) -> Tiers:
+    # cache=False is for text that must never reach the replay cache's file, such as a resume.
+    if cache is not False:
+        install_llm_cache(settings)
 
     def build(ids: list[str], effort: str) -> list[BaseChatModel]:
         return [
@@ -232,6 +234,7 @@ def make_tiers(settings: Settings) -> Tiers:
                 openrouter_provider={"require_parameters": True, "sort": "price"},
                 timeout=TIMEOUT_MS,
                 max_retries=0,  # our with_retry owns retries
+                cache=cache,
             )
             for i in ids
         ]

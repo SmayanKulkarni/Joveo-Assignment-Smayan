@@ -15,9 +15,10 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from talent_scout.clients import auth, customers, probe
+from talent_scout.clients import auth, customers, probe, resumes
 from talent_scout.clients.auth import current_csm
 from talent_scout.clients.refusal import Refusal
+from talent_scout.analysis.resume import make_resume_chain
 from talent_scout.brief.glance import Glance, glance
 from talent_scout.brief.markdown import CONFIDENCE_KEY
 from talent_scout.brief.rules import OUTLOOK_MEANING, recommendation_of
@@ -164,6 +165,7 @@ public = APIRouter(prefix="/api", dependencies=[Depends(write_guard)])
 public.include_router(auth.router)
 api = APIRouter(prefix="/api", dependencies=[Depends(write_guard), Depends(current_csm)])
 api.include_router(customers.router)
+api.include_router(resumes.router)
 
 
 @public.get("/meta")
@@ -260,6 +262,8 @@ def make_app(settings: Settings) -> FastAPI:
     async def lifespan(app: FastAPI):
         async with RunController.open(settings) as controller:
             app.state.controller = controller
+            # No model in a Demo install; tests put a fake chain here.
+            app.state.resume_chain = None if settings.demo else make_resume_chain(settings)
             yield
 
     app = FastAPI(lifespan=lifespan)
@@ -272,7 +276,7 @@ def make_app(settings: Settings) -> FastAPI:
         app.add_middleware(
             CORSMiddleware,
             allow_origins=[settings.web_origin],
-            allow_methods=["GET", "POST", "PATCH", "DELETE"],
+            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
             allow_headers=["Content-Type"],
         )
 

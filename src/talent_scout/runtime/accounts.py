@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from pydantic import StringConstraints
 
+from talent_scout.analysis.resume import ResumeFacts
 from talent_scout.kernel.types import Model
 
 SESSION_DAYS = 30
@@ -21,6 +22,9 @@ SCHEMA = [
     """CREATE TABLE IF NOT EXISTS customers (
       id TEXT PRIMARY KEY, csm_id TEXT NOT NULL, name TEXT NOT NULL, note TEXT,
       created_at TEXT NOT NULL, updated_at TEXT NOT NULL)""",
+    # The redacted text stays only to check CSM edits against; no original file is kept.
+    """CREATE TABLE IF NOT EXISTS resumes (
+      customer_id TEXT PRIMARY KEY, text TEXT NOT NULL, facts TEXT NOT NULL, uploaded_at TEXT NOT NULL)""",
 ]
 
 CustomerName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
@@ -39,6 +43,12 @@ class Customer(Model):
     note: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class StoredResume(Model):
+    text: str
+    facts: ResumeFacts
+    uploaded_at: datetime
 
 
 def _now() -> str:
@@ -138,7 +148,25 @@ class Accounts:
         return Customer.model_validate((await self._run("SELECT * FROM customers WHERE id = ?", (customer.id,)))[0])
 
     async def delete_customer(self, customer_id: str) -> None:
+        await self.delete_resume(customer_id)
         await self._run("DELETE FROM customers WHERE id = ?", (customer_id,))
+
+    async def resume(self, customer_id: str) -> StoredResume | None:
+        rows = await self._run("SELECT text, facts, uploaded_at FROM resumes WHERE customer_id = ?", (customer_id,))
+        return StoredResume.model_validate({**rows[0], "facts": ResumeFacts.model_validate_json(rows[0]["facts"])}) if rows else None
+
+    async def save_resume(self, customer_id: str, text: str, facts: ResumeFacts, *, keep_date: bool = False) -> None:
+        await self._run(
+            "INSERT INTO resumes (customer_id, text, facts, uploaded_at) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT (customer_id) DO UPDATE SET text = excluded.text, facts = excluded.facts"
+            + ("" if keep_date else ", uploaded_at = excluded.uploaded_at"),
+            (customer_id, text, facts.model_dump_json(), _now()),
+        )
+
+    async def delete_resume(self, customer_id: str) -> bool:
+        gone = bool(await self._run("SELECT 1 FROM resumes WHERE customer_id = ?", (customer_id,)))
+        await self._run("DELETE FROM resumes WHERE customer_id = ?", (customer_id,))
+        return gone
 
     async def owner_of_run(self, thread_id: str) -> str | None:
         rows = await self._run(
