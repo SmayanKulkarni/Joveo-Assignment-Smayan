@@ -1,14 +1,54 @@
-import type { Recommendation } from "../api/types"
+import { useState } from "react"
+import type { Match, PostingRef, Recommendation } from "../api/types"
 import { downloadUrl } from "./documents"
 import type { Ctx } from "./Evidence"
 import { Tile } from "./Tiles"
 
 const money = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 })
 
-type Props = { id: string; role: string; recommendation: Recommendation; ctx: Ctx }
+const LEVELS = { fits: "Fits", stretch: "Stretch", far: "Far", not_judged: "Not judged" }
 
-export function RecommendationView({ id, role, recommendation: r, ctx }: Props) {
+function MatchRow({ rank, match, posting }: { rank: number; match: Match; posting: PostingRef }) {
+  // Both spellings when they differ, as in the download.
+  const skill = (s: Match["matched"][number]) =>
+    (s.posting.toLowerCase() === s.resume.toLowerCase() ? s.posting : `${s.posting} (Resume: ${s.resume})`) + (s.added ? " [added by CSM]" : "")
+  return (
+    <li className="match">
+      <strong>
+        {rank}. {posting.title}
+      </strong>
+      , {[posting.company, posting.location].filter(Boolean).join(", ")}
+      <ul>
+        <li>Pay: {posting.pay}</li>
+        <li>
+          Score {match.score}, {LEVELS[match.level]} ({match.level_reason})
+        </li>
+        <li>Matched: {match.matched.map(skill).join(", ") || "none"}</li>
+        <li>Missing: {match.missing.join(", ") || "none"}</li>
+        <li>
+          Source: {posting.source}. {posting.labels.map((l) => `${l}. `)}
+          {posting.url && (
+            <a href={posting.url} target="_blank" rel="noopener noreferrer">
+              link
+            </a>
+          )}
+        </li>
+      </ul>
+    </li>
+  )
+}
+
+type Props = { id: string; role: string; recommendation: Recommendation; matches: Match[]; shownKeys: string[]; ctx: Ctx }
+
+export function RecommendationView({ id, role, recommendation: r, matches, shownKeys, ctx }: Props) {
+  const [all, setAll] = useState(false)
   const band = r.salary_band
+  const byKey = new Map(ctx.sample.map((p) => [p.key, p]))
+  // A Match whose Posting isn't in the Sample can't be shown, so it is left out.
+  const listed = matches.filter((m) => byKey.has(m.posting_key))
+  const top = listed.filter((m) => shownKeys.includes(m.posting_key))
+  const rest = listed.filter((m) => !shownKeys.includes(m.posting_key))
+  const rows = all ? [...top, ...rest] : top
   return (
     <article className="brief">
       <div className="brief-head">
@@ -32,7 +72,17 @@ export function RecommendationView({ id, role, recommendation: r, ctx }: Props) 
       </div>
       <section>
         <h2>Matches</h2>
-        <p>{r.matches_note}</p>
+        {top.length === 0 && <p>{r.matches_note}</p>}
+        <ol className="matches">
+          {rows.map((m, i) => (
+            <MatchRow key={m.posting_key} rank={i + 1} match={m} posting={byKey.get(m.posting_key)!} />
+          ))}
+        </ol>
+        {rest.length > 0 && !all && (
+          <button type="button" className="no-print" onClick={() => setAll(true)}>
+            Show the other {rest.length}
+          </button>
+        )}
       </section>
     </article>
   )

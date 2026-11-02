@@ -79,7 +79,29 @@ export type RunDetail = {
   brief: Brief | null
   recommendation: Recommendation | null
   sample: PostingRef[]
+  matches: Match[]
+  shown_keys: string[]
   glance: Glance | null
+}
+
+export type Level = "fits" | "stretch" | "far" | "not_judged"
+export type Match = {
+  posting_key: string
+  score: number
+  matched: { posting: string; resume: string; added: boolean }[]
+  missing: string[]
+  level: Level
+  level_reason: string
+}
+
+export type ResumeInfo = { uploaded_at: string }
+
+export type ProfileField = "role" | "country" | "currency" | "seniority" | "employment_type" | "work_mode" | "places" | "focus" | "titles"
+export type Profile = {
+  values: Partial<Record<ProfileField, { value: string | string[]; runs: number | null }>> // runs is null when the CSM set it
+  titles: Record<string, number>
+  earlier: { thread_id: string; date: string; role: string; country: string; sample_size: number; median_pay: number | null; currency: string | null }[]
+  cleared_at: string | null
 }
 
 export type Row = { label: string; count: number; required: number | null; stat_ids: string[]; evidence: Evidence }
@@ -99,6 +121,9 @@ export type PostingRef = {
   location: string
   url: string | null
   posted_at: string
+  source: string
+  pay: string
+  labels: string[]
 }
 
 export type Evidence = { posting_keys: string[] }
@@ -128,6 +153,7 @@ export type Brief = {
     postings_analysed: Evidence
     match_totals: string[]
     caveats: string[]
+    resume_note: string | null
     attribution: string | null
     matches_note: string
   }

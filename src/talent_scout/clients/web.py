@@ -15,19 +15,20 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from talent_scout.clients import auth, customers, probe, resumes
+from talent_scout.clients import auth, customers, probe, profiles, resumes
 from talent_scout.clients.auth import current_csm
 from talent_scout.clients.refusal import Refusal
 from talent_scout.analysis.types import Match
 from talent_scout.analysis.resume import make_resume_chain
 from talent_scout.brief.glance import Glance, glance
-from talent_scout.brief.markdown import CONFIDENCE_KEY
-from talent_scout.brief.rules import OUTLOOK_MEANING, recommendation_of
+from talent_scout.analysis.match import default_view
+from talent_scout.brief.markdown import CONFIDENCE_KEY, PARTIAL_LABEL, REMOTE_LABEL, pay_text
+from talent_scout.brief.rules import OUTLOOK_MEANING, SOURCE_NAMES, recommendation_of
 from talent_scout.brief.types import CustomerRecommendation, MarketBrief
 from talent_scout.kernel.llm import BalanceTooLow
 from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.state import LogKind
-from talent_scout.kernel.types import ADZUNA_CATEGORIES, ADZUNA_CURRENCY, Dimension, Model, NonBlank
+from talent_scout.kernel.types import ADZUNA_CATEGORIES, ADZUNA_CURRENCY, Dimension, Model, NonBlank, Posting, Source
 from talent_scout.runtime.accounts import Csm
 from talent_scout.runtime.controller import InvalidAnswer, NotResumable, RunController, RunHandle, RunLive, RunView, UnknownRun
 from talent_scout.runtime.events import Stopped
@@ -79,6 +80,9 @@ class PostingRef(Model):
     location: str
     url: str | None
     posted_at: date
+    source: str
+    pay: str  # with its Advertised or Estimated label
+    labels: list[str]  # remote and partial-advert notes; neither changes a score
 
 
 class RunDetail(Model):
@@ -92,7 +96,8 @@ class RunDetail(Model):
     live_from: int | None  # the attached handle's log_start; None when no Run is live here
     brief: MarketBrief | None
     sample: list[PostingRef]  # empty unless there is a Brief
-    matches: list[Match]  # every scored Posting, ranked; the default view is the first few that pass the cut
+    matches: list[Match]  # every scored Posting, ranked
+    shown_keys: list[str]  # the Postings of the default view, in rank order; the rest sit behind "Show the other N"
     recommendation: CustomerRecommendation | None  # computed on read for a Run that finished before it was stored
     glance: Glance | None  # computed on read, so earlier Runs get it and brief.json keeps its bytes
 
@@ -102,13 +107,18 @@ def _http_url(url: str) -> str | None:
     return url if urlparse(url).scheme in ("http", "https") else None
 
 
+def _labels(p: Posting) -> list[str]:
+    return ([REMOTE_LABEL] if p.remote else []) + ([PARTIAL_LABEL] if p.source == Source.adzuna else [])
+
+
 def _detail(view: RunView, handle: RunHandle | None) -> RunDetail:
     state = view.state
     sample = []
     if state and state.brief:
         sample = [
             PostingRef(
-                key=p.key, title=p.title, company=p.company, location=p.location, url=_http_url(p.url), posted_at=p.posted_at
+                key=p.key, title=p.title, company=p.company, location=p.location, url=_http_url(p.url), posted_at=p.posted_at,
+                source=SOURCE_NAMES[p.source], pay=pay_text(p), labels=_labels(p),
             )
             for p in state.sample_postings
         ]
@@ -123,6 +133,7 @@ def _detail(view: RunView, handle: RunHandle | None) -> RunDetail:
         brief=state.brief if state else None,
         sample=sample,
         matches=state.matches if state else [],
+        shown_keys=[m.posting_key for m in default_view(state.matches)] if state else [],
         recommendation=recommendation_of(state) if state and state.brief else None,
         glance=glance(state.brief, state.sample_postings) if state and state.brief else None,
     )
@@ -169,6 +180,7 @@ public.include_router(auth.router)
 api = APIRouter(prefix="/api", dependencies=[Depends(write_guard), Depends(current_csm)])
 api.include_router(customers.router)
 api.include_router(resumes.router)
+api.include_router(profiles.router)
 
 
 @public.get("/meta")

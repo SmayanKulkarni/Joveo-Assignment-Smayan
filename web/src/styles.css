@@ -229,3 +229,8 @@ marker path { fill: var(--line); } marker.taken path { fill: var(--warn); }
 .sign-in h1 { margin: 0 0 16px; }
 .sign-in a.start { display: inline-block; }
 @media (max-width: 899px) { .sidebar .new-run { width: auto; } }
+.matches { list-style: none; padding: 0; }
+.match { margin-bottom: 14px; }
+.profile table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.profile th, .profile td { text-align: left; padding: 4px 8px; vertical-align: top; }
+.profile .inline { display: inline-flex; gap: 4px; margin-right: 6px; }

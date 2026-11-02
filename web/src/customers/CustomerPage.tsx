@@ -7,6 +7,9 @@ import { navigate } from "../router"
 import { RunList } from "../sidebar/RunList"
 import { refreshCustomers } from "../sidebar/useCustomers"
 import { CustomerHeader } from "./CustomerHeader"
+import { ProfilePanel } from "./ProfilePanel"
+
+const TABS = [["runs", "Runs"], ["profile", "Profile"]] as const
 
 function Edit({ customer, onDone }: { customer: Customer; onDone: () => void }) {
   const [name, setName] = useState(customer.name)
@@ -37,6 +40,7 @@ function Edit({ customer, onDone }: { customer: Customer; onDone: () => void }) 
 export function CustomerPage({ customer, runs }: { customer: Customer; runs: RunRecord[] }) {
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [tab, setTab] = useState<(typeof TABS)[number][0]>("runs")
 
   async function remove() {
     if (!confirm(`Delete ${customer.name} and all of their Runs? This can't be undone.`)) return
@@ -57,9 +61,22 @@ export function CustomerPage({ customer, runs }: { customer: Customer; runs: Run
         <button type="button" className="danger" onClick={remove}>Delete Customer</button>
       </div>
       {error && <p className="error">{error}</p>}
-      <Composer customerId={customer.id} />
-      <h2>Runs</h2>
-      <RunList runs={runs} activeId={null} />
+      <div role="tablist" className="tabs no-print">
+        {TABS.map(([key, label]) => (
+          <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === "profile" ? (
+        <ProfilePanel customerId={customer.id} />
+      ) : (
+        <>
+          <Composer customerId={customer.id} />
+          <h2>Runs</h2>
+          <RunList runs={runs} activeId={null} />
+        </>
+      )}
     </div>
   )
 }

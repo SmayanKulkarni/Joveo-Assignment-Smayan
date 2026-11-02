@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { KeyboardEvent } from "react"
-import { startRun } from "../api/client"
+import { getResume, startRun } from "../api/client"
 import type { Dimension } from "../api/types"
 import { DIMENSIONS } from "../dimensions"
 import { navigate } from "../router"
@@ -11,7 +11,13 @@ export function Composer({ customerId }: { customerId: string }) {
   const [focus, setFocus] = useState<Dimension[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [uploaded, setUploaded] = useState<string | null>(null)
   const blank = !text.trim()
+
+  // A Customer with no Resume answers 404, which just means there is no line to show.
+  useEffect(() => {
+    getResume(customerId).then((r) => setUploaded(r.uploaded_at), () => setUploaded(null))
+  }, [customerId])
 
   async function submit() {
     if (blank || busy) return
@@ -61,6 +67,7 @@ export function Composer({ customerId }: { customerId: string }) {
           </button>
         </div>
       </div>
+      {uploaded && <p className="muted">Using the Resume uploaded on {new Date(uploaded).toLocaleDateString()}</p>}
       {error && <p className="error">{error}</p>}
     </div>
   )

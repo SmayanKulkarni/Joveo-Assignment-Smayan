@@ -35,6 +35,7 @@ from talent_scout.brief.rules import recommendation_of
 from talent_scout.runtime.graph import build_graph
 from talent_scout.runtime.guard import RunLocked, take_lock
 from talent_scout.runtime.pause import ALLOWED_MSGPACK, ANSWERS, Pause
+from talent_scout.runtime.profile import WINDOW, facts_of, learn
 from talent_scout.runtime.registry import RESUMABLE, Registry, RunRecord, RunStatus, derive_status
 from talent_scout.runtime.seed import seed_runs
 from talent_scout.runtime.testing import fake_deps
@@ -316,6 +317,27 @@ class RunController:
             await self._saver.adelete_thread(thread_id)
         shutil.rmtree(self._settings.runs_dir / thread_id, ignore_errors=True)
         await self._registry.delete(thread_id)
+        await self._relearn(record.customer_id)
+
+    async def _relearn(self, customer_id: str | None) -> None:
+        """Rebuild the Customer's learned profile from their last Done Runs. Housekeeping, so a failure is logged and never fails a Run."""
+        if customer_id is None:
+            return
+        try:
+            cleared = (await self.accounts.profile(customer_id)).cleared_at
+            done = [
+                r for r in await self._registry.list_all(customer_id=customer_id)
+                if r.status is RunStatus.done and (cleared is None or r.created_at >= cleared)
+            ][:WINDOW]
+            facts = []
+            for record in done:
+                values = (await self._graph.aget_state(_config(record.thread_id))).values
+                found = facts_of(record.thread_id, record.created_at.date(), State.model_validate(values)) if values else None
+                if found:
+                    facts.append(found)
+            await self.accounts.save_learned(customer_id, learn(facts))
+        except Exception:
+            logger.exception("Relearning the profile of Customer %s failed", customer_id)
 
     async def _check_balance(self) -> None:
         # A replayed or Demo Run makes no LLM calls, so it must work without OpenRouter.
@@ -366,7 +388,10 @@ class RunController:
                 await self._saver.aprune([thread_id], strategy="keep_latest")
             except Exception:
                 logger.exception("Pruning Run %s failed", thread_id)
-        return await self._registry.get(thread_id)
+        record = await self._registry.get(thread_id)
+        if status is RunStatus.done:
+            await self._relearn(record.customer_id)
+        return record
 
     def brief_paths(self, thread_id: str) -> list[Path]:
         folder = self._settings.runs_dir / thread_id

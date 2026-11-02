@@ -7,7 +7,7 @@ import { RecommendationView } from "./RecommendationView"
 
 export function Deliverables({ id, detail }: { id: string; detail: RunDetail & { brief: NonNullable<RunDetail["brief"]> } }) {
   const [tab, setTab] = useState<Document>("brief")
-  const { brief, recommendation, sample, glance } = detail
+  const { brief, recommendation, sample, glance, matches, shown_keys } = detail
   return (
     <>
       <div role="tablist" className="tabs no-print">
@@ -20,7 +20,7 @@ export function Deliverables({ id, detail }: { id: string; detail: RunDetail & {
       {tab === "brief" || !recommendation ? (
         <BriefView id={id} brief={brief} sample={sample} glance={glance} />
       ) : (
-        <RecommendationView id={id} role={brief.hiring_request.role} recommendation={recommendation} ctx={{ stats: brief.stats.stats, sample }} />
+        <RecommendationView id={id} role={brief.hiring_request.role} recommendation={recommendation} matches={matches} shownKeys={shown_keys} ctx={{ stats: brief.stats.stats, sample }} />
       )}
     </>
   )

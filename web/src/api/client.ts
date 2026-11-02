@@ -1,4 +1,4 @@
-import type { Customer, Dimension, Me, Meta, RunDetail, RunRecord } from "./types"
+import type { Customer, Dimension, Me, Meta, Profile, ProfileField, ResumeInfo, RunDetail, RunRecord } from "./types"
 
 export class ApiError extends Error {
   constructor(
@@ -47,6 +47,15 @@ export const editCustomer = (id: string, fields: { name?: string; note?: string 
   call<Customer>(`/customers/${id}`, json("PATCH", fields))
 
 export const deleteCustomer = (id: string) => call<void>(`/customers/${id}`, { method: "DELETE" })
+
+export const getResume = (id: string) => call<ResumeInfo>(`/customers/${id}/resume`)
+
+export const getProfile = (id: string) => call<Profile>(`/customers/${id}/profile`)
+
+export const editProfile = (id: string, change: { set?: Partial<Record<ProfileField, string | string[]>>; remove?: ProfileField[] }) =>
+  call<Profile>(`/customers/${id}/profile`, json("PATCH", change))
+
+export const clearProfile = (id: string) => call<void>(`/customers/${id}/profile`, { method: "DELETE" })
 
 export const listRuns = () => call<RunRecord[]>("/runs")
 

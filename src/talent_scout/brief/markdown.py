@@ -152,7 +152,7 @@ def render_markdown(brief: MarketBrief, postings: list[Posting]) -> str:
     return "\n\n".join(parts) + "\n"
 
 
-def _pay(p: Posting) -> str:
+def pay_text(p: Posting) -> str:
     s = p.salary
     if s is None:
         return "not stated"
@@ -174,7 +174,7 @@ def _match_row(rank: int, m: Match, p: Posting) -> str:
     where = ", ".join(x for x in (_cell(p.company or ""), _cell(p.location)) if x)
     return "\n".join([
         f"{rank}. **{_cell(p.title)}**, {where}",
-        f"   - Pay: {_pay(p)}",
+        f"   - Pay: {pay_text(p)}",
         f"   - Score {m.score}, {m.level.value.replace('_', ' ').capitalize()} ({m.level_reason})",
         f"   - Matched: {', '.join(skill(s) for s in m.matched) or 'none'}",
         f"   - Missing: {', '.join(_cell(s) for s in m.missing) or 'none'}",

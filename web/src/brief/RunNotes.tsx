@@ -25,6 +25,11 @@ export function RunNotes({ notes }: { notes: Brief["run_notes"] }) {
         <Item label="Things to keep in mind" lines={notes.caveats.map((c) => `⚠ ${c}`)} empty="None" />
         <Item label="Questions and answers" lines={notes.questions.map((q) => `${q.text} → ${q.answer || "no answer"}`)} empty="None asked" />
         <Item label="Assumptions" lines={notes.assumptions.map((a) => `${a.about}: ${a.value} (${a.reason})`)} empty="None" />
+        {notes.resume_note && (
+          <li>
+            <b>Resume:</b> {notes.resume_note}
+          </li>
+        )}
         <li>
           <b>Search used:</b> {planLine(notes.final_plan)}
         </li>

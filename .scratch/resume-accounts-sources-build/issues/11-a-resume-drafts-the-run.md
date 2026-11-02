@@ -4,13 +4,13 @@
 
 **Blocked by:** 09: Runs belong to a Customer; 10: Upload and correct a Resume
 
-**Status:** in-progress (API and graph done; the New Run screen line "Using the Resume uploaded on <date>" is not built)
+**Status:** done (see commit)
 
-- [ ] The Controller copies the current facts into a defaulted `resume` input field, so later uploads don't change a Run
-- [ ] `intake` reads the request and the facts, and whatever the CSM typed takes priority
-- [ ] Each field taken from the Resume is an Assumption; `clarity_check` still asks about whatever is unclear
-- [ ] All three Pauses stay
-- [ ] The New Run screen says "Using the Resume uploaded on <date>"
-- [ ] The Run Notes gain one line naming when the Resume was uploaded and which CSM-added facts were used
-- [ ] `write_brief` never receives Resume facts
-- [ ] A test asserts a Run's prompts contain nothing from a second Customer's Resume, and that nodes have no database access to fetch one
+- [x] The Controller copies the current facts into a defaulted `resume` input field, so later uploads don't change a Run
+- [x] `intake` reads the request and the facts, and whatever the CSM typed takes priority
+- [x] Each field taken from the Resume is an Assumption; `clarity_check` still asks about whatever is unclear
+- [x] All three Pauses stay
+- [x] The New Run screen says "Using the Resume uploaded on <date>"
+- [x] The Run Notes gain one line naming when the Resume was uploaded and which CSM-added facts were used
+- [x] `write_brief` never receives Resume facts
+- [x] A test asserts a Run's prompts contain nothing from a second Customer's Resume, and that nodes have no database access to fetch one

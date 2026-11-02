@@ -4,16 +4,16 @@
 
 **Blocked by:** 02: Remote Postings; 03: Guardrails on Postings; 04: Customer Recommendation as its own deliverable; 11: A Resume drafts the Run
 
-**Status:** done except the web rows, the three-Resume tuning and the Match view in the UI (see commit)
+**Status:** done except tuning the constants on three fictional Resumes against recorded Postings, and recording the chosen values (needs the Resumes and a choice of recorded Postings)
 
-- [ ] A `match` node owned by Analysis runs `stats → match → write_brief`, including on an empty Sample, with no LLM or Jev call
-- [ ] Any exception logs the Caveat "Matches unavailable", which holds no Resume content, and the Run carries on
-- [ ] Resume skill names join the `normalise_skills` input after the 300-name cut, and a Run with no Resume sends the same prompt as today
-- [ ] Matched skills, score (with the floor of 5), Level, ranking and the default view follow the spec, with its numbers as constants
-- [ ] Postings with no Extraction are counted in the Run Notes, not scored
-- [ ] A Match shows both spellings when they differ, and "added by CSM" where it applies
-- [ ] A row shows rank, title, employer, place, pay with its Advertised or Estimated label, score, Level, skills, attribution and link
-- [ ] Remote and partial-advert labels appear on the row and in the download, and neither changes the score
-- [ ] "Show the other N" reveals the rest, and if none pass the Recommendation says so
-- [ ] `match` is in the stubs, demo, topology and stage strip
+- [x] A `match` node owned by Analysis runs `stats → match → write_brief`, including on an empty Sample, with no LLM or Jev call
+- [x] Any exception logs the Caveat "Matches unavailable", which holds no Resume content, and the Run carries on
+- [x] Resume skill names join the `normalise_skills` input after the 300-name cut, and a Run with no Resume sends the same prompt as today
+- [x] Matched skills, score (with the floor of 5), Level, ranking and the default view follow the spec, with its numbers as constants
+- [x] Postings with no Extraction are counted in the Run Notes, not scored
+- [x] A Match shows both spellings when they differ, and "added by CSM" where it applies
+- [x] A row shows rank, title, employer, place, pay with its Advertised or Estimated label, score, Level, skills, attribution and link
+- [x] Remote and partial-advert labels appear on the row and in the download, and neither changes the score
+- [x] "Show the other N" reveals the rest, and if none pass the Recommendation says so
+- [x] `match` is in the stubs, demo, topology and stage strip
 - [ ] The stuffed-Posting fixture and table tests cover every rule; the constants are tuned on three fictional Resumes against recorded Postings, and the chosen values recorded

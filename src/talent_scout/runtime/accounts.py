@@ -1,3 +1,4 @@
+import json
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from secrets import token_urlsafe
@@ -8,6 +9,7 @@ from pydantic import StringConstraints
 
 from talent_scout.analysis.resume import ResumeFacts
 from talent_scout.kernel.types import Model
+from talent_scout.runtime.profile import Learned
 
 SESSION_DAYS = 30
 LOCAL_CSM = "local"
@@ -25,6 +27,9 @@ SCHEMA = [
     # The redacted text stays only to check CSM edits against; no original file is kept.
     """CREATE TABLE IF NOT EXISTS resumes (
       customer_id TEXT PRIMARY KEY, text TEXT NOT NULL, facts TEXT NOT NULL, uploaded_at TEXT NOT NULL)""",
+    # `learned` is rebuilt from Runs; `pinned` and `removed` are the CSM's say. Code writes it all, no model.
+    """CREATE TABLE IF NOT EXISTS customer_profiles (
+      customer_id TEXT PRIMARY KEY, learned TEXT NOT NULL, pinned TEXT NOT NULL, removed TEXT NOT NULL, cleared_at TEXT)""",
 ]
 
 CustomerName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
@@ -49,6 +54,13 @@ class StoredResume(Model):
     text: str
     facts: ResumeFacts
     uploaded_at: datetime
+
+
+class StoredProfile(Model):
+    learned: Learned = Learned()
+    pinned: dict[str, str | list[str]] = {}
+    removed: list[str] = []
+    cleared_at: datetime | None = None
 
 
 def _now() -> str:
@@ -149,6 +161,7 @@ class Accounts:
 
     async def delete_customer(self, customer_id: str) -> None:
         await self.delete_resume(customer_id)
+        await self._run("DELETE FROM customer_profiles WHERE customer_id = ?", (customer_id,))
         await self._run("DELETE FROM customers WHERE id = ?", (customer_id,))
 
     async def resume(self, customer_id: str) -> StoredResume | None:
@@ -167,6 +180,35 @@ class Accounts:
         gone = bool(await self._run("SELECT 1 FROM resumes WHERE customer_id = ?", (customer_id,)))
         await self._run("DELETE FROM resumes WHERE customer_id = ?", (customer_id,))
         return gone
+
+    async def profile(self, customer_id: str) -> StoredProfile:
+        rows = await self._run("SELECT * FROM customer_profiles WHERE customer_id = ?", (customer_id,))
+        if not rows:
+            return StoredProfile()
+        row = rows[0]
+        return StoredProfile(
+            learned=Learned.model_validate_json(row["learned"]), pinned=json.loads(row["pinned"]),
+            removed=json.loads(row["removed"]), cleared_at=row["cleared_at"],
+        )
+
+    async def save_profile(self, customer_id: str, profile: StoredProfile) -> None:
+        await self._run(
+            "INSERT INTO customer_profiles (customer_id, learned, pinned, removed, cleared_at) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT (customer_id) DO UPDATE SET learned = excluded.learned, pinned = excluded.pinned, "
+            "removed = excluded.removed, cleared_at = excluded.cleared_at",
+            (
+                customer_id, profile.learned.model_dump_json(), json.dumps(profile.pinned), json.dumps(profile.removed),
+                profile.cleared_at.isoformat() if profile.cleared_at else None,
+            ),
+        )
+
+    async def save_learned(self, customer_id: str, learned: Learned) -> None:
+        # Only this column, so a recompute can't undo a CSM's edit made while it ran.
+        await self._run(
+            "INSERT INTO customer_profiles (customer_id, learned, pinned, removed) VALUES (?, ?, '{}', '[]') "
+            "ON CONFLICT (customer_id) DO UPDATE SET learned = excluded.learned",
+            (customer_id, learned.model_dump_json()),
+        )
 
     async def owner_of_run(self, thread_id: str) -> str | None:
         rows = await self._run(
