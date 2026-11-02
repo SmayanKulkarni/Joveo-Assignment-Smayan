@@ -75,7 +75,7 @@ def _claim(state: State, insight: InsightDraft) -> dict:
 
 
 def _run_notes(state: State) -> RunNotes:
-    has_adzuna = any(p.source == Source.adzuna for p in state.sample_postings)
+    credited = [ATTRIBUTION[s] for s in Source if s in ATTRIBUTION and any(p.source == s for p in state.sample_postings)]
     return RunNotes(
         questions=state.questions,
         assumptions=state.assumptions,
@@ -86,7 +86,7 @@ def _run_notes(state: State) -> RunNotes:
         postings_analysed=Evidence(posting_keys=state.sample),
         match_totals=match_totals(state.run_log),
         caveats=_caveats(state),
-        attribution=f"Jobs data provided by {ATTRIBUTION[Source.adzuna]}" if has_adzuna else None,
+        attribution=f"Jobs data provided by {' and '.join(credited)}" if credited else None,
     )
 
 

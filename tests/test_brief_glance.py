@@ -69,6 +69,15 @@ def test_places_strip_what_all_share_and_a_country_only_region_is_area_not_given
     assert [(r.label, r.count) for r in chart.rows] == [("Mumbai", 12), ("Thane", 8), (NO_AREA, 5)]
 
 
+def test_remote_postings_form_one_remote_group_beside_the_cities():
+    edits = regions(*[("Deutschland", "Berlin")] * 10, *[("Deutschland", "Munich")] * 6, *[("Remote",)] * 9)
+    for i in range(16, 25):
+        edits[i]["remote"] = True
+    chart = glance(brief_with(), sample(edits)[1]).places
+
+    assert [(r.label, r.count) for r in chart.rows] == [("Berlin", 10), ("Remote", 9), ("Munich", 6)]
+
+
 def test_places_keep_six_then_count_the_rest_and_hide_under_two_groups():
     many = regions(*[("India", "MH", f"Town {i % 8}") for i in range(25)])
     rows = glance(brief_with(), sample(many)[1]).places.rows

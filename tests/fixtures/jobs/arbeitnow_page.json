@@ -1,0 +1,190 @@
+{
+ "status": 200,
+ "body": {
+  "data": [
+   {
+    "slug": "working-student-qa-in-mobile-app-development-mfd-berlin-110910",
+    "company_name": "idealo internet GmbH",
+    "title": "Working Student QA in Mobile App Development (m|f|d)",
+    "description": "<p>Great shopping experiences start with great quality. Join our Mobile Application Development team as a Working Student in QA and help us deliver reliable, user-friendly Android and iOS apps. From testing new features to identifying bugs and supporting test automation, you'll play an active role in making idealo's mobile experience better every day.</p><p style=\"min-height: 1.7em;\"></p><h3>About your new role</h3><ul><li><p>You will become part of our working student QA team, collaborating closely with designers, product managers, and software developers to ensure the quality of idealo’s Android and iOS apps.</p></li></ul><ul><li><p>",
+    "remote": false,
+    "url": "https://www.arbeitnow.com/jobs/companies/idealo-internet-gmbh/working-student-qa-in-mobile-app-development-mfd-berlin-110910",
+    "tags": [
+     "Career Starters"
+    ],
+    "job_types": [
+     "Student college",
+     "parttime fixed term"
+    ],
+    "location": "Berlin, Berlin, Deutschland",
+    "created_at": 1793590268
+   },
+   {
+    "slug": "senior-growth-marketing-manager-maternity-cover-berlin-303138",
+    "company_name": "Lovehoney Group",
+    "title": "Senior Growth Marketing Manager (Maternity Cover)",
+    "description": "<div>\n<p style=\"text-align: justify;\"><span data-contrast=\"auto\">Lovehoney&nbsp;Group is the world’s leading sexual&nbsp;wellbeing company, with the&nbsp;mission to elevate pleasure through innovative technologies, a data-driven approach, and&nbsp;foster creative and fresh perspectives on intimacy.&nbsp;We offer&nbsp;exciting&nbsp;brands with innovative, high-quality sex toys,&nbsp;lingerie,&nbsp;and&nbsp;accessories&nbsp;in a&nbsp;streamlined&nbsp;online shopping experience.</span><span data-ccp-props=\"{&quot;335551550&quot;:6,&quot;335551620&quot;:6}\">&nbsp;</span></p>\n</div>\n<div style=\"text-align: justify;\">\n<p><span data-contrast=\"auto\">",
+    "remote": false,
+    "url": "https://www.arbeitnow.com/jobs/companies/lovehoney-group/senior-growth-marketing-manager-maternity-cover-berlin-303138",
+    "tags": [
+     "23.3 B2C Marketing - Growth Marketing"
+    ],
+    "job_types": [
+     "Full time"
+    ],
+    "location": "Berlin",
+    "created_at": 1793590053
+   },
+   {
+    "slug": "working-student-llm-inference-performance-munich-161026",
+    "company_name": "tensordyne",
+    "title": "Working Student - LLM Inference Performance",
+    "description": "&lt;h3&gt;About Tensordyne&amp;nbsp;&lt;/h3&gt;\n&lt;p&gt;AI is transforming our world. It can perform cognitive functions that previously only humans could do, such as perceiving interactions across different modalities and environments - with the ability to quickly learn and then solve complex problems. Tensordyne is an AI system solution company that builds very high-performance, low-power generative AI inference systems. Our mission, through the creation of custom silicon, hardware and software, is to enable multimodal Generative AI inference acceleration at scale, with safe, sustainable, high-performance systems for our hyperscaler and neocloud data center customers. We are at the leadin",
+    "remote": false,
+    "url": "https://www.arbeitnow.com/jobs/companies/tensordyne/working-student-llm-inference-performance-munich-161026",
+    "tags": [
+     "Engineering"
+    ],
+    "job_types": [],
+    "location": "Munich",
+    "created_at": 1793591721
+   },
+   {
+    "slug": "sales-director-commercial-london-33282",
+    "company_name": "Temporal Technologies",
+    "title": "Sales Director, Commercial",
+    "description": "<h2>Role Summary</h2><p style=\"min-height:1.5em\">At Temporal, we’re building something transformative and helping developers create resilient applications through our open-source, distributed systems platform. We’re looking for a <strong>Commercial Sales Director </strong>to help us grow build, own and scale our Commercial segment across EMEA. </p><p style=\"min-height:1.5em\">",
+    "remote": false,
+    "url": "https://www.arbeitnow.co.uk/jobs/companies/temporal-technologies/sales-director-commercial-london-33282",
+    "tags": [
+     "Sales"
+    ],
+    "job_types": [
+     "Full Time"
+    ],
+    "location": "London, England",
+    "created_at": 1793590817
+   },
+   {
+    "slug": "senior-devsecops-engineer-london-91227",
+    "company_name": "Shield AI",
+    "title": "Senior DevSecOps Engineer",
+    "description": "<div>The DevSecOps Engineer at Shield AI is responsible for designing, building, securing, and operating the software delivery infrastructure required to develop and deploy advanced autonomous systems for defence applications.</div>\n<div><br>This role sits at the intersection of software engineering, platform engineering, cyber security, and defence systems engineering. The DevSecOps Engineer works alongside autonomy, software, systems, integration, and test engineers to create secure and reliable development environments and delivery pipelines that enable teams to rapidly develop, integrate, test, and deploy mission critical software.</div>\n<div><br>",
+    "remote": false,
+    "url": "https://www.arbeitnow.co.uk/jobs/companies/shield-ai/senior-devsecops-engineer-london-91227",
+    "tags": [
+     "Applications Engineering"
+    ],
+    "job_types": [
+     "Full Time Employee"
+    ],
+    "location": "London",
+    "created_at": 1793590054
+   },
+   {
+    "slug": "analytics-engineer-finance-280853",
+    "company_name": "mewssystems",
+    "title": "Analytics Engineer - Finance",
+    "description": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h4&gt;&lt;strong&gt;Help make the world more hospitable &lt;/strong&gt;&lt;/h4&gt;\n&lt;p&gt;The hospitality industry is uniquely human, and it deserves technology that’s just as inspiring as the people behind it. At Mews, we’re transforming the industry with a platform that helps hotels run smarter, move faster and create better guest experiences.&lt;/p&gt;\n&lt;p&gt;You’ll work with smart, curious people who care deeply about what they do. You’ll have autonomy and the trust to make good decisions and move quickly. And you’ll enjoy a real sense of purpose as you see the impact of what we’re building.&lt;/p&gt;\n&lt;p&gt;If you’re motivated by owne",
+    "remote": false,
+    "url": "https://www.arbeitnow.fr/jobs/companies/mewssystems/analytics-engineer-finance-280853",
+    "tags": [
+     "Operations"
+    ],
+    "job_types": [],
+    "location": "",
+    "created_at": 1793591721
+   },
+   {
+    "slug": "working-student-business-and-office-administrator-40-50-zurich-208448",
+    "company_name": "Wingtra 2",
+    "title": "Working Student - Business and Office Administrator (40-50%)",
+    "description": "<div>Join the Wingtra team and become part of this venture-backed robotics scaleup with a global and international team of 120+ dedicated Wingtranauts who want to see their actions have a positive and lasting impact on the world. Founded more than 9 years ago at ETH Zurich, Europe’s leading robotics university, our goal is to build the best aerial robots to digitize the world at the push of a button and set the basis for faster and better decisions. Wingtra provides efficient and reliable data solutions to a variety of industries ranging from mining, construction and agriculture to humanitarian organizations, environmentalists and wildlife monitoring groups.</div>\n<div>\n<p>",
+    "remote": false,
+    "url": "https://www.arbeitnow.ch/jobs/companies/wingtra-2/working-student-business-and-office-administrator-40-50-zurich-208448",
+    "tags": [
+     "Business"
+    ],
+    "job_types": [
+     "Part-time"
+    ],
+    "location": "Zürich",
+    "created_at": 1793590051
+   },
+   {
+    "slug": "senior-ux-designer-map-visualisation-amsterdam-the-netherlands-97864",
+    "company_name": "Tomtom",
+    "title": "Senior UX Designer - Map Visualisation",
+    "description": "<div>\n<p><span data-contrast=\"auto\">TomTom's map is seen by millions of people every day - in dashboards, on phones, and across partner products worldwide. As a </span><span data-contrast=\"auto\">Senior UX Designer</span><span data-contrast=\"auto\"> on the Map Visualisation team, you will shape how our 2D and 3D geospatial data is designed, styled and delivered across TomTom's product portfolio.</span><span data-ccp-props=\"{&quot;335559738&quot;:240,&quot;335559739&quot;:240}\">&nbsp;</span></p>\n</div>\n<div>\n<p><span data-contrast=\"auto\">",
+    "remote": false,
+    "url": "https://www.arbeitnow.nl/jobs/companies/tomtom/senior-ux-designer-map-visualisation-amsterdam-the-netherlands-97864",
+    "tags": [
+     "UX"
+    ],
+    "job_types": [
+     "Employee",
+     "Full Time"
+    ],
+    "location": "Amsterdam, The Netherlands",
+    "created_at": 1793590049
+   },
+   {
+    "slug": "brand-ambassador-representing-the-brand-hacoy-munich-131633",
+    "company_name": "HACOY",
+    "title": "Brand Ambassador - Representing the Brand | HACOY",
+    "description": "<p>We are looking for brand ambassadors for our new fashion brand, interested in long-term collaboration. At HACOY we are making individuals feel comfortable with the clothing they wear, but more importantly; with themselves. Focused on home office wear, our collection presents clothing pieces that combine comfort and classic business style.</p>\n<h2>Tasks</h2>\n<ul>\n<li>Creation of authentic content on your preferred social media channel(s)</li>\n<li>Product samples testing</li>\n<li>Representing the brand at events</li>\n<li>Modeling for photo shootings</li>\n</ul>\n<h2>Requirements</h2>\n<ul>\n<li>home & remote office enthusiast </li>\n<li>active on social media</li>\n</ul>\n<h2>Benefits</h2>\n<ul>",
+    "remote": true,
+    "url": "https://www.arbeitnow.com/jobs/companies/hacoy/brand-ambassador-representing-the-brand-hacoy-munich-131633",
+    "tags": [
+     "Remote",
+     "Marketing and Communication"
+    ],
+    "job_types": [
+     "Freelancer / indepedent contractor",
+     "freelance"
+    ],
+    "location": "Munich",
+    "created_at": 1793561442
+   },
+   {
+    "slug": "senior-product-engineer-ai-agents-berlin-309383",
+    "company_name": "Cosuno",
+    "title": "Senior Product Engineer (AI Agents)",
+    "description": "<h2>Your mission</h2><p style=\"min-height:1.5em\">Join our team and build the intelligent systems at the core of Cosuno's platform.</p><ul style=\"min-height:1.5em\"><li><p style=\"min-height:1.5em\">Generative AI: Build and improve our LLM-powered systems that navigate the complex, often messy tendering workflow.</p></li><li><p style=\"min-height:1.5em\">Ship end-to-end into the product: Own features from model/agent through API to the TypeScript front-end — backend service, API, and the integration into the web app.</p></li><li><p style=\"min-height:1.5em\">Collaborate across teams: Work with Product, Engineering, and Data to translate business problems into shipped AI features.</p></li><li>",
+    "remote": false,
+    "url": "https://www.arbeitnow.com/jobs/companies/cosuno/senior-product-engineer-ai-agents-berlin-309383",
+    "tags": [
+     "Tech"
+    ],
+    "job_types": [
+     "Full Time"
+    ],
+    "location": "Berlin/Remote",
+    "created_at": 1793547616
+   },
+   {
+    "slug": "senior-product-security-engineer-remote-working-within-germany-89783",
+    "company_name": "Staffbase",
+    "title": "Senior Product Security Engineer  - Remote working within Germany",
+    "description": "&lt;div class=&quot;content-intro&quot;&gt;&lt;h3&gt;&lt;strong&gt;About Staffbase&lt;/strong&gt;&lt;/h3&gt;\n&lt;p&gt;We inspire people to achieve great things together. Our mission is to help organizations unlock the power of inspirational communication with the first &lt;strong&gt;AI-native Employee Experience Platform&lt;/strong&gt;. Our&lt;strong&gt; industry-leading and award-winning agentic AI communications channels&lt;/strong&gt; - intranet, employee app and email solutions - create engaging experiences that connect and empower employees.&lt;/p&gt;\n&lt;p&gt;Headquartered in Chemnitz, Germany and New York City, with offices in Berlin, London, Sydney, Tokyo, Prague, and Minneapolis–St.",
+    "remote": false,
+    "url": "https://www.arbeitnow.com/jobs/companies/staffbase/senior-product-security-engineer-remote-working-within-germany-89783",
+    "tags": [
+     "Engineering"
+    ],
+    "job_types": [],
+    "location": "",
+    "created_at": 1793570127
+   }
+  ],
+  "links": {
+   "first": "https://www.arbeitnow.com/api/job-board-api?page=1",
+   "last": null,
+   "prev": null,
+   "next": "https://www.arbeitnow.com/api/job-board-api?page=2"
+  },
+  "meta": {
+   "current_page": 1
+  }
+ }
+}

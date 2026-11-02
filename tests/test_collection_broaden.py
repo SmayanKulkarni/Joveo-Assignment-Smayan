@@ -298,8 +298,8 @@ def test_jev_degraded_caveat_fires_on_a_truncated_verdict_and_not_on_a_normal_on
     assert not any(m.startswith("Jev degraded") for m in caveats(update["run_log"]))
 
 
-def closing(posted: date, *, count: int = 20, source: Source = Source.adzuna, **state):
-    postings = {p.key: p for p in (posting(str(i), posted=posted, source=source, company=f"Co {i}") for i in range(count))}
+def closing(posted: date, *, count: int = 20, source: Source = Source.adzuna, remote: bool = False, **state):
+    postings = {p.key: p for p in (posting(str(i), posted=posted, source=source, company=f"Co {i}", remote=remote) for i in range(count))}
     start = state_with(postings=postings, sample=list(postings), fetches=[record(fetched_at=datetime(2026, 1, 20, tzinfo=UTC))], **state)
     _, (final,) = review(start, LowDataAnswer(action="continue"))
     return caveats(State.model_validate(final).run_log)
@@ -313,6 +313,12 @@ def test_old_data_caveat_counts_over_half_older_than_30_days_from_the_newest_fet
 
 def test_mostly_federal_caveat_fires_over_half_usajobs_and_not_for_private_postings():
     assert closing(date(2026, 1, 15), source=Source.usajobs) == ["Mostly federal: 20 of 20 Postings are from USAJOBS"]
+    assert closing(date(2026, 1, 15)) == []
+
+
+def test_mostly_no_pay_fires_past_half_arbeitnow_and_includes_remote_whenever_any_are_present():
+    assert closing(date(2026, 1, 15), source=Source.arbeitnow) == ["Mostly no pay: 20 of 20 Postings are from Arbeitnow, which lists no salary"]
+    assert closing(date(2026, 1, 15), remote=True) == ["Includes remote: 20 of 20 Postings are remote jobs that may be based outside IN"]
     assert closing(date(2026, 1, 15)) == []
 
 

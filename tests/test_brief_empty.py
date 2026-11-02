@@ -7,6 +7,7 @@ from pathlib import Path
 from talent_scout.brief.nodes import ROUTERS, _run_notes, after_critic, make_nodes
 from talent_scout.brief.rules import match_totals
 from talent_scout.brief.types import InsightVerdict
+from talent_scout.gateway.types import ATTRIBUTION
 from talent_scout.kernel.state import LogKind, RunLogEntry, State
 from talent_scout.kernel.testing import make_settings
 from talent_scout.kernel.types import (
@@ -130,6 +131,21 @@ def test_attribution_only_when_an_adzuna_posting_is_in_the_sample():
 
     assert notes(Source.adzuna).attribution == "Jobs data provided by The Adzuna API"
     assert notes(Source.usajobs).attribution is None
+    assert notes(Source.arbeitnow).attribution == f"Jobs data provided by {ATTRIBUTION[Source.arbeitnow]}"
+
+
+def test_attribution_names_every_credited_source_in_the_sample():
+    both = [
+        Posting(
+            source=s, source_id="1", title="t", company=None, location="x", region=(), domain=None,
+            posted_at=date(2026, 1, 1), closes_at=None, description="d", url="https://x", salary=None,
+        )
+        for s in (Source.adzuna, Source.arbeitnow, Source.usajobs)
+    ]
+
+    notes = _run_notes(zero_state(postings={p.key: p for p in both}, sample=[p.key for p in both]))
+
+    assert notes.attribution == f"Jobs data provided by {ATTRIBUTION[Source.adzuna]} and {ATTRIBUTION[Source.arbeitnow]}"
 
 
 def test_after_critic_goes_to_render_with_no_verdicts_and_the_router_is_registered():

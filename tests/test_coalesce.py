@@ -63,6 +63,14 @@ def test_salary_must_match_unless_either_is_predicted():
     assert len(coalesce([posting("1", pay=salary(100, True)), posting("2", pay=salary(200, True))])[0]) == 1
 
 
+def test_a_missing_salary_never_blocks_a_merge_and_the_posting_with_pay_wins():
+    paid, unpaid = posting("1", pay=salary(100), posted=date(2026, 9, 1)), posting("2", source=Source.arbeitnow, posted=date(2026, 10, 1))
+
+    kept, merged = coalesce([unpaid, paid])
+
+    assert kept == [paid] and merged == {"adzuna:1": ["arbeitnow:2"]}
+
+
 def test_survivor_is_usajobs_then_newest_then_lowest_key():
     old, new = posting("1", posted=date(2026, 9, 1)), posting("2", posted=date(2026, 10, 1))
     gov = posting("9", source=Source.usajobs, posted=date(2026, 8, 1))

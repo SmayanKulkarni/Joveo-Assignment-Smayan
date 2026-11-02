@@ -7,15 +7,16 @@ import httpx
 import langsmith as ls
 
 from talent_scout.gateway.adzuna import PAGE_SIZE, AdzunaClient
+from talent_scout.gateway.arbeitnow import ArbeitnowClient
 from talent_scout.gateway.coalesce import coalesce
 from talent_scout.gateway.http import TIMEOUT
 from talent_scout.gateway.store import POSTINGS, Store, without_closed
-from talent_scout.gateway.types import CacheStatus, Fetch, FetchResult, GatewayError, Page, SourceOutcome
+from talent_scout.gateway.types import COVERAGE, CacheStatus, Fetch, FetchResult, GatewayError, Page, SourceOutcome
 from talent_scout.gateway.usajobs import UsajobsClient
 from talent_scout.kernel.events import emit
 from talent_scout.kernel.replay import Replay, open_replay
 from talent_scout.kernel.settings import Settings
-from talent_scout.kernel.types import Posting, Source
+from talent_scout.kernel.types import ADZUNA_CURRENCY, Posting, Source
 
 
 class Served(NamedTuple):
@@ -31,7 +32,7 @@ class JobsGateway:
         self._http: httpx.AsyncClient | None = None
         self._store: Store | None = None
         self._replay: Replay | None = None
-        self._clients: dict[Source, AdzunaClient | UsajobsClient] = {}
+        self._clients: dict[Source, AdzunaClient | UsajobsClient | ArbeitnowClient] = {}
         # One lock per cache key, so concurrent identical Fetches share one call instead of each spending quota.
         self._locks: dict[tuple[Source, str], asyncio.Lock] = {}
 
@@ -49,6 +50,7 @@ class JobsGateway:
         self._clients = {
             Source.adzuna: AdzunaClient(self._http, self._settings, self._store),
             Source.usajobs: UsajobsClient(self._http, self._settings, self._store),
+            Source.arbeitnow: ArbeitnowClient(self._http, self._store),
         }
         return self
 
@@ -86,7 +88,7 @@ class JobsGateway:
             return served._replace(page=page)
 
     async def _beyond_l1(self, source: Source, f: Fetch, key: str) -> Served:
-        # L2 holds Adzuna only: USAJOBS calls are free, and its Postings match poorly.
+        # L2 holds Adzuna only: USAJOBS calls are free, and its Postings match poorly. Arbeitnow filters one shared snapshot.
         stored = self._store.get_l2(f, PAGE_SIZE) if source == Source.adzuna else None
         if stored and len(stored[0].postings) == PAGE_SIZE:  # a short page would skew the Sample, so only a full one skips the call
             return Served(*stored, CacheStatus.store)
@@ -122,9 +124,9 @@ class JobsGateway:
     async def fetch(self, f: Fetch, source: Source) -> FetchResult:
         if not self._clients:
             raise RuntimeError("JobsGateway must be opened with `async with` before fetch")
-        # The model picks the source; USAJOBS only covers the US, so anything else is a planning bug.
-        if source == Source.usajobs and f.country != "us":
-            raise ValueError(f"usajobs only covers country 'us', not {f.country!r}")
+        # The model picks the source, so a country the source doesn't cover is a planning bug.
+        if f.country not in COVERAGE.get(source, ADZUNA_CURRENCY):
+            raise ValueError(f"{source} does not cover country {f.country!r}")
         # A failed source raises GatewayError and SourceRejected stops the Run, both straight from here.
         try:
             postings, outcome, failure = await self._resolve(source, f)

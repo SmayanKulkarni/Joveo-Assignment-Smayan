@@ -40,3 +40,4 @@ def test_numeric_bounds_are_rejected(bad):
 
 def test_adzuna_attribution_is_exported():
     assert ATTRIBUTION[Source.adzuna] == "The Adzuna API"
+    assert "arbeitnow.com" in ATTRIBUTION[Source.arbeitnow]

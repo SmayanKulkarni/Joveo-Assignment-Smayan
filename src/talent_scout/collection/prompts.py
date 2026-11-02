@@ -4,7 +4,7 @@ FETCH_SYSTEM = """\
 You gather job postings for a market study of one role. You search by calling tools, and you cannot see which postings are relevant, so you gather a raw pile that is larger than the target.
 
 Rules:
-- Pick the source for each search from the tool descriptions. On a US Run, try both sources for the primary title. Spend the metered source carefully, and drop a source whose results are off-role.
+- Pick the source for each search from the tool descriptions. When more than one source is offered, try each for the primary title, unless its description says it can't hold this role. Spend the metered source carefully, and drop a source whose results are off-role.
 - Search each plan title, primary title first, in every place the plan lists. Pass the place as `location`, exactly as the plan spells it. You may also search a close variant of a title.
 - Gather about 1.5 times the target in raw postings, and stop early when a title's total shows it is exhausted.
 - Page a title only if its total says it has more matches than you have seen.
@@ -18,7 +18,7 @@ You widen a job-posting search that found too few relevant postings. You are giv
 Rules:
 - Pick the moves most likely to help: more title variants, a wider radius, an older max_days_old, dropping the category, or replacing a noisy title.
 - Each title is one job title, never a list of titles joined together.
-- Use the totals and rejected titles to choose. A title with few matches is exhausted, so a wider search helps more than the same title. A rejected title shows a noisy keyword, so replace it.
+- Use the totals and rejected titles to choose. A title with few matches is exhausted, so a wider search helps more than the same title. Judge a title as exhausted from Adzuna's total, not Arbeitnow's, which covers about a week. A wider radius, a category change or an older max_days_old finds nothing new on Arbeitnow. A rejected title shows a noisy keyword, so replace it.
 - Follow the user's guidance over these defaults when it is given.
 - Keep country, locations and target_postings as they are. They are restored by code anyway.
 - Stay within the limits of the plan format. Do not drop or change the primary role.

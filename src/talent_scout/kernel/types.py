@@ -38,6 +38,7 @@ def check_country(country: str) -> str:
 class Source(StrEnum):
     adzuna = "adzuna"
     usajobs = "usajobs"
+    arbeitnow = "arbeitnow"
 
 
 class PayPeriod(StrEnum):
@@ -79,6 +80,7 @@ class Posting(Model):
     description: str
     url: str
     salary: Salary | None
+    remote: bool = False  # defaulted, so an old checkpoint still loads
 
     # A property, not a computed_field: dumped data must stay valid input under extra="forbid".
     @property

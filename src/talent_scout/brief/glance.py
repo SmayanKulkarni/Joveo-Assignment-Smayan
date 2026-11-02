@@ -109,8 +109,9 @@ def _places(sample: list[Posting]) -> RowChart | None:
         shared += 1
     groups: dict[str, list[str]] = {}
     for p in sample:
-        # A country-only region has no area to name, but it doesn't stop the others being grouped.
-        groups.setdefault(p.region[shared] if len(p.region) > 1 else NO_AREA, []).append(p.key)
+        # A country-only region has no area to name, but it doesn't stop the others being grouped. Remote jobs are one group of their own.
+        label = "Remote" if p.remote else p.region[shared] if len(p.region) > 1 else NO_AREA
+        groups.setdefault(label, []).append(p.key)
     if len(groups) < 2:
         return None
     ranked = sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0]))

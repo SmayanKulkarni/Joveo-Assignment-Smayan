@@ -10,7 +10,7 @@ from talent_scout.kernel.state import LogKind, RunLogEntry
 from talent_scout.kernel.text import employer_key, plural
 from talent_scout.kernel.types import Evidence, HiringRequest, MarketStats, Posting, Source, Stat
 
-SOURCE_NAMES = {Source.adzuna: "Adzuna", Source.usajobs: "USAJOBS"}
+SOURCE_NAMES = {Source.adzuna: "Adzuna", Source.usajobs: "USAJOBS", Source.arbeitnow: "Arbeitnow"}
 
 MAX_INSIGHTS, THIN_MAX_INSIGHTS = 8, 3
 THIN_SAMPLE = 10  # below it no Stat rates above Low, so no Dimension is filled

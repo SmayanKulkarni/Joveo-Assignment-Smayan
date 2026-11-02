@@ -52,11 +52,11 @@ def request() -> HiringRequest:
     )
 
 
-def posting(id: str, *, title: str = "Data Analyst", source: Source = Source.adzuna, posted: date = date(2026, 1, 15), company: str | None = None, description: str | None = None) -> Posting:
+def posting(id: str, *, title: str = "Data Analyst", source: Source = Source.adzuna, posted: date = date(2026, 1, 15), company: str | None = None, description: str | None = None, remote: bool = False) -> Posting:
     return Posting(
         source=source, source_id=id, title=title, company=company or f"Company {id}", location="Bangalore", region=("India",),
         domain=None, posted_at=posted, closes_at=None, description=description or f"Unique description for posting {id} with its own words",
-        url=f"https://example.com/{id}", salary=None,
+        url=f"https://example.com/{id}", salary=None, remote=remote,
     )
 
 

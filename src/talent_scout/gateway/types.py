@@ -6,7 +6,9 @@ from pydantic import Field, field_validator
 
 from talent_scout.kernel.types import ADZUNA_CURRENCY, Model, Posting, Source
 
-ATTRIBUTION = {Source.adzuna: "The Adzuna API"}
+ATTRIBUTION = {Source.adzuna: "The Adzuna API", Source.arbeitnow: "Arbeitnow (arbeitnow.com)"}
+# Countries a source is limited to; a source not listed covers every country Adzuna does.
+COVERAGE = {Source.usajobs: {"us"}}
 
 
 class GatewayError(Exception):

@@ -28,15 +28,15 @@ def fetch_agent_turn(script, **state_over):
     return update, cheap
 
 
-def test_bound_schemas_hide_plan_and_attempt_and_a_non_us_plan_binds_only_adzuna():
+def test_bound_schemas_hide_plan_and_attempt_and_usajobs_binds_only_on_a_us_plan():
     _, cheap = fetch_agent_turn([ai_calls()], search_plan=plan(country="us"))
     schemas = {t.name: convert_to_openai_tool(t)["function"]["parameters"]["properties"] for t in cheap.bound_tools}
 
-    assert set(schemas) == {"search_adzuna", "search_usajobs"}
+    assert set(schemas) == {"search_adzuna", "search_usajobs", "search_arbeitnow"}
     assert all(set(props) == {"title", "page", "location"} for props in schemas.values())
 
     _, cheap = fetch_agent_turn([ai_calls()])
-    assert [t.name for t in cheap.bound_tools] == ["search_adzuna"]
+    assert [t.name for t in cheap.bound_tools] == ["search_adzuna", "search_arbeitnow"]
 
 
 def test_model_args_cannot_override_the_plan_or_attempt():
@@ -282,7 +282,9 @@ def test_a_place_outside_the_plan_is_refused_and_a_blank_one_means_the_first():
 def test_the_cap_grows_with_titles_times_places_and_totals_name_both():
     from talent_scout.collection.nodes import _cap
 
-    assert _cap(plan(titles=["a", "b", "c"], locations=["x", "y", "z", "w"])) == 12
+    # Two sources are offered on a non-US plan, so each place gains a call for the primary title on the second.
+    assert _cap(plan(titles=["a", "b", "c"], locations=["x", "y", "z", "w"])) == 16
+    assert _cap(plan(country="us", titles=["a", "b", "c"], locations=["x", "y", "z", "w"])) == 20
     assert _cap(plan()) == MAX_FETCHES
 
 

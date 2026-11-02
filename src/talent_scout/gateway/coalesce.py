@@ -8,8 +8,8 @@ def _words(text: str | None) -> list[str]:
 
 
 def _key(p: Posting):
-    # Best first: USAJOBS (close date, full text, real pay), then newest, then lowest key.
-    return (p.source != Source.usajobs, -p.posted_at.toordinal(), p.key)
+    # Best first: USAJOBS (close date, full text, real pay), then a Posting with pay, then newest, then lowest key.
+    return (p.source != Source.usajobs, p.salary is None, -p.posted_at.toordinal(), p.key)
 
 
 def _agree(a: list[str], b: list[str]) -> bool:
@@ -19,7 +19,8 @@ def _agree(a: list[str], b: list[str]) -> bool:
 
 
 def _same_pay(a: Posting, b: Posting) -> bool:
-    return a.salary == b.salary or any(p.salary and p.salary.predicted for p in (a, b))
+    # Unknown pay doesn't contradict known pay, so a missing salary never blocks a merge.
+    return a.salary == b.salary or any(p.salary is None or p.salary.predicted for p in (a, b))
 
 
 def coalesce(postings: list[Posting]) -> tuple[list[Posting], dict[str, list[str]]]:

@@ -10,10 +10,10 @@ from pydantic import ValidationError
 from talent_scout.collection.prompts import BROADEN_SYSTEM, FETCH_SYSTEM, RELEVANT_NOUL
 from talent_scout.collection.types import FetchRecord, LowDataPayload
 from talent_scout.gateway.coalesce import coalesce
-from talent_scout.gateway.types import CacheStatus, Fetch, GatewayError
+from talent_scout.gateway.types import COVERAGE, CacheStatus, Fetch, GatewayError
 from talent_scout.kernel.events import emit
 from talent_scout.kernel.state import LogKind, RunLogEntry, State, log, log_entry
-from talent_scout.kernel.types import Posting, SearchPlan, Source
+from talent_scout.kernel.types import ADZUNA_CURRENCY, Posting, SearchPlan, Source
 from talent_scout.runtime.deps import Deps, Node, Router
 from talent_scout.runtime.pause import LowDataPause
 
@@ -30,9 +30,16 @@ def _places(plan: SearchPlan) -> list[str]:
     return plan.locations or [""]
 
 
+def _offered(plan: SearchPlan) -> list[Source]:
+    # The model is never offered a source that can't work for the plan's country.
+    return [s for s in Source if plan.country in COVERAGE.get(s, ADZUNA_CURRENCY)]
+
+
 def _cap(plan: SearchPlan) -> int:
-    # So a title or place the user adds still gets searched; the daily guard stays the ceiling.
-    return max(MAX_FETCHES, len(plan.titles) * len(_places(plan)))
+    # So a title or place the user adds still gets searched, and so is the primary title on each extra source in each place.
+    # The daily guard stays the ceiling.
+    places = len(_places(plan))
+    return max(MAX_FETCHES, len(plan.titles) * places + places * (len(_offered(plan)) - 1))
 
 
 def _norm(place: str) -> str:
@@ -74,12 +81,18 @@ def _make_tools(gateway) -> dict[str, BaseTool]:
         """Search USAJOBS, the US federal government's own job ads, by title. US searches only. Honours the plan's category when it maps to federal job series. Free and unmetered, but federal roles only, so a private-sector title may return little. One call returns one page of up to 50. `location` must be one of the plan's places; blank means the first."""
         return await search(Source.usajobs, title, page, location, plan, attempt)
 
-    return {t.name: t for t in (search_adzuna, search_usajobs)}
+    @tool
+    async def search_arbeitnow(
+        title: str, plan: Annotated[SearchPlan, InjectedToolArg], attempt: Annotated[int, InjectedToolArg], page: int = 1, location: str = ""
+    ) -> FetchRecord:
+        """Search Arbeitnow, a European job board, by title. Inside Germany, UK, France, Switzerland and the Netherlands it returns local and remote jobs; elsewhere it returns remote jobs only. Free and unmetered, but mostly tech and corporate roles, no salaries, and only about the last 7 days. It ignores the plan's radius and category, and a place must match the city name exactly. One call returns one page of up to 50. `location` must be one of the plan's places; blank means the first."""
+        return await search(Source.arbeitnow, title, page, location, plan, attempt)
+
+    return {t.name: t for t in (search_adzuna, search_usajobs, search_arbeitnow)}
 
 
 def _bound(tools: dict[str, BaseTool], plan: SearchPlan) -> list[BaseTool]:
-    # The model is never offered a tool that can't work: USAJOBS covers the US only.
-    return list(tools.values()) if plan.country == "us" else [tools["search_adzuna"]]
+    return [tools[f"search_{s}"] for s in _offered(plan)]
 
 
 def _tool_count(state: State) -> int:
@@ -180,6 +193,13 @@ def _closing_caveats(state: State, node: str) -> list[RunLogEntry]:
     entries = []
     if sample and (federal := sum(p.source == Source.usajobs for p in sample)) * 2 > len(sample):
         entries.append(log_entry(node, LogKind.caveat, f"Mostly federal: {federal} of {len(sample)} Postings are from USAJOBS", federal=federal))
+    if sample and (no_pay := sum(p.source == Source.arbeitnow for p in sample)) * 2 > len(sample):
+        entries.append(log_entry(node, LogKind.caveat, f"Mostly no pay: {no_pay} of {len(sample)} Postings are from Arbeitnow, which lists no salary", no_pay=no_pay))
+    if sample and (remote := sum(p.remote for p in sample)):
+        country = state.current_plan.country.upper()
+        entries.append(log_entry(
+            node, LogKind.caveat, f"Includes remote: {remote} of {len(sample)} Postings are remote jobs that may be based outside {country}", remote=remote,
+        ))
     fetched = [o.fetched_at for r in state.fetches if r.result for o in r.result.sources.values()]
     if sample and fetched:
         # Measured from the newest fetch, never today: a clock here would change the text and miss every downstream LLM cache entry.
