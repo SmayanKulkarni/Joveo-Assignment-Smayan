@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://talent-scout-kvc0.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://joveo-assignment-smayan.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
