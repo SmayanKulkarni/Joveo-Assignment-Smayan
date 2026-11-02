@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import re
+import weakref
 from datetime import UTC, datetime, timedelta
 from html.parser import HTMLParser
 from urllib.parse import urlsplit
@@ -30,8 +31,8 @@ HOST_COUNTRY = {"arbeitnow.com": "de", "arbeitnow.co.uk": "gb", "arbeitnow.fr": 
 # Adzuna's name for each country at the root of its area list, so the places chart groups mixed Samples by city.
 ADZUNA_ROOT = {"de": "Deutschland", "gb": "UK", "fr": "France", "ch": "Schweiz", "nl": "Nederland"}
 
-# Held across Runs, so two Runs never walk the feed at once.
-_WALK = asyncio.Lock()
+# Held across Runs, so two Runs never walk the feed at once. One per event loop, because a lock binds to the loop that first waits on it.
+_WALKS: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, asyncio.Lock] = weakref.WeakKeyDictionary()
 
 
 class _Text(HTMLParser):
@@ -92,8 +93,8 @@ def _words(text: str) -> set[str]:
     return set(re.findall(r"\w+", text.lower()))
 
 
-def _matches(p: Posting, f: Fetch) -> bool:
-    if not _words(f.title) <= _words(p.title) or p.posted_at < clock.today() - timedelta(days=f.max_days_old):
+def _matches(p: Posting, f: Fetch, title: set[str]) -> bool:
+    if not title <= _words(p.title) or p.posted_at < clock.today() - timedelta(days=f.max_days_old):
         return False
     # A remote Posting can be taken from anywhere, so the place filters leave it alone.
     if p.remote:
@@ -106,6 +107,7 @@ class ArbeitnowClient:
     def __init__(self, client: httpx.AsyncClient, store: Store):
         self._client, self._store = client, store
         self._failure: str | None = None  # a failed walk is not retried for the rest of this Run
+        self._page: Page | None = None  # parsed once per Run: every Fetch filters the same snapshot
 
     async def _walk(self) -> Page:
         postings: dict[str, Posting] = {}
@@ -133,10 +135,13 @@ class ArbeitnowClient:
         return Page(list(postings.values()), len(postings), dropped)
 
     async def _snapshot(self) -> Page:
-        async with _WALK:
+        if self._page:
+            return self._page
+        async with _WALKS.setdefault(asyncio.get_running_loop(), asyncio.Lock()):
             # Checked once the lock is held, because the Run ahead of this one may just have walked.
             if cached := self._store.get_l1(Source.arbeitnow, SNAPSHOT):
-                return cached[0]
+                self._page = cached[0]
+                return self._page
             if self._failure:
                 raise SourceUnavailable(self._failure)
             try:
@@ -145,10 +150,12 @@ class ArbeitnowClient:
                 self._failure = str(e)
                 raise
             self._store.put_l1(Source.arbeitnow, SNAPSHOT, snapshot, datetime.now(UTC))
+            self._page = snapshot
             return snapshot
 
     async def search(self, f: Fetch) -> Page:
         snapshot = await self._snapshot()
-        found = sorted((p for p in snapshot.postings if _matches(p, f)), key=lambda p: (-p.posted_at.toordinal(), p.key))
+        title = _words(f.title)
+        found = sorted((p for p in snapshot.postings if _matches(p, f, title)), key=lambda p: (-p.posted_at.toordinal(), p.key))
         served = found[(f.page - 1) * PAGE_SIZE : f.page * PAGE_SIZE]
         return Page(served, len(found), snapshot.dropped if f.page == 1 else 0)

@@ -60,6 +60,15 @@ def engineers():
     return {**PAGE, "data": [{**r, "title": "Data Engineer"} for r in PAGE["data"]]}
 
 
+def snapshot():
+    store = Store(make_settings(**SETTINGS))
+    try:
+        cached = store.get_l1(Source.arbeitnow, "snapshot")
+    finally:
+        store.close()
+    return cached and cached[0]
+
+
 def mapped():
     return [arbeitnow._map(raw) for raw in PAGE["data"]]
 
@@ -112,7 +121,7 @@ def test_any_country_gets_its_own_postings_and_every_remote_one():
     assert de.sources[Source.arbeitnow].calls_left is None
 
 
-def test_title_location_and_age_filter_locally_and_the_place_leaves_remote_alone(monkeypatch):
+def test_title_location_and_age_filter_locally_and_the_place_leaves_remote_alone():
     berlin, london, nothing = run(
         serving([engineers()]),
         fetch_for(location="berlin"),
@@ -150,9 +159,8 @@ def test_the_walk_runs_once_and_a_posting_repeated_across_pages_counts_once():
 
     run(serving([PAGE, repeat], seen), fetch_for(), fetch_for(location="berlin"), fetch_for(country="nl"))
 
-    store = Store(make_settings(**SETTINGS))
     assert seen == [1, 2, 3]  # two pages, then the empty one that ends the walk
-    assert store.get_l1(Source.arbeitnow, "snapshot")[0].total == len(PAGE["data"])
+    assert snapshot().total == len(PAGE["data"])
 
 
 def test_a_failed_walk_stores_no_snapshot_and_is_remembered_for_the_rest_of_the_run():
@@ -170,7 +178,7 @@ def test_a_failed_walk_stores_no_snapshot_and_is_remembered_for_the_rest_of_the_
 
     assert all(isinstance(o, SourceUnavailable) for o in outcomes)
     assert seen == [1, 2]  # no second walk after the 429, not even for the call that queued behind it
-    assert Store(make_settings(**SETTINGS)).get_l1(Source.arbeitnow, "snapshot") is None
+    assert snapshot() is None
 
 
 def test_a_refusal_from_the_feed_is_a_source_failure_and_not_a_stop():

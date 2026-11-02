@@ -45,7 +45,7 @@ export function bandsOf(graph: Graph): { name: string; steps: Step[] }[] {
 }
 
 // Tool and source names the trace knows; anything else shows as it came.
-const SOURCES: Record<string, string> = { search_adzuna: "Adzuna", adzuna: "Adzuna", search_usajobs: "USAJOBS", usajobs: "USAJOBS" }
+const SOURCES: Record<string, string> = { search_adzuna: "Adzuna", adzuna: "Adzuna", search_usajobs: "USAJOBS", usajobs: "USAJOBS", search_arbeitnow: "Arbeitnow", arbeitnow: "Arbeitnow" }
 export const sourceName = (name: string) => SOURCES[name] ?? name
 
 const indexOfNode = new Map(STEPS.flatMap((step, i) => step.nodes.map((node) => [node, i] as const)))

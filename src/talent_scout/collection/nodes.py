@@ -346,13 +346,14 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         fresh = [p for k, p in state.postings.items() if k not in state.relevance_verdicts]
         questions = {"relevant": RELEVANT_NOUL, "addressed_to_ai": ADDRESSES_AI_NOUL}
         results = await asyncio.gather(*(deps.jev.judge("relevance", judged(state, p), questions) for p in fresh))
-        verdicts = {**state.relevance_verdicts, **{p.key: r["relevant"].outcome for p, r in zip(fresh, results)}}
         flagged = [p.key for p, r in zip(fresh, results) if r["addressed_to_ai"].p_yes >= AI_ADDRESSED_CUT]
+        # A flagged Posting counts as rejected, so the low-data figures add up and it never joins the Sample.
+        verdicts = {**state.relevance_verdicts, **{p.key: r["relevant"].outcome and p.key not in flagged for p, r in zip(fresh, results)}}
         flags = [*state.guard_flags, *flagged]
         update = {
             "relevance_verdicts": verdicts,
             "guard_flags": flags,
-            "sample": [k for k in state.postings if verdicts[k] and k not in flags],
+            "sample": [k for k in state.postings if verdicts[k]],
             "fetch_blocked": _blocked(state, deps),
         }
         after = state.model_copy(update=update)
