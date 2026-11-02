@@ -255,7 +255,7 @@ class RunController:
         thread_id = uuid4().hex[:8]
         lock = take_lock(self._settings.lock_folder, thread_id)
         try:
-            await self._registry.insert(thread_id, request_text, customer_id)
+            await self._registry.insert(thread_id, request_text or "From the Resume", customer_id)
         except BaseException:
             lock.close()
             raise

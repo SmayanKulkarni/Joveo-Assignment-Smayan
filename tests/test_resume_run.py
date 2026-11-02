@@ -150,3 +150,14 @@ def test_no_node_package_can_reach_the_database_or_the_accounts():
                 continue  # parses an upload; it is called by the API layer, not by a node
             source = path.read_text(encoding="utf-8")
             assert not re.search(r"runtime\.accounts|runtime\.registry|aiosqlite|psycopg", source), path.name
+
+
+def test_a_blank_request_starts_a_run_only_for_a_customer_with_a_resume(client):
+    with_resume, bare = customer_of(client, "Has"), customer_of(client, "Bare")
+    client.put(f"/api/customers/{with_resume}/resume", content=RESUME.encode())
+    refused = client.post("/api/runs", json={"request_text": "  ", "customer_id": bare})
+    assert refused.status_code == 422 and refused.json()["code"] == "needs_request"
+    started = client.post("/api/runs", json={"request_text": "", "customer_id": with_resume})
+    assert started.status_code == 201
+    wait_idle(client, started.json()["thread_id"])
+    assert client.get(f"/api/runs/{started.json()['thread_id']}").json()["record"]["summary"] == "From the Resume"

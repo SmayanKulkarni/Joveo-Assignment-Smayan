@@ -55,7 +55,7 @@ REFUSALS = {
 
 class StartRequest(Model):
     customer_id: str
-    request_text: NonBlank
+    request_text: str = ""  # may be blank when the Customer has a Resume to draft the Run from
     focus: list[Dimension] = []
 
 
@@ -211,7 +211,10 @@ async def list_runs(request: Request, customer_id: str | None = None, csm: Csm =
 async def start_run(body: StartRequest, request: Request, csm: Csm = Depends(current_csm)) -> Started:
     if await _controller(request).accounts.customer(csm, body.customer_id) is None:
         raise Refusal(404, "not_found", "No such Customer")
-    handle = await _controller(request).start(body.request_text, body.focus, body.customer_id)
+    text = body.request_text.strip()
+    if not text and await _controller(request).accounts.resume(body.customer_id) is None:
+        raise Refusal(422, "needs_request", "Type what you want to understand, or upload a Resume first")
+    handle = await _controller(request).start(text, body.focus, body.customer_id)
     return Started(thread_id=handle.thread_id)
 
 

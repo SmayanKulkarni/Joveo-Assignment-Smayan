@@ -12,7 +12,8 @@ export function Composer({ customerId }: { customerId: string }) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
-  const blank = !text.trim()
+  // With a Resume on file the Run can be drafted from it, so nothing has to be typed.
+  const blank = !text.trim() && !uploaded
 
   // A Customer with no Resume answers 404, which just means there is no line to show.
   useEffect(() => {
