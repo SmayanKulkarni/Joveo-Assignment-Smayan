@@ -8,13 +8,13 @@ class RunLocked(Exception):
         self.thread_id = thread_id
 
 
-def take_lock(runs_db: Path, thread_id: str) -> sqlite3.Connection:
+def take_lock(folder: Path, thread_id: str) -> sqlite3.Connection:
     """Lock a thread across processes. The caller holds the returned connection and closes it to release.
 
     The OS frees the lock when a process dies. Never commit on the connection, and keep it
     referenced for the whole Run: a commit or garbage collection releases the lock.
     """
-    path = runs_db.parent / "locks" / f"{thread_id}.lock"
+    path = folder / f"{thread_id}.lock"
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path, timeout=0, isolation_level=None)
     try:

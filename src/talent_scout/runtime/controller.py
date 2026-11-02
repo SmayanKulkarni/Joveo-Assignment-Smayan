@@ -9,11 +9,15 @@ from pathlib import Path
 from uuid import uuid4
 
 import aiosqlite
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.store.postgres.aio import AsyncPostgresStore
 from langgraph.store.sqlite.aio import AsyncSqliteStore
 from langgraph.types import Command
+from psycopg.rows import dict_row
+from psycopg_pool import AsyncConnectionPool
 from pydantic import ValidationError
 
 from talent_scout.gateway.gateway import make_gateway
@@ -38,6 +42,7 @@ logger = logging.getLogger(__name__)
 STREAM_MODES = ["updates", "messages", "custom", "tasks"]
 BUFFER_SIZE = 5000
 SETUP_ATTEMPTS = 5
+POOL_SIZE = 5
 BUSY_TIMEOUT_S = 5
 ERROR_CHARS = 200
 
@@ -86,6 +91,48 @@ async def _setup_with_retry(target: AsyncSqliteSaver | AsyncSqliteStore) -> None
             if attempt == SETUP_ATTEMPTS - 1:
                 raise
             await asyncio.sleep(0.1 * 2**attempt)
+
+
+@asynccontextmanager
+async def _sqlite_storage(settings: Settings):
+    settings.runs_db.parent.mkdir(parents=True, exist_ok=True)
+    async with aiosqlite.connect(settings.runs_db) as saver_conn:
+        saver = AsyncSqliteSaver(saver_conn, serde=JsonPlusSerializer(allowed_msgpack_modules=ALLOWED_MSGPACK))
+        await _setup_with_retry(saver)
+        # Autocommit: each transition is one statement, so a cancel can't strand an open
+        # write transaction that would block the saver on the same file.
+        async with (
+            aiosqlite.connect(settings.runs_db, timeout=BUSY_TIMEOUT_S, isolation_level=None) as registry_conn,
+            # Autocommit too: on a default connection setup() leaves a transaction open and the next write fails.
+            aiosqlite.connect(settings.runs_db, timeout=BUSY_TIMEOUT_S, isolation_level=None) as store_conn,
+        ):
+            registry = Registry(registry_conn)
+            await registry.setup()
+            seed_runs(settings)
+            store = AsyncSqliteStore(store_conn)
+            await _setup_with_retry(store)
+            yield saver, store, registry
+
+
+@asynccontextmanager
+async def _postgres_storage(settings: Settings):
+    # One pool for the saver, the Store and the registry. Neon suspends idle compute and drops its
+    # connections, so `check` tests one before handing it out. `prepare_threshold=0` also suits a pooler.
+    pool = AsyncConnectionPool(
+        settings.database_url, min_size=1, max_size=POOL_SIZE, open=False, check=AsyncConnectionPool.check_connection,
+        kwargs={"autocommit": True, "row_factory": dict_row, "prepare_threshold": 0},
+    )
+    await pool.open(wait=True)
+    try:
+        saver = AsyncPostgresSaver(pool, serde=JsonPlusSerializer(allowed_msgpack_modules=ALLOWED_MSGPACK))
+        store = AsyncPostgresStore(pool)
+        registry = Registry(pool)
+        # One after another: setup() runs migrations, and two at once can race on the same table.
+        for part in (saver, store, registry):
+            await part.setup()
+        yield saver, store, registry
+    finally:
+        await pool.close()
 
 
 def _config(thread_id: str) -> dict:
@@ -166,42 +213,29 @@ class RunHandle:
 
 
 class RunController:
-    def __init__(self, settings: Settings, graph: CompiledStateGraph, registry: Registry):
+    def __init__(self, settings: Settings, graph: CompiledStateGraph, registry: Registry, saver=None):
         self._settings = settings
         self._graph = graph
         self._registry = registry
+        self._saver = saver
         self._live: dict[str, RunHandle] = {}
 
     @classmethod
     @asynccontextmanager
     async def open(cls, settings: Settings) -> AsyncIterator["RunController"]:
-        settings.runs_db.parent.mkdir(parents=True, exist_ok=True)
-        async with open_deps(settings) as deps, aiosqlite.connect(settings.runs_db) as saver_conn:
-            saver = AsyncSqliteSaver(saver_conn, serde=JsonPlusSerializer(allowed_msgpack_modules=ALLOWED_MSGPACK))
-            await _setup_with_retry(saver)
-            # Autocommit: each transition is one statement, so a cancel can't strand an open
-            # write transaction that would block the saver on the same file.
-            async with (
-                aiosqlite.connect(settings.runs_db, timeout=BUSY_TIMEOUT_S, isolation_level=None) as registry_conn,
-                # Autocommit too: on a default connection setup() leaves a transaction open and the next write fails.
-                aiosqlite.connect(settings.runs_db, timeout=BUSY_TIMEOUT_S, isolation_level=None) as store_conn,
-            ):
-                registry = Registry(registry_conn)
-                await registry.setup()
-                seed_runs(settings)
-                store = AsyncSqliteStore(store_conn)
-                await _setup_with_retry(store)
-                controller = cls(settings, build_graph(deps, saver, store), registry)
-                try:
-                    yield controller
-                finally:
-                    # The connections close next, and a live task still needs them to record its end.
-                    await asyncio.gather(*(h.cancel() for h in list(controller._live.values())), return_exceptions=True)
+        storage = _postgres_storage if settings.database_url else _sqlite_storage
+        async with open_deps(settings) as deps, storage(settings) as (saver, store, registry):
+            controller = cls(settings, build_graph(deps, saver, store), registry, saver)
+            try:
+                yield controller
+            finally:
+                # The connections close next, and a live task still needs them to record its end.
+                await asyncio.gather(*(h.cancel() for h in list(controller._live.values())), return_exceptions=True)
 
     async def start(self, request_text: str, focus: list[Dimension] = []) -> RunHandle:
         await self._check_balance()
         thread_id = uuid4().hex[:8]
-        lock = take_lock(self._settings.runs_db, thread_id)
+        lock = take_lock(self._settings.lock_folder, thread_id)
         try:
             await self._registry.insert(thread_id, request_text)
         except BaseException:
@@ -211,7 +245,7 @@ class RunController:
 
     async def resume(self, thread_id: str, answer: dict | None = None) -> RunHandle:
         await self._record(thread_id)  # before the lock, so an unknown ID leaves no lock file
-        lock = take_lock(self._settings.runs_db, thread_id)
+        lock = take_lock(self._settings.lock_folder, thread_id)
         try:
             # Read under the lock: another process may have moved the Run on.
             status = (await self._record(thread_id)).status
@@ -281,7 +315,7 @@ class RunController:
         if record.status is not RunStatus.running:
             return record
         try:
-            lock = take_lock(self._settings.runs_db, record.thread_id)
+            lock = take_lock(self._settings.lock_folder, record.thread_id)
         except RunLocked:  # a live task, here or in another process
             return record
         # Held throughout, or a resume could start in the gap and have its live row overwritten.
@@ -296,6 +330,13 @@ class RunController:
         if status is RunStatus.done:
             self._write_brief(thread_id, snapshot.values)
         await self._registry.reconcile(thread_id, status, error)
+        # A finished Run is only ever read, so its history is dead weight on a 1 GB database.
+        # Housekeeping, so a failure is logged and never undoes the Run.
+        if status is RunStatus.done and isinstance(self._saver, AsyncPostgresSaver):
+            try:
+                await self._saver.aprune([thread_id], strategy="keep_latest")
+            except Exception:
+                logger.exception("Pruning Run %s failed", thread_id)
         return await self._registry.get(thread_id)
 
     def brief_paths(self, thread_id: str) -> list[Path]:

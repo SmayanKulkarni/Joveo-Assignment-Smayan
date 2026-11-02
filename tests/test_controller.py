@@ -138,7 +138,7 @@ def test_refusals_change_nothing(settings, monkeypatch):
             with pytest.raises(InvalidAnswer):
                 await controller.resume(thread_id, None)
 
-            lock = take_lock(settings.runs_db, thread_id)
+            lock = take_lock(settings.lock_folder, thread_id)
             with pytest.raises(RunLocked):
                 await controller.resume(thread_id, ANSWER_FOR["clarify"])
             lock.close()
@@ -263,7 +263,7 @@ def test_cancel_before_the_first_checkpoint_aborts_and_frees_the_lock(settings):
             handle = await controller.start("Engineer, Texas")
             first, second = await asyncio.gather(handle.cancel(), handle.cancel())
             view = await controller.get_run(handle.thread_id)
-            take_lock(settings.runs_db, handle.thread_id).close()
+            take_lock(settings.lock_folder, handle.thread_id).close()
             with pytest.raises(NotResumable):
                 await controller.resume(handle.thread_id)
             return first, second, view

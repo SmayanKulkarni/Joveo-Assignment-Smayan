@@ -5,6 +5,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "langgraph==1.2.18",
     "langgraph-checkpoint-sqlite==3.1.2",
+    "langgraph-checkpoint-postgres==3.2.0",
     "langchain-core==1.7.2",
     "langchain-openrouter==0.2.9",
     "langchain-typesafe==0.0.1a3",
@@ -16,6 +17,9 @@ dependencies = [
     "aiosqlite==0.22.1",
     "fastapi==0.162.0",
     "uvicorn==0.54.0",
+    "psycopg[binary]>=3.2",
+    "boto3>=1.35",
+    "pyjwt[crypto]>=2.9",
 ]
 
 [project.scripts]

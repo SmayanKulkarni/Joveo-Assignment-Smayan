@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from talent_scout.kernel.types import check_country
@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     l2_fresh_days: int = 7
     runs_db: Path = Path(".cache/runs.sqlite")
     runs_dir: Path = Path("runs")
+    lock_dir: Path | None = None  # the resume guard's folder; beside runs_db when unset
     seed_dir: Path | None = None  # sample Runs to load on start; the Docker image sets it
     # Used when the user gives no place, or none the clarify loop could pin down.
     default_country: str = "us"
@@ -58,6 +59,27 @@ class Settings(BaseSettings):
     access_code: str | None = None
     web_origin: str | None = None
     render_external_hostname: str | None = None  # Render sets this itself
+    # Neon services; all optional so a deploy without them runs exactly as before.
+    database_url: str | None = None
+    neon_auth_jwks_url: str | None = None
+    aws_endpoint_url_s3: str | None = None
+    aws_region: str | None = None
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
+
+    @property
+    def lock_folder(self) -> Path:
+        return self.lock_dir or self.runs_db.parent / "locks"
+
+    @model_validator(mode="after")
+    def _storage_is_safe(self):
+        # Render's disk is ephemeral, so a Run kept there would vanish on the next restart. A Demo Run is scripted and disposable.
+        if self.render_external_hostname and not self.database_url and not self.demo:
+            raise ValueError("database_url must be set on Render, or every Run is lost on restart")
+        # A replayed Run is made of cached answers and must never reach a database someone else reads.
+        if self.database_url and self.replay_cache:
+            raise ValueError("database_url and replay_cache can't both be set")
+        return self
 
     _known_country = field_validator("default_country")(check_country)
 

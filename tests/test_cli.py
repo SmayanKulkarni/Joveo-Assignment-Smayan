@@ -126,7 +126,7 @@ def test_resume_and_show_print_each_status(settings, monkeypatch, capsys):
             await Registry(conn).transition(ids["paused"], RunStatus.running)
 
     asyncio.run(mark_running())
-    held = take_lock(settings.runs_db, ids["paused"])
+    held = take_lock(settings.lock_folder, ids["paused"])
     assert cli.main(["resume", ids["paused"]]) == 1
     held.close()
     assert "This Run is open elsewhere" in capsys.readouterr().out

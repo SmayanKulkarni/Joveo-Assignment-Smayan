@@ -3,9 +3,12 @@ from datetime import UTC, datetime
 from enum import StrEnum
 
 import aiosqlite
+from psycopg_pool import AsyncConnectionPool
 
 from talent_scout.kernel.types import Model
 
+# Plain TEXT columns and `?` placeholders, so the same statements run on SQLite and, with `%s`, on Postgres.
+# ponytail: created if missing at startup, no migrations; add Alembic when a column has to change.
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
   thread_id  TEXT PRIMARY KEY,
@@ -57,44 +60,50 @@ def _now() -> str:
 class Registry:
     """An index over Runs: the checkpoint is the truth, and this lags it but never leads it."""
 
-    def __init__(self, conn: aiosqlite.Connection):
-        conn.row_factory = sqlite3.Row
-        self._conn = conn
+    def __init__(self, db: aiosqlite.Connection | AsyncConnectionPool):
+        if isinstance(db, aiosqlite.Connection):
+            db.row_factory = sqlite3.Row
+        self._db = db
+
+    async def _run(self, sql: str, params: tuple = ()) -> list[dict]:
+        # One statement per call, so each commits alone on either database.
+        if isinstance(self._db, AsyncConnectionPool):
+            async with self._db.connection() as conn:
+                cursor = await conn.execute(sql.replace("?", "%s"), params)
+                return await cursor.fetchall() if cursor.description else []
+        async with self._db.execute(sql, params) as cursor:
+            rows = [dict(row) for row in await cursor.fetchall()]
+        await self._db.commit()
+        return rows
 
     async def setup(self) -> None:
-        await self._conn.execute(SCHEMA)
-        await self._conn.commit()
+        await self._run(SCHEMA)
 
     async def insert(self, thread_id: str, request_text: str) -> None:
         now = _now()
-        await self._conn.execute(
+        await self._run(
             "INSERT INTO runs (thread_id, summary, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-            (thread_id, request_text[:80], RunStatus.running, now, now),
+            (thread_id, request_text[:80], RunStatus.running.value, now, now),
         )
-        await self._conn.commit()
 
     async def transition(self, thread_id: str, status: RunStatus, error: str | None = None) -> None:
         # One UPDATE, never a read then a write, so two processes can't interleave a transition.
-        await self._conn.execute(
+        await self._run(
             "UPDATE runs SET status = ?, error = ?, updated_at = ? WHERE thread_id = ?",
-            (status, error, _now(), thread_id),
+            (status.value, error, _now(), thread_id),
         )
-        await self._conn.commit()
 
     async def reconcile(self, thread_id: str, status: RunStatus, error: str | None) -> None:
         # Only a still-running row: another process may have moved it since the lock probe.
-        await self._conn.execute(
+        await self._run(
             "UPDATE runs SET status = ?, error = ?, updated_at = ? WHERE thread_id = ? AND status = ?",
-            (status, error, _now(), thread_id, RunStatus.running),
+            (status.value, error, _now(), thread_id, RunStatus.running.value),
         )
-        await self._conn.commit()
 
     async def get(self, thread_id: str) -> RunRecord | None:
-        async with self._conn.execute("SELECT * FROM runs WHERE thread_id = ?", (thread_id,)) as cursor:
-            row = await cursor.fetchone()
-        return RunRecord.model_validate(dict(row)) if row else None
+        rows = await self._run("SELECT * FROM runs WHERE thread_id = ?", (thread_id,))
+        return RunRecord.model_validate(rows[0]) if rows else None
 
     async def list_all(self) -> list[RunRecord]:
-        async with self._conn.execute("SELECT * FROM runs ORDER BY rowid DESC") as cursor:
-            rows = await cursor.fetchall()
-        return [RunRecord.model_validate(dict(row)) for row in rows]
+        rows = await self._run("SELECT * FROM runs ORDER BY created_at DESC")
+        return [RunRecord.model_validate(row) for row in rows]

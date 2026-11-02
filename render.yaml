@@ -20,6 +20,8 @@ services:
         sync: false
       - key: LANGSMITH_PROJECT
         sync: false
+      - key: DATABASE_URL
+        sync: false
       - key: ACCESS_CODE
         sync: false
       - key: WEB_ORIGIN
