@@ -78,11 +78,10 @@ def test_unknown_run_is_a_404_in_the_one_body(client):
 
 
 def test_invalid_requests_are_reshaped(client):
+    # Nothing typed is allowed once the Customer has a Resume, so without one it is refused by name.
     for body in ({"request_text": "  "}, {}):
         response = client.post("/api/runs", json={**body, "customer_id": local_customer(client)})
-        assert response.status_code == 422
-        assert response.json()["code"] == "invalid_request"
-        assert response.json()["errors"][0]["loc"][-1] == "request_text"
+        assert response.status_code == 422 and response.json()["code"] == "needs_request"
     assert client.post("/api/runs", json={"request_text": "x"}).json()["errors"][0]["loc"][-1] == "customer_id"
 
 
