@@ -30,8 +30,8 @@ async function call<T>(path: string, init?: Init): Promise<T> {
 
 const json = (method: string, body: object): Init => ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
 
-export const startRun = (customer_id: string, request_text: string, focus: Dimension[]) =>
-  call<{ thread_id: string }>("/runs", json("POST", { customer_id, request_text, focus }))
+export const startRun = (customer_id: string, request_text: string, focus: Dimension[], use_profile: boolean) =>
+  call<{ thread_id: string }>("/runs", json("POST", { customer_id, request_text, focus, use_profile }))
 
 export const deleteRun = (id: string) => call<void>(`/runs/${id}`, { method: "DELETE" })
 

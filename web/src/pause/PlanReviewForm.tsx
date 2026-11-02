@@ -28,7 +28,7 @@ function EditPlan({ plan, send, onCancel }: { plan: SearchPlan; send: Send; onCa
   )
 }
 
-export function PlanReviewForm({ plan, assumptions, send }: { plan: SearchPlan; assumptions: Assumption[]; send: Send }) {
+export function PlanReviewForm({ plan, assumptions, fromProfile = [], send }: { plan: SearchPlan; assumptions: Assumption[]; fromProfile?: string[]; send: Send }) {
   const [mode, setMode] = useState<"read" | "edit" | "reject">("read")
   const [feedback, setFeedback] = useState("")
   const { busy, refusal, submit } = useSubmit(send)
@@ -39,7 +39,7 @@ export function PlanReviewForm({ plan, assumptions, send }: { plan: SearchPlan; 
     <section className="card">
       <h2>Check the search plan</h2>
       <dl className="plan">
-        <dt>Titles</dt>
+        <dt>Titles{fromProfile.includes("titles") && <small> (hinted by the profile)</small>}</dt>
         <dd className="chips">
           {plan.titles.map((title) => (
             <span key={title} className="chip">

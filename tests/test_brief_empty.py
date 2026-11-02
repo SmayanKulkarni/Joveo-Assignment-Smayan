@@ -63,7 +63,7 @@ def test_zero_postings_write_brief_makes_no_llm_call_and_render_says_there_are_n
     assert brief.insights == [] and brief.summary_stat_ids == []
     assert brief.outlook.rating == "competitive" and brief.outlook.stat_ids == []
     recommendation = update["customer_recommendation"]
-    assert recommendation.model_dump() == {"job_title": None, "salary_band": None, "top_skills": None, "matches_note": NO_MATCHES}
+    assert recommendation.model_dump() == {"job_title": None, "salary_band": None, "top_skills": None, "matches_note": NO_MATCHES, "compared": None}
     assert brief.run_notes.matches_note == NO_MATCHES and f"- **Matches:** {NO_MATCHES}" in md
     assert update["recommendation_markdown"].startswith("# Customer Recommendation: Data Analyst, Austin")
     headings = [line for line in md.splitlines() if line.startswith("#")]

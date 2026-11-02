@@ -57,6 +57,7 @@ class StartRequest(Model):
     customer_id: str
     request_text: str = ""  # may be blank when the Customer has a Resume to draft the Run from
     focus: list[Dimension] = []
+    use_profile: bool = True
 
 
 class Started(Model):
@@ -214,7 +215,7 @@ async def start_run(body: StartRequest, request: Request, csm: Csm = Depends(cur
     text = body.request_text.strip()
     if not text and await _controller(request).accounts.resume(body.customer_id) is None:
         raise Refusal(422, "needs_request", "Type what you want to understand, or upload a Resume first")
-    handle = await _controller(request).start(text, body.focus, body.customer_id)
+    handle = await _controller(request).start(text, body.focus, body.customer_id, body.use_profile)
     return Started(thread_id=handle.thread_id)
 
 

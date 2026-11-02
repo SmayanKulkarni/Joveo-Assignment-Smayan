@@ -84,6 +84,7 @@ class CustomerRecommendation(Model):
     salary_band: BandRecommendation | None
     top_skills: SkillsRecommendation | None
     matches_note: str = NO_MATCHES
+    compared: str | None = None  # against the Customer's newest earlier Run of the same market; None when there is none
 
 
 class RunNotes(Model):
@@ -98,6 +99,7 @@ class RunNotes(Model):
     attribution: str | None
     matches_note: str = NO_MATCHES  # defaulted, so an old Run still loads
     resume_note: str | None = None  # when the Resume was uploaded and what of it the CSM added; None for a Run without one
+    from_profile: list[str] = []  # what the Customer Profile gave this Run
 
 
 class MarketBrief(Model):

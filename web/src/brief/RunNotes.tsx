@@ -30,6 +30,7 @@ export function RunNotes({ notes }: { notes: Brief["run_notes"] }) {
             <b>Resume:</b> {notes.resume_note}
           </li>
         )}
+        {notes.from_profile.length > 0 && <Item label="From the Customer Profile" lines={notes.from_profile} empty="" />}
         <li>
           <b>Search used:</b> {planLine(notes.final_plan)}
         </li>

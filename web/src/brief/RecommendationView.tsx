@@ -70,6 +70,7 @@ export function RecommendationView({ id, role, recommendation: r, matches, shown
         <Tile label="Salary band" value={band ? `${money(band.low)} to ${money(band.high)}` : undefined} unit={band?.unit} cites={band} ctx={ctx} />
         <Tile label="Top skills" value={r.top_skills?.skills.join(", ")} cites={r.top_skills} ctx={ctx} />
       </div>
+      {r.compared && <p>{r.compared}</p>}
       <section>
         <h2>Matches</h2>
         {top.length === 0 && <p>{r.matches_note}</p>}

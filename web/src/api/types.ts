@@ -53,7 +53,7 @@ export type Question = { about: string; text: string; options: string[]; answer:
 
 export type Pause =
   | { kind: "clarify"; payload: { questions: Question[] } }
-  | { kind: "plan_review"; payload: { plan: SearchPlan; assumptions: { about: string; value: string; reason: string }[]; calls_left: number | null } }
+  | { kind: "plan_review"; payload: { plan: SearchPlan; assumptions: { about: string; value: string; reason: string }[]; calls_left: number | null; from_profile: string[] } }
   | {
       kind: "low_data_review"
       payload: {
@@ -136,6 +136,7 @@ export type Recommendation = {
   salary_band: (Cited & { low: number; high: number; unit: string }) | null
   top_skills: (Cited & { skills: string[] }) | null
   matches_note: string
+  compared: string | null
 }
 
 export type Brief = {
@@ -154,6 +155,7 @@ export type Brief = {
     match_totals: string[]
     caveats: string[]
     resume_note: string | null
+    from_profile: string[]
     attribution: string | null
     matches_note: string
   }

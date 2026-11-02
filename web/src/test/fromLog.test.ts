@@ -30,7 +30,7 @@ test("only the lines before live_from are history", () => {
 })
 
 test("each status places the cursor", () => {
-  const pause: Pause = { kind: "plan_review", payload: { plan: {} as never, assumptions: [], calls_left: null } }
+  const pause: Pause = { kind: "plan_review", payload: { plan: {} as never, assumptions: [], calls_left: null, from_profile: [] } }
   const paused = fromLog(detail("paused", { pause, run_log: [line("plan")] }))
   expect(paused.pause).toBe(pause)
   expect(paused.turns.map((t) => t.step)).toEqual(["plan", "approve"])

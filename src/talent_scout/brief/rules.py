@@ -7,7 +7,7 @@ from talent_scout.brief.types import (
     SkillsRecommendation, TitleRecommendation,
 )
 from talent_scout.kernel.state import LogKind, RunLogEntry, State
-from talent_scout.kernel.text import employer_key, plural
+from talent_scout.kernel.text import employer_key, fold, plural
 from talent_scout.kernel.types import Evidence, HiringRequest, MarketStats, Posting, Source, Stat
 
 SOURCE_NAMES = {Source.adzuna: "Adzuna", Source.usajobs: "USAJOBS", Source.arbeitnow: "Arbeitnow"}
@@ -322,6 +322,29 @@ def recommendations(stats: MarketStats, request: HiringRequest, sample: list[Pos
         job_title=_title(stats, by_key, level),
         salary_band=_band(by_id, sample, level),
         top_skills=_skills(stats, by_key, any(p.source == Source.adzuna for p in sample)),
+    )
+
+
+def compared_line(state: State) -> str | None:
+    """Sets this Run's market against the Customer's newest earlier Run of the same role, country and currency."""
+    if state.profile is None:
+        return None
+    request = state.hiring_request
+    pay = next((s for s in state.stats.stats if s.id == "comp.advertised.median"), None)
+    currency = pay.unit.split("/")[0] if pay and pay.unit else None
+    before = next(
+        (e for e in state.profile.earlier
+         if fold(e.role) == fold(request.role) and e.country == request.country and e.currency == currency),
+        None,
+    )
+    if before is None:
+        return None
+    def money(value: float | None) -> str:
+        return f"{value:,.0f} {currency}" if value is not None else "not available"
+
+    return (
+        f"Compared with the Run of {before.date}: median Advertised pay {money(before.median_pay)} then and "
+        f"{money(float(pay.value) if pay else None)} now; Sample size {before.sample_size} then and {state.stats.sample_size} now."
     )
 
 

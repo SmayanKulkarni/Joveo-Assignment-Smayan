@@ -71,6 +71,8 @@ def _run_notes(brief: MarketBrief, postings: list[Posting]) -> str:
     ]
     if notes.resume_note:
         items.append(f"- **Resume:** {notes.resume_note}")
+    if notes.from_profile:
+        items.append(_item("From the Customer Profile", notes.from_profile, ""))
     if notes.attribution:
         items.append(f"- {notes.attribution}")
     return "## Run Notes\n\n" + "\n".join(items)
@@ -109,6 +111,8 @@ def _recommendations(recs: CustomerRecommendation, refs: dict[tuple[str, ...], i
     lines = []
     for (label, value), rec, missing in zip(shown, (recs.job_title, band, recs.top_skills), NO_RECOMMENDATIONS):
         lines.append(f"- **{label}:** {value}. {rec.reason} {_evidence_line(rec.evidence, refs)}" if rec else f"- {missing}")
+    if recs.compared:
+        lines.append(f"- {recs.compared}")
     return "## What to aim for\n\n" + "\n".join(lines)
 
 

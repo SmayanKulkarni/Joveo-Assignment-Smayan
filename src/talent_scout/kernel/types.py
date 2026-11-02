@@ -202,3 +202,23 @@ class MarketStats(Model):
         if dupes:
             raise ValueError(f"duplicate stat ids: {dupes}")
         return stats
+
+
+class Earlier(Model):
+    """What one finished Run of a Customer found, kept to compare a later Run with."""
+
+    thread_id: str
+    date: date
+    role: str
+    country: str
+    sample_size: int
+    median_pay: float | None  # Advertised only
+    currency: str | None
+
+
+class RunProfile(Model):
+    """A Customer Profile as a Run was started with it. Copied in, so later edits can't change the Run."""
+
+    values: dict[str, str | list[str]] = {}
+    titles: list[str] = []  # titles that found enough Postings before, commonest first
+    earlier: list[Earlier] = []  # newest first

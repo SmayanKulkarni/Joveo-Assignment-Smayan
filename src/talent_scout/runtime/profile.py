@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 from pydantic import StringConstraints, TypeAdapter
 
 from talent_scout.kernel.state import State
-from talent_scout.kernel.types import ADZUNA_CURRENCY, CurrencyCode, Dimension, Model, WorkMode
+from talent_scout.kernel.types import ADZUNA_CURRENCY, CurrencyCode, Dimension, Earlier, Model, RunProfile, WorkMode
 
 WINDOW = 10
 SCALARS = ("role", "country", "currency", "seniority", "employment_type", "work_mode")
@@ -24,16 +24,6 @@ PIN_TYPES = {
     "places": TypeAdapter(list[Text]),
     "focus": TypeAdapter(list[Dimension]),
 }
-
-
-class Earlier(Model):
-    thread_id: str
-    date: date
-    role: str
-    country: str
-    sample_size: int
-    median_pay: float | None  # Advertised only
-    currency: str | None
 
 
 class Learned(Model):
@@ -96,3 +86,12 @@ def shown(learned: Learned, pinned: dict, removed: list[str]) -> tuple[dict[str,
     entries = {k: Entry(value=v, runs=learned.runs[k]) for k, v in learned.values.items() if k not in removed}
     entries |= {k: Entry(value=v, runs=None) for k, v in pinned.items()}
     return entries, {} if "titles" in removed else learned.titles
+
+
+def run_profile(stored_learned: Learned, pinned: dict, removed: list[str]) -> RunProfile | None:
+    """The copy a Run keeps: what the CSM sees, plus the earlier results to compare with. None when there is nothing to use."""
+    entries, titles = shown(stored_learned, pinned, removed)
+    profile = RunProfile(
+        values={k: e.value for k, e in entries.items()}, titles=list(titles), earlier=stored_learned.earlier,
+    )
+    return profile if profile.values or profile.titles or profile.earlier else None

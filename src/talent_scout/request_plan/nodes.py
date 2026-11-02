@@ -17,9 +17,11 @@ from talent_scout.kernel.types import (
     RequestField,
     SearchPlan,
     Source,
+    WorkMode,
 )
 from talent_scout.request_plan.prompts import INTAKE_SYSTEM, JEV_QUESTIONS, PLAN_SYSTEM, PROBLEMS, QUESTION_SYSTEM
 from talent_scout.request_plan.types import (
+    PROFILE_REASON,
     ClarifyPayload,
     PlanAction,
     PlanReviewPayload,
@@ -102,6 +104,27 @@ def _resume_facts(state: State) -> dict[RequestField, str]:
     return {field: value for field, value in facts.items() if value}
 
 
+def _profile_facts(state: State) -> dict[RequestField, str]:
+    """What the Customer Profile offers for the fields a request can leave empty."""
+    values = state.profile.values if state.profile else {}
+    facts = {field: values.get(field.value) for field in (
+        RequestField.role, RequestField.seniority, RequestField.employment_type, RequestField.work_mode, RequestField.currency,
+    )}
+    facts[RequestField.location] = ", ".join(values.get("places", []))
+    return {field: value for field, value in facts.items() if value}
+
+
+def _fill_from_profile(state: State, draft: RequestDraft) -> RequestDraft:
+    """Code fills only what the model left empty, so nothing typed or taken from the Resume is overridden."""
+    update = {field.value: value for field, value in _profile_facts(state).items() if _blank(getattr(draft, field.value))}
+    if "work_mode" in update:
+        update["work_mode"] = WorkMode(update["work_mode"])
+    # A place and its country go together: a country beside a typed place could contradict it.
+    if "location" in update and draft.country is None:
+        update["country"] = state.profile.values.get("country")
+    return draft.model_copy(update=update)
+
+
 def _intake_input(state: State) -> str:
     lines = [f"Request: {state.request_text}"]
     answered = _answered(state)
@@ -126,6 +149,22 @@ def _from_resume(state: State, draft: RequestDraft, settled: list[Assumption]) -
     ]
 
 
+def _from_profile(state: State, draft: RequestDraft, claimed: set[RequestField]) -> list[Assumption]:
+    """A field the draft holds with the profile's own value, that was neither typed nor the Resume's, was filled from the profile."""
+    typed = fold(" ".join([state.request_text, *(q.answer for q in _answered(state))]))
+    return [
+        Assumption(about=field, value=value, reason=PROFILE_REASON)
+        for field, value in _profile_facts(state).items()
+        if field not in claimed and fold(str(getattr(draft, field.value) or "")) == fold(value) and fold(value) not in typed
+    ]
+
+
+def profile_fields(state: State) -> list[str]:
+    """What this Run took from the Customer Profile: the fields filled, and "titles" when hints went to the plan."""
+    fields = [a.about.value for a in state.assumptions if a.reason == PROFILE_REASON]
+    return [*fields, *(["titles"] if state.profile and state.profile.titles else [])]
+
+
 def _question_input(state: State, draft: RequestDraft, field: RequestField, kind: str) -> str:
     lines = [
         f"Request: {state.request_text}",
@@ -145,6 +184,8 @@ def _plan_input(state: State) -> str:
         lines += ["Assumptions:", *(f"- {a.about.value}: {a.value} ({a.reason})" for a in state.assumptions)]
     if state.plan_decision == PlanAction.reject and state.search_plan:
         lines += [f"Previous plan: {state.search_plan.model_dump_json()}", f"Feedback: {state.plan_feedback}"]
+    if state.profile and state.profile.titles:
+        lines += ["Titles that found enough Postings for this Customer before (hints, not requirements):", *(f"- {t}" for t in state.profile.titles)]
     return "\n".join(lines)
 
 
@@ -164,7 +205,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
     plan_chain = deps.tiers.structured("strong", SearchPlan, system=PLAN_SYSTEM, name="plan")
 
     async def intake(state: State) -> dict:
-        draft = await intake_chain.ainvoke(_intake_input(state))
+        draft = _fill_from_profile(state, await intake_chain.ainvoke(_intake_input(state)))
         return {
             "request_draft": draft,
             **log(state, "intake", LogKind.note, "parsed request", **draft.model_dump(mode="json")),
@@ -196,7 +237,9 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
     async def clarity_check(state: State) -> dict:
         draft = state.request_draft
         flags = _flag_missing(draft)
-        judged = await judge(state, draft, set(flags))
+        profiled = _from_profile(state, draft, {a.about for a in _from_resume(state, draft, [])})
+        # Fields the profile filled are settled, so no Clarifying Question repeats them.
+        judged = await judge(state, draft, set(flags) | {a.about for a in profiled})
         for field, j in judged.items():
             if j.outcome:
                 flags[field] = "ambiguous"
@@ -228,6 +271,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
             return {"run_log": [*state.run_log, *caveats, route]}
         route = log_entry("clarity_check", LogKind.route, "request is final", fields=outcomes)
         assumptions += _from_resume(state, draft, assumptions)
+        assumptions += [a for a in profiled if a.about not in {x.about for x in assumptions}]
         return {"hiring_request": request, "assumptions": assumptions, "run_log": [*state.run_log, *caveats, route]}
 
     async def clarify(state: State) -> dict:
@@ -250,6 +294,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         # The Assumptions are shown here because this is the last chance to correct one before quota is spent.
         payload = PlanReviewPayload(
             plan=state.search_plan, assumptions=state.assumptions, calls_left=deps.gateway.calls_left(Source.adzuna),
+            from_profile=profile_fields(state),
         )
         answer = interrupt(PlanReviewPause(payload=payload))
         # feedback is written even when null, so an approve after a reject clears the old feedback.

@@ -41,7 +41,7 @@ test("a loop resets the Steps between, except optional ones that ran", () => {
 })
 
 test("only a Pause's own Step waits, and the Step before it is done", () => {
-  const pause: Pause = { kind: "plan_review", payload: { plan: {} as never, assumptions: [], calls_left: null } }
+  const pause: Pause = { kind: "plan_review", payload: { plan: {} as never, assumptions: [], calls_left: null, from_profile: [] } }
   const { trace } = play([started("plan"), started("plan_review"), { type: "paused", pause }])
   expect(trace.steps.approve.status).toBe("waiting")
   expect(trace.steps.plan.status).toBe("done")

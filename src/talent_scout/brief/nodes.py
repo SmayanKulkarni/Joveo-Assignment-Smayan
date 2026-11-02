@@ -4,7 +4,7 @@ from collections import Counter
 from talent_scout.brief.markdown import render_markdown, render_recommendation
 from talent_scout.brief.prompts import CRITIC_NOUL, REVISE_SYSTEM, WRITE_SYSTEM
 from talent_scout.brief.rules import (
-    build_insights, checked_draft, checked_revision, empty_draft, fmt_value, insight_cap, match_totals, outlook, recommendations, rule_draft,
+    build_insights, checked_draft, checked_revision, empty_draft, fmt_value, insight_cap, match_totals, outlook, compared_line, recommendations, rule_draft,
 )
 from talent_scout.analysis.match import MIN_MATCHED, MIN_SCORE
 from talent_scout.brief.types import NO_MATCHES, BriefDraft, Confidence, InsightDraft, InsightVerdict, MarketBrief, RunNotes
@@ -13,6 +13,7 @@ from talent_scout.kernel.llm import LLMExhausted
 from talent_scout.kernel.state import LogKind, State, log, log_entry
 from talent_scout.kernel.text import plural
 from talent_scout.kernel.types import Evidence, Source
+from talent_scout.request_plan.types import PROFILE_REASON
 from talent_scout.runtime.deps import Deps, Node, Router
 
 MAX_REVISIONS = 2  # the loop stops here even if the critic still flags an Insight
@@ -93,6 +94,13 @@ def _resume_note(state: State) -> str | None:
     return note
 
 
+def _profile_lines(state: State) -> list[str]:
+    lines = [f"{a.about.value}: {a.value}" for a in state.assumptions if a.reason == PROFILE_REASON]
+    if state.profile and state.profile.titles:
+        lines.append(f"Title hints given to the plan: {', '.join(state.profile.titles)}")
+    return lines
+
+
 def _run_notes(state: State) -> RunNotes:
     credited = [ATTRIBUTION[s] for s in Source if s in ATTRIBUTION and any(p.source == s for p in state.sample_postings)]
     return RunNotes(
@@ -106,6 +114,7 @@ def _run_notes(state: State) -> RunNotes:
         match_totals=match_totals(state.run_log),
         caveats=_caveats(state),
         resume_note=_resume_note(state),
+        from_profile=_profile_lines(state),
         attribution=f"Jobs data provided by {' and '.join(credited)}" if credited else None,
     )
 
@@ -205,7 +214,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         tags = Counter(i.confidence for i in brief.insights)
         note = log(state, "render", LogKind.note, f"{len(brief.insights)} Insights", **{c.value: tags[c] for c in Confidence})
         recommendation = recommendations(state.stats, state.hiring_request, state.sample_postings).model_copy(
-            update={"matches_note": _matches_note(state)}
+            update={"matches_note": _matches_note(state), "compared": compared_line(state)}
         )
         return {
             "brief": brief,

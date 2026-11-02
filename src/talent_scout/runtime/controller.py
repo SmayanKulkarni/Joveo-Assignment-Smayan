@@ -35,7 +35,7 @@ from talent_scout.brief.rules import recommendation_of
 from talent_scout.runtime.graph import build_graph
 from talent_scout.runtime.guard import RunLocked, take_lock
 from talent_scout.runtime.pause import ALLOWED_MSGPACK, ANSWERS, Pause
-from talent_scout.runtime.profile import WINDOW, facts_of, learn
+from talent_scout.runtime.profile import WINDOW, facts_of, learn, run_profile
 from talent_scout.runtime.registry import RESUMABLE, Registry, RunRecord, RunStatus, derive_status
 from talent_scout.runtime.seed import seed_runs
 from talent_scout.runtime.testing import fake_deps
@@ -245,13 +245,20 @@ class RunController:
                 # The connections close next, and a live task still needs them to record its end.
                 await asyncio.gather(*(h.cancel() for h in list(controller._live.values())), return_exceptions=True)
 
-    async def start(self, request_text: str, focus: list[Dimension] = [], customer_id: str | None = None) -> RunHandle:
+    async def start(
+        self, request_text: str, focus: list[Dimension] = [], customer_id: str | None = None, use_profile: bool = True
+    ) -> RunHandle:
         await self._check_balance()
         # The Resume is read here, once, and travels as Run input: no node can reach another Customer's.
         stored = await self.accounts.resume(customer_id) if customer_id else None
         run_input = {"request_text": request_text, "focus": focus}
         if stored:
             run_input |= {"resume": stored.facts, "resume_uploaded": stored.uploaded_at.date()}
+        # Same rule for the profile: copied once, for this Customer only, and skipped when the CSM unticks "Use profile".
+        if customer_id and use_profile:
+            saved = await self.accounts.profile(customer_id)
+            if profile := run_profile(saved.learned, saved.pinned, saved.removed):
+                run_input["profile"] = profile
         thread_id = uuid4().hex[:8]
         lock = take_lock(self._settings.lock_folder, thread_id)
         try:

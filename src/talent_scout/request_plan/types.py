@@ -22,6 +22,10 @@ class RequestDraft(Model):
     purpose: str | None = Field(description="Why the user wants this market view; null if not stated.")
 
 
+# The reason a Run records for a field it took from the Customer Profile; the plan screen and Run Notes pick these out by it.
+PROFILE_REASON = "from Customer Profile"
+
+
 class PlanAction(StrEnum):
     approve = "approve"
     edit = "edit"
@@ -41,6 +45,7 @@ class PlanReviewPayload(Model):
     plan: SearchPlan
     assumptions: list[Assumption]
     calls_left: int | None = None  # Adzuna's, at the moment of the Pause, so the UI can price the plan
+    from_profile: list[str] = []  # fields, and "titles" for the hints, that came from the Customer Profile
 
 
 class PlanReviewAnswer(Model):

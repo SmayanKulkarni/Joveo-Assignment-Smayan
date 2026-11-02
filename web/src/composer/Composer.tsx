@@ -11,6 +11,7 @@ export function Composer({ customerId }: { customerId: string }) {
   const [focus, setFocus] = useState<Dimension[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [useProfile, setUseProfile] = useState(true)
   const [uploaded, setUploaded] = useState<string | null>(null)
   // With a Resume on file the Run can be drafted from it, so nothing has to be typed.
   const blank = !text.trim() && !uploaded
@@ -25,7 +26,7 @@ export function Composer({ customerId }: { customerId: string }) {
     setBusy(true)
     setError(null)
     try {
-      const { thread_id } = await startRun(customerId, text.trim(), focus)
+      const { thread_id } = await startRun(customerId, text.trim(), focus, useProfile)
       refreshRuns()
       navigate(`/runs/${thread_id}`)
     } catch (e) {
@@ -68,6 +69,9 @@ export function Composer({ customerId }: { customerId: string }) {
           </button>
         </div>
       </div>
+      <label className="muted">
+        <input type="checkbox" checked={useProfile} onChange={(e) => setUseProfile(e.target.checked)} /> Use profile
+      </label>
       {uploaded && <p className="muted">Using the Resume uploaded on {new Date(uploaded).toLocaleDateString()}</p>}
       {error && <p className="error">{error}</p>}
     </div>

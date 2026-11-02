@@ -19,6 +19,7 @@ from talent_scout.kernel.types import (
     MarketStats,
     Model,
     Posting,
+    RunProfile,
     SearchPlan,
 )
 from talent_scout.request_plan.types import PlanAction, RequestDraft
@@ -65,6 +66,8 @@ class State(Model):
     # The Customer's Resume as it stood when the Run began, so a later upload can't change this Run. Defaulted so old checkpoints load.
     resume: ResumeFacts | None = _owned_by(Owner.input, default=None)
     resume_uploaded: date | None = _owned_by(Owner.input, default=None)
+    # The Customer Profile as it stood at the start; None when it was empty or the CSM unticked "Use profile".
+    profile: RunProfile | None = _owned_by(Owner.input, default=None)
 
     hiring_request: HiringRequest | None = _owned_by(Owner.request_plan, default=None)
     questions: list[ClarifyingQuestion] = _owned_by(Owner.request_plan, default_factory=list)

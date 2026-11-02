@@ -6,7 +6,6 @@ Work deliberately left out of an LLD, with why and what would bring it back. One
 
 | Item | Why it's left out | Brings it back |
 |---|---|---|
-| `preferences` state slice | Long-term memory is the last build pass and its LLD decides what preferences contain | Long-term memory LLD adds the slice to `kernel/state.py` |
 | Calibrated Jev cuts | Need live labelled runs; every cut ships at 0.5, marked untuned | Running the `evals/jev/<placement>.jsonl` sweep and editing `thresholds.py` |
 | Jev Choice and Score in the wrapper | All three placements are yes/no questions, so the wrapper is Noul-only | A stage that needs a multi-label or graded judgement |
 | `jev-1.13` as a middle fallback hop | It would need its own tuned cuts | `jev-1.14` proving flaky in practice |
