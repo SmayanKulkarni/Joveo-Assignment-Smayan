@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date
@@ -14,7 +15,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from talent_scout.clients import auth, customers
+from talent_scout.clients import auth, customers, probe
 from talent_scout.clients.auth import current_csm
 from talent_scout.clients.refusal import Refusal
 from talent_scout.brief.glance import Glance, glance
@@ -294,6 +295,8 @@ def make_app(settings: Settings) -> FastAPI:
     async def _invalid(request: Request, exc: RequestValidationError):
         return refuse(422, "invalid_request", "The request was not valid", errors=_clean(exc.errors()))
 
+    if os.environ.get("PROBE") == "1":
+        app.include_router(probe.make_router(write_guard))  # before the catch-all
     app.include_router(public)
     app.include_router(api)
     if (DIST / "assets").is_dir():
