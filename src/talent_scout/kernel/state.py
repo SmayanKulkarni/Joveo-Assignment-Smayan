@@ -8,7 +8,7 @@ from langchain_core.messages import AnyMessage
 from langgraph.types import Command, Send
 from pydantic import BaseModel, Field, JsonValue, TypeAdapter, ValidationError
 
-from talent_scout.analysis.types import Extraction, ResumeFacts
+from talent_scout.analysis.types import Extraction, Match, ResumeFacts
 from talent_scout.brief.types import BriefDraft, CustomerRecommendation, InsightVerdict, MarketBrief
 from talent_scout.collection.types import FetchRecord
 from talent_scout.kernel.types import (
@@ -89,6 +89,7 @@ class State(Model):
     extractions: Annotated[dict[str, Extraction], merge] = _owned_by(Owner.analysis, default_factory=dict)
     skill_aliases: dict[str, str] = _owned_by(Owner.analysis, default_factory=dict)  # folded name -> canonical name
     stats: MarketStats | None = _owned_by(Owner.analysis, default=None)
+    matches: list[Match] = _owned_by(Owner.analysis, default_factory=list)  # ranked, every scored Posting; defaulted for old checkpoints
 
     brief_draft: BriefDraft | None = _owned_by(Owner.brief, default=None)
     critic_verdicts: list[InsightVerdict] = _owned_by(Owner.brief, default_factory=list)  # matches the start of brief_draft.insights

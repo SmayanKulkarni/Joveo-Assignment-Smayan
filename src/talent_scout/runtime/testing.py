@@ -88,6 +88,7 @@ def stub_nodes() -> dict[str, Node]:
         "batch_extract": _stub("batch_extract", extractions={"stub": _EXTRACTION}),
         "normalise_skills": _stub("normalise_skills", skill_aliases={}),
         "stats": _stub("stats", stats=MarketStats(sample_size=0, stats=[])),
+        "match": _stub("match", matches=[]),
         "write_brief": _stub("write_brief"),
         "critic": _stub("critic"),
         "render": _stub(

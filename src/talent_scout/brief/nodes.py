@@ -6,7 +6,8 @@ from talent_scout.brief.prompts import CRITIC_NOUL, REVISE_SYSTEM, WRITE_SYSTEM
 from talent_scout.brief.rules import (
     build_insights, checked_draft, checked_revision, empty_draft, fmt_value, insight_cap, match_totals, outlook, recommendations, rule_draft,
 )
-from talent_scout.brief.types import BriefDraft, Confidence, InsightDraft, InsightVerdict, MarketBrief, RunNotes
+from talent_scout.analysis.match import MIN_MATCHED, MIN_SCORE
+from talent_scout.brief.types import NO_MATCHES, BriefDraft, Confidence, InsightDraft, InsightVerdict, MarketBrief, RunNotes
 from talent_scout.gateway.types import ATTRIBUTION
 from talent_scout.kernel.llm import LLMExhausted
 from talent_scout.kernel.state import LogKind, State, log, log_entry
@@ -72,6 +73,15 @@ def _claim(state: State, insight: InsightDraft) -> dict:
             for s in (by_id[i] for i in insight.stat_ids)
         ],
     }
+
+
+def _matches_note(state: State) -> str:
+    """Shown in place of the Matches when there are none to list."""
+    if state.resume is None:
+        return NO_MATCHES
+    if not state.matches:
+        return "No Matches could be scored for this Run."
+    return f"No Posting matched at least {MIN_MATCHED} skills with a score of {MIN_SCORE} or more."
 
 
 def _resume_note(state: State) -> str | None:
@@ -194,12 +204,14 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         )
         tags = Counter(i.confidence for i in brief.insights)
         note = log(state, "render", LogKind.note, f"{len(brief.insights)} Insights", **{c.value: tags[c] for c in Confidence})
-        recommendation = recommendations(state.stats, state.hiring_request, state.sample_postings)
+        recommendation = recommendations(state.stats, state.hiring_request, state.sample_postings).model_copy(
+            update={"matches_note": _matches_note(state)}
+        )
         return {
             "brief": brief,
             "brief_markdown": render_markdown(brief, state.sample_postings),
             "customer_recommendation": recommendation,
-            "recommendation_markdown": render_recommendation(recommendation, state.hiring_request, state.sample_postings),
+            "recommendation_markdown": render_recommendation(recommendation, state.hiring_request, state.sample_postings, state.matches),
             **note,
         }
 

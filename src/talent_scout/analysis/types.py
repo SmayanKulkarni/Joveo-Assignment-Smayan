@@ -93,3 +93,25 @@ class ResumeFacts(Model):
             return int(years[-1]) if years else 9999
 
         return max(self.roles, key=ends).title if self.roles else None
+
+
+class Level(StrEnum):
+    fits = "fits"
+    stretch = "stretch"
+    far = "far"
+    not_judged = "not_judged"
+
+
+class MatchedSkill(Model):
+    posting: str  # as the Posting writes it
+    resume: str  # as the Resume writes it; shown beside the other when they differ
+    added: bool  # the CSM added it to the Resume
+
+
+class Match(Model):
+    posting_key: str
+    score: int
+    matched: list[MatchedSkill]
+    missing: list[str]
+    level: Level
+    level_reason: str

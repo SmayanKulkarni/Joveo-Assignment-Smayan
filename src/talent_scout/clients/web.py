@@ -18,6 +18,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from talent_scout.clients import auth, customers, probe, resumes
 from talent_scout.clients.auth import current_csm
 from talent_scout.clients.refusal import Refusal
+from talent_scout.analysis.types import Match
 from talent_scout.analysis.resume import make_resume_chain
 from talent_scout.brief.glance import Glance, glance
 from talent_scout.brief.markdown import CONFIDENCE_KEY
@@ -91,6 +92,7 @@ class RunDetail(Model):
     live_from: int | None  # the attached handle's log_start; None when no Run is live here
     brief: MarketBrief | None
     sample: list[PostingRef]  # empty unless there is a Brief
+    matches: list[Match]  # every scored Posting, ranked; the default view is the first few that pass the cut
     recommendation: CustomerRecommendation | None  # computed on read for a Run that finished before it was stored
     glance: Glance | None  # computed on read, so earlier Runs get it and brief.json keeps its bytes
 
@@ -120,6 +122,7 @@ def _detail(view: RunView, handle: RunHandle | None) -> RunDetail:
         live_from=handle.log_start if handle else None,
         brief=state.brief if state else None,
         sample=sample,
+        matches=state.matches if state else [],
         recommendation=recommendation_of(state) if state and state.brief else None,
         glance=glance(state.brief, state.sample_postings) if state and state.brief else None,
     )

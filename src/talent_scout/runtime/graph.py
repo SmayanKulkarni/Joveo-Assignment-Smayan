@@ -23,7 +23,7 @@ EDGES = [
     (START, "intake"), ("intake", "clarity_check"), ("clarify", "intake"),
     ("plan", "plan_review"), ("tools", "fetch_agent"), ("collect", "relevance"),
     ("broaden", "fetch_agent"), ("batch_extract", "normalise_skills"), ("normalise_skills", "stats"),
-    ("stats", "write_brief"),
+    ("stats", "match"), ("match", "write_brief"),
     ("write_brief", "critic"), ("render", END),
 ]
 # The targets are listed because a router returning Send can't be read for its destinations.
@@ -38,7 +38,7 @@ CONDITIONAL = {
 OWNERS = {
     "request_plan": ["intake", "clarity_check", "clarify", "plan", "plan_review"],
     "collection":   ["fetch_agent", "tools", "collect", "relevance", "broaden", "low_data_review"],
-    "analysis":     ["batch_extract", "normalise_skills", "stats"],
+    "analysis":     ["batch_extract", "normalise_skills", "stats", "match"],
     "brief":        ["write_brief", "critic", "render"],
 }
 _OWNER_OF = {node: owner for owner, nodes in OWNERS.items() for node in nodes}

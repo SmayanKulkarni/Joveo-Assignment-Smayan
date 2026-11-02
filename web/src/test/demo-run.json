@@ -59,6 +59,10 @@
      "owner": "analysis"
     },
     {
+     "id": "match",
+     "owner": "analysis"
+    },
+    {
      "id": "write_brief",
      "owner": "brief"
     },
@@ -110,6 +114,10 @@
     },
     {
      "source": "stats",
+     "target": "match"
+    },
+    {
+     "source": "match",
      "target": "write_brief"
     },
     {
@@ -690,6 +698,18 @@
    "notes": [
     "6 Stats from 6 Postings",
     "Demo data: these Postings are invented for the walkthrough"
+   ],
+   "results": []
+  },
+  {
+   "type": "node_started",
+   "node": "match"
+  },
+  {
+   "type": "node_done",
+   "node": "match",
+   "notes": [
+    "Demo Runs score no Matches"
    ],
    "results": []
   },

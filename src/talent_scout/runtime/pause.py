@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from pydantic import Field
 
 from talent_scout.analysis.types import (
-    EmployerType, ExtractBatch, Extraction, Requirement, ResumeFacts, ResumeSkill, Role, Seniority,
+    EmployerType, ExtractBatch, Extraction, Requirement, Level, Match, MatchedSkill, ResumeFacts, ResumeSkill, Role, Seniority,
 )
 from talent_scout.brief.types import BriefDraft, BriefRevision, Confidence, CustomerRecommendation, InsightVerdict, MarketBrief, OutlookRating
 from talent_scout.collection.types import FetchRecord, LowDataAnswer, LowDataPayload
@@ -47,7 +47,7 @@ ALLOWED_MSGPACK = [
     for cls in (
         ClarifyPause, PlanReviewPause, LowDataPause, *ANSWERS.values(), PlanAction, RequestField, RequestDraft, WorkMode,
         FetchRecord, CacheStatus, Source, PayPeriod, ExtractBatch, Extraction, Seniority, EmployerType, Requirement,
-        ResumeFacts, ResumeSkill, Role,
+        ResumeFacts, ResumeSkill, Role, Match, MatchedSkill, Level,
         BriefDraft, BriefRevision, InsightVerdict, MarketBrief, CustomerRecommendation, Confidence, OutlookRating, Dimension,
         HiringRequest, LogKind, RunLogEntry, ClarifyingQuestion, SearchPlan, MarketStats,
     )

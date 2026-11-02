@@ -340,6 +340,9 @@ def demo_nodes(delay: float) -> dict[str, Node]:
         ]
         return {"stats": STATS, "run_log": [*state.run_log, *entries]}
 
+    async def match(state: State) -> dict:
+        return {"matches": [], **log(state, "match", LogKind.note, "Demo Runs score no Matches")}
+
     async def write_brief(state: State) -> dict:
         if state.brief_draft:  # a revision: the flagged Insight is replaced and the rest kept
             await say(reasoning="One claim goes further than the figures allow. Rewording it.")
@@ -385,5 +388,5 @@ def demo_nodes(delay: float) -> dict[str, Node]:
         "intake": intake, "clarity_check": clarity_check, "clarify": clarify, "plan": plan, "plan_review": plan_review,
         "fetch_agent": fetch_agent, "tools": tools, "collect": collect, "relevance": relevance, "broaden": broaden,
         "low_data_review": low_data_review, "batch_extract": batch_extract, "normalise_skills": normalise_skills,
-        "stats": stats, "write_brief": write_brief, "critic": critic, "render": render,
+        "stats": stats, "match": match, "write_brief": write_brief, "critic": critic, "render": render,
     }

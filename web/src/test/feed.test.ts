@@ -15,7 +15,7 @@ test("the Demo Run feed reaches its end state", () => {
   const state = play(events)
   expect(state.turns.map((t) => t.step)).toEqual([
     "read", "ask", "read", "plan", "approve", "search", "filter", "few", "widen", "search", "filter",
-    "postings", "normalise", "stats", "write", "check", "write", "check", "finish",
+    "postings", "normalise", "stats", "match", "write", "check", "write", "check", "finish",
   ])
   expect(state.ending).toEqual({ kind: "done" })
   expect(state.pause).toBeNull()

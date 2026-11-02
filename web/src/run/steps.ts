@@ -23,6 +23,7 @@ export const STEPS: Step[] = [
   { id: "postings", label: "Read postings", nodes: ["batch_extract"], sub: "Skills, seniority, pay", weight: 4 },
   { id: "normalise", label: "Tidy skill names", nodes: ["normalise_skills"], sub: "Merge spelling variants", weight: 1 },
   { id: "stats", label: "Compute the numbers", nodes: ["stats"], sub: "Medians, counts, shares", weight: 1 },
+  { id: "match", label: "Match to the Resume", nodes: ["match"], sub: "Only with a Resume", weight: 0.5, optional: true },
   { id: "write", label: "Write the brief", nodes: ["write_brief"], sub: "Summary and insights", weight: 2 },
   { id: "check", label: "Check every claim", nodes: ["critic"], sub: "Against the numbers", weight: 1 },
   { id: "finish", label: "Finish", nodes: ["render"], sub: "Brief ready", weight: 0.5 },

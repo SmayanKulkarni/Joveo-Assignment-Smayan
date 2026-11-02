@@ -3,9 +3,10 @@ from collections import Counter
 
 from langgraph.types import Send
 
+from talent_scout.analysis.match import compute_matches
 from talent_scout.analysis.prompts import EXTRACT_SYSTEM, MERGE_SYSTEM
 from talent_scout.analysis.stats import compute_stats, mentions
-from talent_scout.analysis.types import BatchFacts, ExtractBatch, Extraction, PostingFacts, SkillGroup, SkillGroups
+from talent_scout.analysis.types import ResumeFacts, BatchFacts, ExtractBatch, Extraction, PostingFacts, SkillGroup, SkillGroups
 from talent_scout.kernel.llm import LLMExhausted
 from talent_scout.kernel.state import LogKind, RunLogEntry, State, log
 from talent_scout.kernel.text import fold
@@ -67,11 +68,12 @@ def _text(postings: list[Posting]) -> str:
     return "\n\n".join(blocks)
 
 
-def _names_to_merge(extractions: dict[str, Extraction]) -> list[str]:
+def _names_to_merge(extractions: dict[str, Extraction], resume: ResumeFacts | None = None) -> list[str]:
     counts = Counter(fold(s.name) for e in extractions.values() for s in e.skills)
     # Ties break by name so the cut is the same whatever order the branches finished in.
     top = sorted(counts, key=lambda n: (-counts[n], n))[:MAX_SKILLS_TO_MERGE]
-    return sorted(top)
+    # The Resume's names join after the cut, so "Postgres" and "PostgreSQL" can merge; no Resume sends the same prompt as before.
+    return sorted({*top, *(fold(s.name) for s in resume.skills)} if resume else top)
 
 
 def _root(aliases: dict[str, str], name: str) -> str:
@@ -120,7 +122,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         return {"extractions": found}
 
     async def normalise_skills(state: State) -> dict:
-        names = _names_to_merge(state.extractions)
+        names = _names_to_merge(state.extractions, state.resume)
         if not names:
             return {"skill_aliases": {}, **log(state, "normalise_skills", LogKind.note, "No skills to merge")}
         try:
@@ -147,7 +149,19 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
         entries.append(RunLogEntry(node="stats", kind=LogKind.note, message=note, data=summary))
         return {"stats": market, "run_log": [*state.run_log, *entries]}
 
-    return {"batch_extract": batch_extract, "normalise_skills": normalise_skills, "stats": stats}
+    async def match(state: State) -> dict:
+        if state.resume is None or not state.sample:
+            reason = "no Resume" if state.resume is None else "the Sample is empty"
+            return {"matches": [], **log(state, "match", LogKind.note, f"No Matches: {reason}")}
+        try:
+            matches, unscored = compute_matches(state.resume, state.sample_postings, state.extractions, state.skill_aliases)
+        except Exception:
+            # A bug here must not lose the Brief; the Caveat holds no Resume content because Caveats reach write_brief.
+            return {"matches": [], **log(state, "match", LogKind.caveat, "Matches unavailable")}
+        note = f"{len(matches)} Postings scored against the Resume; {unscored} had no Extraction and were not scored"
+        return {"matches": matches, **log(state, "match", LogKind.note, note, scored=len(matches), unscored=unscored)}
+
+    return {"batch_extract": batch_extract, "normalise_skills": normalise_skills, "stats": stats, "match": match}
 
 
 ROUTERS: dict[str, Router] = {}

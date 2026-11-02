@@ -87,7 +87,7 @@ def test_happy_path_goes_through_each_typed_pause_to_done(settings):
     assert view.record.summary == "Engineer, Texas"
     assert isinstance(terminal, Done) and terminal.status == "done"
     # The last leg, replayed from the buffer, in order and ending on the terminal event.
-    assert [e.node for e in events if isinstance(e, NodeDone)] == ["low_data_review", "stats", "write_brief", "critic", "render"]
+    assert [e.node for e in events if isinstance(e, NodeDone)] == ["low_data_review", "stats", "match", "write_brief", "critic", "render"]
     assert events[:2] == [NodeStarted(node="low_data_review"), NodeDone(node="low_data_review", notes=["continue"])]
     assert events[-1] == terminal
 

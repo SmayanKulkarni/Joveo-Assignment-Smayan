@@ -53,7 +53,7 @@ def test_stub_run_reaches_render_through_all_three_pauses(tmp_path):
     state = State.model_validate(snapshot.values)
     assert [e.node for e in state.run_log] == [
         "intake", "clarity_check", "clarify", "intake", "clarity_check", "plan", "plan_review", "fetch_agent",
-        "collect", "relevance", "low_data_review", "stats", "write_brief", "critic", "render",
+        "collect", "relevance", "low_data_review", "stats", "match", "write_brief", "critic", "render",
     ]
     assert state.questions[0].answer == "Software"
     assert state.brief == stub_brief()

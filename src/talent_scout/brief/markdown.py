@@ -1,12 +1,16 @@
 from collections import Counter
 from urllib.parse import quote, urlparse
 
+from talent_scout.analysis.match import default_view
+from talent_scout.analysis.types import Match, MatchedSkill
 from talent_scout.brief.glance import Glance, glance
 from talent_scout.brief.rules import OUTLOOK_MEANING, SOURCE_NAMES
 from talent_scout.brief.types import CustomerRecommendation, HiringOutlook, Insight, MarketBrief
-from talent_scout.kernel.text import plural
-from talent_scout.kernel.types import Evidence, HiringRequest, Posting, SearchPlan
+from talent_scout.kernel.text import fold, plural
+from talent_scout.kernel.types import Evidence, HiringRequest, Posting, SearchPlan, Source
 
+REMOTE_LABEL = "Remote: check where the employer can hire"
+PARTIAL_LABEL = "Adzuna shows only part of the advert"
 REPLAY_BANNER = "Replayed run: jobs data, LLM and Jev responses came from the replay cache, not live sources"
 NO_RECOMMENDATIONS = (
     "Not enough evidence to suggest a job title.",
@@ -148,12 +152,57 @@ def render_markdown(brief: MarketBrief, postings: list[Posting]) -> str:
     return "\n\n".join(parts) + "\n"
 
 
-def render_recommendation(recs: CustomerRecommendation, request: HiringRequest, postings: list[Posting]) -> str:
+def _pay(p: Posting) -> str:
+    s = p.salary
+    if s is None:
+        return "not stated"
+    low, high = (f"{v:,.0f}" for v in (s.min if s.min is not None else s.max, s.max if s.max is not None else s.min))
+    span = low if low == high else f"{low} to {high}"
+    return f"{span} {s.currency}/{s.period.value} ({'Estimated' if s.predicted else 'Advertised'})"
+
+
+def _match_row(rank: int, m: Match, p: Posting) -> str:
+    def skill(s: MatchedSkill) -> str:
+        name = s.posting if fold(s.posting) == fold(s.resume) else f"{s.posting} (Resume: {s.resume})"
+        return name + (" [added by CSM]" if s.added else "")
+
+    labels = []
+    if p.remote:
+        labels.append(REMOTE_LABEL)
+    if p.source == Source.adzuna:
+        labels.append(PARTIAL_LABEL)
+    where = ", ".join(x for x in (_cell(p.company or ""), _cell(p.location)) if x)
+    return "\n".join([
+        f"{rank}. **{_cell(p.title)}**, {where}",
+        f"   - Pay: {_pay(p)}",
+        f"   - Score {m.score}, {m.level.value.replace('_', ' ').capitalize()} ({m.level_reason})",
+        f"   - Matched: {', '.join(skill(s) for s in m.matched) or 'none'}",
+        f"   - Missing: {', '.join(_cell(s) for s in m.missing) or 'none'}",
+        f"   - Source: {SOURCE_NAMES[p.source]}" + "".join(f". {label}" for label in labels) + f". {_link(p.url)}",
+    ])
+
+
+def _matches(note: str, matches: list[Match], postings: list[Posting]) -> str:
+    by_key = {p.key: p for p in postings}
+    shown = default_view(matches)
+    if not shown:
+        return f"## Matches\n\n{note}"
+    out = "## Matches\n\n" + "\n".join(_match_row(i, m, by_key[m.posting_key]) for i, m in enumerate(shown, 1))
+    rest = [m for m in matches if m not in shown]
+    if rest:
+        rows = (_match_row(i, m, by_key[m.posting_key]) for i, m in enumerate(rest, len(shown) + 1))
+        out += f"\n\n### The other {len(rest)} scored Postings\n\n" + "\n".join(rows)
+    return out
+
+
+def render_recommendation(
+    recs: CustomerRecommendation, request: HiringRequest, postings: list[Posting], matches: list[Match] = ()
+) -> str:
     refs: dict[tuple[str, ...], int] = {}
     parts = [
         f"# Customer Recommendation: {request.role}, {request.location}",
         _recommendations(recs, refs),
-        f"## Matches\n\n{recs.matches_note}",
+        _matches(recs.matches_note, list(matches), postings),
         _evidence(refs),
         _postings_table(postings),
     ]
