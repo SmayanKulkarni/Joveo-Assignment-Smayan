@@ -1,5 +1,6 @@
 import functools
 import inspect
+from datetime import date
 from enum import StrEnum
 from typing import Annotated, Any, Literal
 
@@ -7,7 +8,7 @@ from langchain_core.messages import AnyMessage
 from langgraph.types import Command, Send
 from pydantic import BaseModel, Field, JsonValue, TypeAdapter, ValidationError
 
-from talent_scout.analysis.types import Extraction
+from talent_scout.analysis.types import Extraction, ResumeFacts
 from talent_scout.brief.types import BriefDraft, CustomerRecommendation, InsightVerdict, MarketBrief
 from talent_scout.collection.types import FetchRecord
 from talent_scout.kernel.types import (
@@ -61,6 +62,9 @@ class State(Model):
     # input: written once by the Run Controller, never by a node
     request_text: str = _owned_by(Owner.input)
     focus: list[Dimension] = _owned_by(Owner.input, default_factory=list)
+    # The Customer's Resume as it stood when the Run began, so a later upload can't change this Run. Defaulted so old checkpoints load.
+    resume: ResumeFacts | None = _owned_by(Owner.input, default=None)
+    resume_uploaded: date | None = _owned_by(Owner.input, default=None)
 
     hiring_request: HiringRequest | None = _owned_by(Owner.request_plan, default=None)
     questions: list[ClarifyingQuestion] = _owned_by(Owner.request_plan, default_factory=list)

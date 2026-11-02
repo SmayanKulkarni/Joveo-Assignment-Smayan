@@ -1,6 +1,8 @@
+import re
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, StringConstraints
 
 from talent_scout.kernel.types import Model, Posting
 
@@ -63,3 +65,31 @@ class SkillGroup(Model):
 
 class SkillGroups(Model):
     groups: list[SkillGroup] = Field(description="Groups of two or more spellings of one skill.")
+
+
+class Role(Model):
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+    start: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)]
+    end: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)]
+
+
+class ResumeSkill(Model):
+    name: str
+    added: bool = False  # not in the resume text, so the CSM put it there
+
+
+class ResumeFacts(Model):
+    roles: list[Role]
+    skills: list[ResumeSkill]
+    seniority: Seniority
+    locations: list[str]
+    years: int | None  # computed from the role dates, never read from the model
+
+    @property
+    def latest_title(self) -> str | None:
+        # The role that ends last, with "Present" ending after any year, so the order the resume lists them in doesn't matter.
+        def ends(role: Role) -> int:
+            years = re.findall(r"\b(?:19|20)\d{2}\b", role.end)
+            return int(years[-1]) if years else 9999
+
+        return max(self.roles, key=ends).title if self.roles else None

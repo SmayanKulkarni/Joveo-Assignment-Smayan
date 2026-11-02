@@ -97,6 +97,7 @@ class RunNotes(Model):
     caveats: list[str]  # messages: state.py imports this file, so no RunLogEntry
     attribution: str | None
     matches_note: str = NO_MATCHES  # defaulted, so an old Run still loads
+    resume_note: str | None = None  # when the Resume was uploaded and what of it the CSM added; None for a Run without one
 
 
 class MarketBrief(Model):

@@ -65,6 +65,8 @@ def _run_notes(brief: MarketBrief, postings: list[Posting]) -> str:
         _item("Caveats", notes.caveats, "None"),
         f"- **Matches:** {notes.matches_note}",
     ]
+    if notes.resume_note:
+        items.append(f"- **Resume:** {notes.resume_note}")
     if notes.attribution:
         items.append(f"- {notes.attribution}")
     return "## Run Notes\n\n" + "\n".join(items)

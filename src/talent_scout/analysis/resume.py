@@ -10,7 +10,7 @@ from pydantic import AfterValidator, Field, StringConstraints
 from pypdf import PdfReader
 
 from talent_scout.analysis.stats import mentions
-from talent_scout.analysis.types import Seniority
+from talent_scout.analysis.types import ResumeFacts, ResumeSkill, Role, Seniority
 from talent_scout.kernel.llm import make_tiers
 from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.text import fold
@@ -49,12 +49,6 @@ SkillName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1
 Location = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 
 
-class Role(Model):
-    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
-    start: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)]
-    end: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)]
-
-
 class ResumeExtraction(Model):
     """What the model returns. No free-text field and nowhere for a personal detail, which is what keeps them out."""
 
@@ -62,19 +56,6 @@ class ResumeExtraction(Model):
     skills: list[str] = Field(description="Skills copied exactly as written, one to four words, at most 30.")
     seniority: Seniority = Field(description="Level of the most recent role from its title; unknown if unclear.")
     locations: list[str] = Field(description="Cities or countries copied exactly as written.")
-
-
-class ResumeSkill(Model):
-    name: str
-    added: bool = False  # not in the resume text, so the CSM put it there
-
-
-class ResumeFacts(Model):
-    roles: list[Role]
-    skills: list[ResumeSkill]
-    seniority: Seniority
-    locations: list[str]
-    years: int | None  # computed from the role dates, never read from the model
 
 
 class FactsPatch(Model):

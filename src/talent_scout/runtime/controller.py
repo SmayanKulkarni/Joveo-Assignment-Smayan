@@ -246,6 +246,11 @@ class RunController:
 
     async def start(self, request_text: str, focus: list[Dimension] = [], customer_id: str | None = None) -> RunHandle:
         await self._check_balance()
+        # The Resume is read here, once, and travels as Run input: no node can reach another Customer's.
+        stored = await self.accounts.resume(customer_id) if customer_id else None
+        run_input = {"request_text": request_text, "focus": focus}
+        if stored:
+            run_input |= {"resume": stored.facts, "resume_uploaded": stored.uploaded_at.date()}
         thread_id = uuid4().hex[:8]
         lock = take_lock(self._settings.lock_folder, thread_id)
         try:
@@ -253,7 +258,7 @@ class RunController:
         except BaseException:
             lock.close()
             raise
-        return self._spawn(thread_id, {"request_text": request_text, "focus": focus}, lock, log_len=0)
+        return self._spawn(thread_id, run_input, lock, log_len=0)
 
     async def resume(self, thread_id: str, answer: dict | None = None) -> RunHandle:
         await self._record(thread_id)  # before the lock, so an unknown ID leaves no lock file

@@ -7,6 +7,7 @@ from pydantic import Field
 
 from talent_scout.kernel.jev import Judgement
 from talent_scout.kernel.state import LogKind, RunLogEntry, State, log, log_entry
+from talent_scout.kernel.text import fold
 from talent_scout.kernel.types import (
     ADZUNA_CURRENCY,
     Assumption,
@@ -88,12 +89,41 @@ def _finish(
     return request, assumptions, None
 
 
+def _resume_facts(state: State) -> dict[RequestField, str]:
+    """What the Resume offers for the fields it can fill. Nothing else of it reaches a prompt here."""
+    resume = state.resume
+    if resume is None:
+        return {}
+    facts = {
+        RequestField.role: resume.latest_title,
+        RequestField.seniority: resume.seniority.value if resume.seniority.value != "unknown" else None,
+        RequestField.location: ", ".join(resume.locations) or None,
+    }
+    return {field: value for field, value in facts.items() if value}
+
+
 def _intake_input(state: State) -> str:
     lines = [f"Request: {state.request_text}"]
     answered = _answered(state)
     if answered:
         lines += ["", "Answers to earlier questions:", *(f"- {q.text} -> {q.answer}" for q in answered)]
+    if facts := _resume_facts(state):
+        lines += [
+            "", "The Customer's Resume offers these values. Use one only for a field the request and answers leave empty:",
+            *(f"- {field.value}: {value}" for field, value in facts.items()),
+        ]
     return "\n".join(lines)
+
+
+def _from_resume(state: State, draft: RequestDraft, settled: list[Assumption]) -> list[Assumption]:
+    """A field the draft holds that the CSM never typed can only have come from the Resume, so it is shown as an Assumption."""
+    typed = fold(" ".join([state.request_text, *(q.answer for q in _answered(state))]))
+    taken = {a.about for a in settled}
+    return [
+        Assumption(about=field, value=value, reason=f"from the Resume uploaded {state.resume_uploaded}")
+        for field in _resume_facts(state)
+        if field not in taken and (value := getattr(draft, field.value)) and fold(value) not in typed
+    ]
 
 
 def _question_input(state: State, draft: RequestDraft, field: RequestField, kind: str) -> str:
@@ -197,6 +227,7 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
             route = log_entry("clarity_check", LogKind.route, f"aborted: {abort}", fields=outcomes)
             return {"run_log": [*state.run_log, *caveats, route]}
         route = log_entry("clarity_check", LogKind.route, "request is final", fields=outcomes)
+        assumptions += _from_resume(state, draft, assumptions)
         return {"hiring_request": request, "assumptions": assumptions, "run_log": [*state.run_log, *caveats, route]}
 
     async def clarify(state: State) -> dict:

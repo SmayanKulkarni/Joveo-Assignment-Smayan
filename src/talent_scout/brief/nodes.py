@@ -74,6 +74,15 @@ def _claim(state: State, insight: InsightDraft) -> dict:
     }
 
 
+def _resume_note(state: State) -> str | None:
+    if state.resume is None:
+        return None
+    note = f"Resume uploaded on {state.resume_uploaded}"
+    if added := [s.name for s in state.resume.skills if s.added]:
+        note += f"; facts added by the CSM: {', '.join(added)}"
+    return note
+
+
 def _run_notes(state: State) -> RunNotes:
     credited = [ATTRIBUTION[s] for s in Source if s in ATTRIBUTION and any(p.source == s for p in state.sample_postings)]
     return RunNotes(
@@ -86,6 +95,7 @@ def _run_notes(state: State) -> RunNotes:
         postings_analysed=Evidence(posting_keys=state.sample),
         match_totals=match_totals(state.run_log),
         caveats=_caveats(state),
+        resume_note=_resume_note(state),
         attribution=f"Jobs data provided by {' and '.join(credited)}" if credited else None,
     )
 
