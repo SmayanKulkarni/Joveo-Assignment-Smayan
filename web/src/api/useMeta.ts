@@ -4,6 +4,7 @@ import type { Meta } from "./types"
 
 const RETRY_MS = 5000
 const TRIES = 24 // two minutes: a sleeping free host takes about one to wake
+const SLOW_MS = 1500
 
 type Wake = "ok" | "waking" | "failed"
 
@@ -17,19 +18,25 @@ function setWake(next: Wake) {
 }
 
 async function loadMeta(): Promise<Meta> {
-  for (let tries = TRIES; ; tries--) {
-    try {
-      const meta = await getMeta()
-      setWake("ok")
-      return meta
-    } catch (e) {
-      if (tries <= 1) {
-        setWake("failed")
-        throw e
+  // A sleeping host holds the first request open for most of a minute instead of failing it, so a slow answer says so too.
+  const slow = setTimeout(() => setWake("waking"), SLOW_MS)
+  try {
+    for (let tries = TRIES; ; tries--) {
+      try {
+        const meta = await getMeta()
+        setWake("ok")
+        return meta
+      } catch (e) {
+        if (tries <= 1) {
+          setWake("failed")
+          throw e
+        }
+        setWake("waking")
+        await new Promise((resolve) => setTimeout(resolve, RETRY_MS))
       }
-      setWake("waking")
-      await new Promise((resolve) => setTimeout(resolve, RETRY_MS))
     }
+  } finally {
+    clearTimeout(slow)
   }
 }
 
