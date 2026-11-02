@@ -32,6 +32,9 @@ export function RunNotes({ notes }: { notes: Brief["run_notes"] }) {
         <li>
           <b>Postings analysed:</b> {notes.postings_analysed.posting_keys.length}
         </li>
+        <li>
+          <b>Matches:</b> {notes.matches_note}
+        </li>
       </ul>
     </section>
   )

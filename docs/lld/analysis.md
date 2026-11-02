@@ -27,7 +27,7 @@ It owns:
 It does **not** own:
 - `Stat`, `MarketStats` and `Dimension` (Kernel §3)
 - the Sample or what Relevant means (Collection)
-- Confidence Tags, the Hiring Outlook, what `focus` emphasises, or which Stats a Client Recommendation uses ([Brief LLD](brief.md))
+- Confidence Tags, the Hiring Outlook, what `focus` emphasises, or which Stats a Customer Recommendation uses ([Brief LLD](brief.md))
 
 ## 2. Layout
 
@@ -365,5 +365,5 @@ The Collection pass 1 comes first, since this stage needs `sample`, `fetches` an
 
 - Deliberate deferrals are in [future-scope.md](future-scope.md).
 - Handed on:
-  - **Brief:** settled in the [Brief LLD](brief.md): the Confidence Tag and Hiring Outlook rules, which pay group and seniority slice a Client Recommendation uses (§8), with a reason rather than a tag saying when pay is estimated, rendering every Caveat, and `focus`. It moves `fold` and `_employer_key` to `kernel/text.py` and rewords the Pay is estimated and Too little pay data Caveats (§15).
+  - **Brief:** settled in the [Brief LLD](brief.md): the Confidence Tag and Hiring Outlook rules, which pay group and seniority slice a Customer Recommendation uses (§8), with a reason rather than a tag saying when pay is estimated, rendering every Caveat, and `focus`. It moves `fold` and `_employer_key` to `kernel/text.py` and rewords the Pay is estimated and Too little pay data Caveats (§15).
   - ⏳ **Delivery:** the write-up's failure modes: skills from 500-character snippets, employer type as a judgement, `Indeed` appearing as an employer, and the trend's tilt towards live ads.

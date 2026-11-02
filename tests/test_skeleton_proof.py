@@ -135,7 +135,7 @@ def test_a_run_killed_at_every_pause_resumes_in_a_fresh_process_to_done(tmp_path
     finish(fourth)
 
     assert done["status"] == "done"
-    assert {Path(p).name for p in done["paths"]} == {"brief.json", "brief.md"}
+    assert {Path(p).name for p in done["paths"]} == {"brief.json", "brief.md", "recommendation.json", "recommendation.md"}
     assert all(Path(p).exists() for p in done["paths"])
     assert status_of(tmp_path, thread_id, monkeypatch) is RunStatus.done
 

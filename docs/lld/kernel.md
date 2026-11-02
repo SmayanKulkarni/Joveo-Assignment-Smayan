@@ -51,7 +51,7 @@ src/talent_scout/
 
 **Rule:** a type lives in the Kernel only if one component writes it and another reads it (the Gateway counts as a component). Types read inside a single component stay with that component:
 - **Analysis:** Extraction and the Stat catalogue
-- **Brief:** Insight, Confidence Tag, Client Recommendation, Hiring Outlook, MarketBrief
+- **Brief:** Insight, Confidence Tag, Customer Recommendation, Hiring Outlook, MarketBrief
 
 ```python
 class Source(StrEnum): adzuna, usajobs

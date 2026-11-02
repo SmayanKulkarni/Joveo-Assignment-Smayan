@@ -1,7 +1,7 @@
 import asyncio
 from collections import Counter
 
-from talent_scout.brief.markdown import render_markdown
+from talent_scout.brief.markdown import render_markdown, render_recommendation
 from talent_scout.brief.prompts import CRITIC_NOUL, REVISE_SYSTEM, WRITE_SYSTEM
 from talent_scout.brief.rules import (
     build_insights, checked_draft, checked_revision, empty_draft, fmt_value, insight_cap, match_totals, outlook, recommendations, rule_draft,
@@ -178,14 +178,20 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
             summary=draft.summary,
             summary_stat_ids=draft.summary_stat_ids,
             insights=build_insights(state.stats, state.sample_postings, draft.insights, verdicts),
-            recommendations=recommendations(state.stats, state.hiring_request, state.sample_postings),
             outlook=outlook(state.stats, state.hiring_request),
             run_notes=_run_notes(state),
             stats=state.stats,
         )
         tags = Counter(i.confidence for i in brief.insights)
         note = log(state, "render", LogKind.note, f"{len(brief.insights)} Insights", **{c.value: tags[c] for c in Confidence})
-        return {"brief": brief, "brief_markdown": render_markdown(brief, state.sample_postings), **note}
+        recommendation = recommendations(state.stats, state.hiring_request, state.sample_postings)
+        return {
+            "brief": brief,
+            "brief_markdown": render_markdown(brief, state.sample_postings),
+            "customer_recommendation": recommendation,
+            "recommendation_markdown": render_recommendation(recommendation, state.hiring_request, state.sample_postings),
+            **note,
+        }
 
     return {"write_brief": write_brief, "critic": critic, "render": render}
 

@@ -88,9 +88,7 @@ def test_places_keep_six_then_count_the_rest_and_hide_under_two_groups():
 
 
 def test_skills_only_one_employer_asks_for_are_left_out_and_pay_hides_without_a_band():
-    brief = brief_with()
-    solo = brief.model_copy(update={"recommendations": brief.recommendations.model_copy(update={"salary_band": None})})
-    g = glance(solo, sample()[1])
+    g = glance(brief_with(), sample()[1])
 
     assert g.pay is None
     assert g.skills is None or all(len({k.split(":")[1] for k in r.evidence.posting_keys}) > 1 for r in g.skills.rows)

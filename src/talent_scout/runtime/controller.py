@@ -24,6 +24,8 @@ from talent_scout.kernel.state import State
 from talent_scout.kernel.types import Dimension, Model
 from talent_scout.runtime.deps import Deps
 from talent_scout.runtime.events import LIVE_ONLY, ChunkMapper, Done, Paused, RunEvent, Stopped
+from talent_scout.brief.markdown import render_recommendation
+from talent_scout.brief.rules import recommendation_of
 from talent_scout.runtime.graph import build_graph
 from talent_scout.runtime.guard import RunLocked, take_lock
 from talent_scout.runtime.pause import ALLOWED_MSGPACK, ANSWERS, Pause
@@ -300,12 +302,22 @@ class RunController:
         folder = self._settings.runs_dir / thread_id
         return [folder / "brief.json", folder / "brief.md"]
 
+    def recommendation_paths(self, thread_id: str) -> list[Path]:
+        folder = self._settings.runs_dir / thread_id
+        return [folder / "recommendation.json", folder / "recommendation.md"]
+
     def _write_brief(self, thread_id: str, values: dict) -> None:
         state = State.model_validate(values)
         json_path, markdown_path = self.brief_paths(thread_id)
         json_path.parent.mkdir(parents=True, exist_ok=True)
         json_path.write_text(state.brief.model_dump_json(indent=2), encoding="utf-8")
         markdown_path.write_text(state.brief_markdown or "", encoding="utf-8")
+        recommendation = recommendation_of(state)
+        rec_json, rec_markdown = self.recommendation_paths(thread_id)
+        rec_json.write_text(recommendation.model_dump_json(indent=2), encoding="utf-8")
+        rec_markdown.write_text(
+            state.recommendation_markdown or render_recommendation(recommendation, state.hiring_request, state.sample_postings), encoding="utf-8",
+        )
 
     def _spawn(self, thread_id: str, graph_input, lock: sqlite3.Connection, log_len: int) -> RunHandle:
         handle = RunHandle(thread_id, log_len)
@@ -348,7 +360,7 @@ class RunController:
         status = (await self._reconcile(thread_id, snapshot)).status
         if status is RunStatus.paused:
             return Paused(pause=_pending_pause(snapshot))
-        return Done(status=status.value, paths=self.brief_paths(thread_id) if status is RunStatus.done else [])
+        return Done(status=status.value, paths=[*self.brief_paths(thread_id), *self.recommendation_paths(thread_id)] if status is RunStatus.done else [])
 
     async def _record_stop(self, thread_id: str, reason: str) -> Stopped:
         snapshot = await self._graph.aget_state(_config(thread_id))

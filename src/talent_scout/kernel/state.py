@@ -8,7 +8,7 @@ from langgraph.types import Command, Send
 from pydantic import BaseModel, Field, JsonValue, TypeAdapter, ValidationError
 
 from talent_scout.analysis.types import Extraction
-from talent_scout.brief.types import BriefDraft, InsightVerdict, MarketBrief
+from talent_scout.brief.types import BriefDraft, CustomerRecommendation, InsightVerdict, MarketBrief
 from talent_scout.collection.types import FetchRecord
 from talent_scout.kernel.types import (
     Assumption,
@@ -91,6 +91,8 @@ class State(Model):
     revisions: int = _owned_by(Owner.brief, default=0)
     brief: MarketBrief | None = _owned_by(Owner.brief, default=None)
     brief_markdown: str | None = _owned_by(Owner.brief, default=None)
+    customer_recommendation: CustomerRecommendation | None = _owned_by(Owner.brief, default=None)  # defaulted, so an old checkpoint still loads
+    recommendation_markdown: str | None = _owned_by(Owner.brief, default=None)
 
     run_log: list[RunLogEntry] = _owned_by(Owner.kernel, default_factory=list)
 

@@ -1,7 +1,7 @@
 import re
 from collections import Counter
 
-from talent_scout.brief.rules import _employers, _name
+from talent_scout.brief.rules import _employers, _name, recommendations
 from talent_scout.brief.types import MarketBrief
 from talent_scout.kernel.types import Evidence, Model, Posting, Stat
 
@@ -65,8 +65,9 @@ def _reader_notes(brief: MarketBrief) -> list[str]:
     return [text for applies, text in candidates if applies][:MAX_NOTES]
 
 
-def _pay(brief: MarketBrief) -> PayChart | None:
-    band = brief.recommendations.salary_band
+def _pay(brief: MarketBrief, postings: list[Posting]) -> PayChart | None:
+    # Recomputed from the Sample, which gives the band the Customer Recommendation shows.
+    band = recommendations(brief.stats, brief.hiring_request, postings).salary_band
     if not band:
         return None
     by_id = {s.id: s for s in brief.stats.stats}
@@ -134,6 +135,6 @@ def _employer_chart(brief: MarketBrief) -> RowChart | None:
 def glance(brief: MarketBrief, postings: list[Posting]) -> Glance:
     by_key = {p.key: p for p in postings}
     return Glance(
-        reader_notes=_reader_notes(brief), pay=_pay(brief), skills=_skills(brief, by_key), places=_places(postings),
+        reader_notes=_reader_notes(brief), pay=_pay(brief, postings), skills=_skills(brief, by_key), places=_places(postings),
         employers=_employer_chart(brief),
     )

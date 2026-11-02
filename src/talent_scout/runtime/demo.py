@@ -9,10 +9,10 @@ from langgraph.graph import END
 from langgraph.types import Send, interrupt
 
 from talent_scout.analysis.types import EmployerType, ExtractBatch, Extraction, Requirement, Seniority, SkillMention
-from talent_scout.brief.markdown import render_markdown
+from talent_scout.brief.markdown import render_markdown, render_recommendation
 from talent_scout.brief.nodes import _run_notes, after_critic
 from talent_scout.brief.types import (
-    BandRecommendation, BriefDraft, ClientRecommendations, Confidence, HiringOutlook, Insight, InsightDraft,
+    BandRecommendation, BriefDraft, CustomerRecommendation, Confidence, HiringOutlook, Insight, InsightDraft,
     InsightVerdict, MarketBrief, OutlookRating, RunNotes, SkillsRecommendation, TitleRecommendation,
 )
 from talent_scout.collection.nodes import after_fetch_agent
@@ -107,25 +107,28 @@ def demo_brief() -> MarketBrief:
             Insight(text=text, dimension=dimension, stat_ids=ids, evidence=evidence, confidence=confidence, confidence_reason=reason)
             for text, dimension, ids, evidence, confidence, reason in _INSIGHTS
         ],
-        recommendations=ClientRecommendations(
-            job_title=TitleRecommendation(
-                title="Data Engineer", reason="The most common title among the analysed Postings",
-                stat_ids=["demand.postings"], evidence=_evidence(0, 1, 2, 5),
-            ),
-            salary_band=BandRecommendation(
-                low=105_000, high=132_000, unit="USD per year", reason="The middle of the salaries stated",
-                stat_ids=["comp.median"], evidence=_evidence(*range(6)),
-            ),
-            top_skills=SkillsRecommendation(
-                skills=["Python", "SQL"], reason="Named by most Postings", stat_ids=["skills.python", "skills.sql"],
-                evidence=_evidence(0, 1, 2, 3, 4, 5),
-            ),
-        ),
         outlook=HiringOutlook(
             rating=OutlookRating.competitive, reason="Several employers are hiring at once, and pay is rising with seniority",
             stat_ids=["demand.postings"], evidence=_evidence(*range(6)),
         ),
         run_notes=notes, stats=STATS,
+    )
+
+
+def demo_recommendation() -> CustomerRecommendation:
+    return CustomerRecommendation(
+        job_title=TitleRecommendation(
+            title="Data Engineer", reason="The most common title among the analysed Postings",
+            stat_ids=["demand.postings"], evidence=_evidence(0, 1, 2, 5),
+        ),
+        salary_band=BandRecommendation(
+            low=105_000, high=132_000, unit="USD per year", reason="The middle of the salaries stated",
+            stat_ids=["comp.median"], evidence=_evidence(*range(6)),
+        ),
+        top_skills=SkillsRecommendation(
+            skills=["Python", "SQL"], reason="Named by most Postings", stat_ids=["skills.python", "skills.sql"],
+            evidence=_evidence(0, 1, 2, 3, 4, 5),
+        ),
     )
 
 
@@ -370,8 +373,11 @@ def demo_nodes(delay: float) -> dict[str, Node]:
     async def render(state: State) -> dict:
         await beat()
         brief = demo_brief().model_copy(update={"hiring_request": state.hiring_request, "run_notes": _run_notes(state)})
+        recommendation = demo_recommendation()
         return {
             "brief": brief, "brief_markdown": render_markdown(brief, state.sample_postings),
+            "customer_recommendation": recommendation,
+            "recommendation_markdown": render_recommendation(recommendation, brief.hiring_request, state.sample_postings),
             **log(state, "render", LogKind.note, f"{len(brief.insights)} Insights"),
         }
 

@@ -174,6 +174,9 @@ def test_every_pause_is_answered_to_done_and_the_brief_downloads(client):
     assert brief.status_code == 200 and brief.json()["summary"] == done["brief"]["summary"]
     assert "attachment" in brief.headers["content-disposition"]
     assert client.get(f"/api/runs/{thread_id}/brief.md").text.startswith("# Market Brief")
+    assert done["recommendation"]["matches_note"].startswith("No Resume")
+    assert client.get(f"/api/runs/{thread_id}/recommendation.md").text.startswith("# Customer Recommendation")
+    assert client.get(f"/api/runs/{thread_id}/recommendation.json").json()["matches_note"] == done["recommendation"]["matches_note"]
     # Answered, so nothing is waiting any more.
     again = client.post(f"/api/runs/{thread_id}/resume", json={"answer": None})
     assert again.status_code == 409 and again.json()["code"] == "not_resumable"

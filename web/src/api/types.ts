@@ -13,6 +13,7 @@ export type Meta = {
   countries: string[]
   categories: string[]
   confidence_key: string
+  outlook_meaning: Record<Brief["outlook"]["rating"], string>
   demo: boolean
 }
 
@@ -63,6 +64,7 @@ export type RunDetail = {
   run_log: { node: string; kind: string; message: string }[]
   live_from: number | null
   brief: Brief | null
+  recommendation: Recommendation | null
   sample: PostingRef[]
   glance: Glance | null
 }
@@ -91,16 +93,18 @@ export type Stat = { id: string; label: string; value: number | string; unit: st
 export type Confidence = "high" | "medium" | "low"
 type Cited = { reason: string; stat_ids: string[]; evidence: Evidence }
 
+export type Recommendation = {
+  job_title: (Cited & { title: string }) | null
+  salary_band: (Cited & { low: number; high: number; unit: string }) | null
+  top_skills: (Cited & { skills: string[] }) | null
+  matches_note: string
+}
+
 export type Brief = {
   hiring_request: { role: string; location: string }
   replayed: boolean
   summary: string
   insights: { text: string; confidence: Confidence; confidence_reason: string; stat_ids: string[]; evidence: Evidence }[]
-  recommendations: {
-    job_title: (Cited & { title: string }) | null
-    salary_band: (Cited & { low: number; high: number; unit: string }) | null
-    top_skills: (Cited & { skills: string[] }) | null
-  }
   outlook: Cited & { rating: "favourable" | "competitive" | "hard_to_fill" }
   run_notes: {
     questions: Question[]
@@ -112,6 +116,7 @@ export type Brief = {
     match_totals: string[]
     caveats: string[]
     attribution: string | null
+    matches_note: string
   }
   stats: { sample_size: number; stats: Stat[] }
 }

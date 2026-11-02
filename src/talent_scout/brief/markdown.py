@@ -2,10 +2,10 @@ from collections import Counter
 from urllib.parse import quote, urlparse
 
 from talent_scout.brief.glance import Glance, glance
-from talent_scout.brief.rules import SOURCE_NAMES
-from talent_scout.brief.types import ClientRecommendations, HiringOutlook, Insight, MarketBrief
+from talent_scout.brief.rules import OUTLOOK_MEANING, SOURCE_NAMES
+from talent_scout.brief.types import CustomerRecommendation, HiringOutlook, Insight, MarketBrief
 from talent_scout.kernel.text import plural
-from talent_scout.kernel.types import Evidence, Posting, SearchPlan
+from talent_scout.kernel.types import Evidence, HiringRequest, Posting, SearchPlan
 
 REPLAY_BANNER = "Replayed run: jobs data, LLM and Jev responses came from the replay cache, not live sources"
 NO_RECOMMENDATIONS = (
@@ -63,6 +63,7 @@ def _run_notes(brief: MarketBrief, postings: list[Posting]) -> str:
         f"- **Postings analysed:** {analysed}",
         _item("Source match counts", notes.match_totals, "None"),
         _item("Caveats", notes.caveats, "None"),
+        f"- **Matches:** {notes.matches_note}",
     ]
     if notes.attribution:
         items.append(f"- {notes.attribution}")
@@ -87,12 +88,12 @@ def _evidence_line(evidence: Evidence, refs: dict[tuple[str, ...], int]) -> str:
 
 
 def _outlook(outlook: HiringOutlook, refs: dict[tuple[str, ...], int]) -> str:
-    text = f"## Hiring Outlook\n\n**{outlook.rating.value.replace('_', ' ').capitalize()}**\n\n{outlook.reason}"
+    text = f"## Hiring Outlook\n\n**{outlook.rating.value.replace('_', ' ').capitalize()}**\n\n{OUTLOOK_MEANING[outlook.rating]}\n\n{outlook.reason}"
     # The default rests on no Stats, so it has no Evidence to show.
     return f"{text} {_evidence_line(outlook.evidence, refs)}" if outlook.stat_ids else text
 
 
-def _recommendations(recs: ClientRecommendations, refs: dict[tuple[str, ...], int]) -> str:
+def _recommendations(recs: CustomerRecommendation, refs: dict[tuple[str, ...], int]) -> str:
     band = recs.salary_band
     shown = (
         ("Job title", recs.job_title and recs.job_title.title),
@@ -102,7 +103,7 @@ def _recommendations(recs: ClientRecommendations, refs: dict[tuple[str, ...], in
     lines = []
     for (label, value), rec, missing in zip(shown, (recs.job_title, band, recs.top_skills), NO_RECOMMENDATIONS):
         lines.append(f"- **{label}:** {value}. {rec.reason} {_evidence_line(rec.evidence, refs)}" if rec else f"- {missing}")
-    return "## Client Recommendations\n\n" + "\n".join(lines)
+    return "## What to aim for\n\n" + "\n".join(lines)
 
 
 def _insights(insights: list[Insight], refs: dict[tuple[str, ...], int]) -> str:
@@ -136,11 +137,22 @@ def render_markdown(brief: MarketBrief, postings: list[Posting]) -> str:
         f"# Market Brief: {request.role}, {request.location}",
         f"## Summary\n\n{summary}",
         _outlook(brief.outlook, refs),
-        _recommendations(brief.recommendations, refs),
         _insights(brief.insights, refs),
         _run_notes(brief, postings),
         _evidence(refs),
         _figures(glance(brief, postings)),
+        _postings_table(postings),
+    ]
+    return "\n\n".join(parts) + "\n"
+
+
+def render_recommendation(recs: CustomerRecommendation, request: HiringRequest, postings: list[Posting]) -> str:
+    refs: dict[tuple[str, ...], int] = {}
+    parts = [
+        f"# Customer Recommendation: {request.role}, {request.location}",
+        _recommendations(recs, refs),
+        f"## Matches\n\n{recs.matches_note}",
+        _evidence(refs),
         _postings_table(postings),
     ]
     return "\n\n".join(parts) + "\n"

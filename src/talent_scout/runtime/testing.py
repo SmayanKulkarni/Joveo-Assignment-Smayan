@@ -4,7 +4,7 @@ from langgraph.types import interrupt
 
 from talent_scout.analysis.types import EmployerType, Extraction, Seniority
 from talent_scout.brief.types import (
-    ClientRecommendations, HiringOutlook, MarketBrief, OutlookRating, RunNotes,
+    CustomerRecommendation, HiringOutlook, MarketBrief, OutlookRating, RunNotes,
 )
 from talent_scout.collection.types import LowDataPayload
 from talent_scout.gateway.testing import FakeGateway
@@ -36,7 +36,6 @@ def stub_brief() -> MarketBrief:
     no_evidence = Evidence(posting_keys=[])
     return MarketBrief(
         hiring_request=_REQUEST, replayed=False, summary="Stub summary", summary_stat_ids=[], insights=[],
-        recommendations=ClientRecommendations(job_title=None, salary_band=None, top_skills=None),
         outlook=HiringOutlook(rating=OutlookRating.competitive, reason="Stub", stat_ids=[], evidence=no_evidence),
         run_notes=RunNotes(
             questions=[], assumptions=[], focus=[], final_plan=_PLAN, earlier_plans=[], postings_analysed=no_evidence,
@@ -91,7 +90,11 @@ def stub_nodes() -> dict[str, Node]:
         "stats": _stub("stats", stats=MarketStats(sample_size=0, stats=[])),
         "write_brief": _stub("write_brief"),
         "critic": _stub("critic"),
-        "render": _stub("render", brief=stub_brief(), brief_markdown="# Stub brief"),
+        "render": _stub(
+            "render", brief=stub_brief(), brief_markdown="# Stub brief",
+            customer_recommendation=CustomerRecommendation(job_title=None, salary_band=None, top_skills=None),
+            recommendation_markdown="# Stub recommendation",
+        ),
     }
 
 

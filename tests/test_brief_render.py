@@ -2,7 +2,8 @@ import asyncio
 
 from talent_scout.analysis.stats import compute_stats
 from talent_scout.brief.nodes import make_nodes
-from talent_scout.brief.rules import rule_draft
+from talent_scout.brief.rules import OUTLOOK_MEANING, recommendation_of, rule_draft
+from talent_scout.brief.types import MarketBrief
 from talent_scout.collection.testing import FETCHED_AT, posting, record, state_with
 from talent_scout.kernel.testing import make_settings
 from talent_scout.runtime.testing import fake_deps
@@ -40,8 +41,8 @@ def test_a_run_with_postings_gets_tagged_insights_from_the_rule_draft():
 def test_identical_postings_share_one_reference_and_the_evidence_list_and_table_follow():
     md = run(sample_state())["brief_markdown"]
 
-    # The sample size, the pay share, the top title and the title recommendation cover every Posting, the top employer only one.
-    assert md.count("Evidence: 12 Postings [E1]") == 4
+    # The sample size, the pay share, and the top title cover every Posting, the top employer only one.
+    assert md.count("Evidence: 12 Postings [E1]") == 3
     assert "Evidence: 1 Posting [E2]" in md
     evidence = md.split("## Evidence")[1].split("## Postings analysed")[0]
     assert evidence.count("- **E") == 2 and "adzuna:0, adzuna:1" in evidence
@@ -68,11 +69,11 @@ def test_the_outlook_only_says_too_few_postings_when_it_is_true():
 def test_the_title_name_split_matches_a_real_analysis_label():
     # A title holding ": " is the case a split on the first one would get wrong.
     state = sample_state(edits={i: {"title": "Data Analyst: Contract"} for i in range(12)})
-    assert run(state)["brief"].recommendations.job_title.title == "Data Analyst: Contract"
+    assert run(state)["customer_recommendation"].job_title.title == "Data Analyst: Contract"
 
 
 def test_the_markdown_shows_the_recommendations_with_their_reasons_and_evidence():
-    md = run(sample_state())["brief_markdown"]
+    md = run(sample_state())["recommendation_markdown"]
     assert "- **Job title:** Data Analyst. Used in 12 Postings from 12 employers. Evidence: 12 Postings [E1]" in md
     assert "Not enough evidence to suggest a salary band." in md and "Not enough evidence to suggest top skills." in md
 
@@ -80,3 +81,17 @@ def test_the_markdown_shows_the_recommendations_with_their_reasons_and_evidence(
 def test_two_renders_give_identical_bytes():
     state = sample_state()
     assert run(state)["brief_markdown"] == run(state)["brief_markdown"]
+
+
+def test_the_outlook_gets_a_fixed_line_for_a_job_seeker_and_the_brief_drops_the_recommendation():
+    update = run(sample_state(25))
+    assert OUTLOOK_MEANING[update["brief"].outlook.rating] in update["brief_markdown"]
+    assert "Job title" not in update["brief_markdown"] and "Job title" in update["recommendation_markdown"]
+
+
+def test_a_brief_saved_with_the_old_recommendations_still_loads_and_the_recommendation_is_recomputed():
+    state = sample_state()
+    update = run(state)
+    old = {**update["brief"].model_dump(), "recommendations": {"job_title": None, "salary_band": None, "top_skills": None}}
+    assert MarketBrief.model_validate(old) == update["brief"]
+    assert recommendation_of(state) == update["customer_recommendation"]

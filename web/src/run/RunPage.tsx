@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { ApiError } from "../api/client"
 import { useMeta } from "../api/useMeta"
 import type { RunDetail, RunRecord } from "../api/types"
-import { BriefView } from "../brief/BriefView"
+import { Deliverables } from "../brief/Deliverables"
 import { PauseCard } from "../pause/PauseCard"
 import { AnimateContext } from "../motion"
 import { go } from "../router"
@@ -100,7 +100,7 @@ function RunView({ id, detail, state, notice, streaming, answer, resume, stop }:
         {notice && <p className="notice">{notice}</p>}
         <div ref={pauseBox}>{pause && <PauseCard key={`${state.turns.length}-${pause.kind}`} pause={pause} send={answer} />}</div>
         {ending?.kind === "done" &&
-          (detail.brief ? <BriefView id={id} brief={detail.brief} sample={detail.sample} glance={detail.glance} /> : <p>Finishing…</p>)}
+          (detail.brief ? <Deliverables id={id} detail={{ ...detail, brief: detail.brief }} /> : <p>Finishing…</p>)}
         {ending?.kind === "aborted" && (
           <div className="card">
             <h2>This Run ended without a Brief</h2>

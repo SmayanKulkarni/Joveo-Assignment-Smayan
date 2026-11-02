@@ -17,7 +17,8 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from talent_scout.brief.glance import Glance, glance
 from talent_scout.brief.markdown import CONFIDENCE_KEY
-from talent_scout.brief.types import MarketBrief
+from talent_scout.brief.rules import OUTLOOK_MEANING, recommendation_of
+from talent_scout.brief.types import CustomerRecommendation, MarketBrief
 from talent_scout.kernel.llm import BalanceTooLow
 from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.state import LogKind
@@ -89,6 +90,7 @@ class RunDetail(Model):
     live_from: int | None  # the attached handle's log_start; None when no Run is live here
     brief: MarketBrief | None
     sample: list[PostingRef]  # empty unless there is a Brief
+    recommendation: CustomerRecommendation | None  # computed on read for a Run that finished before it was stored
     glance: Glance | None  # computed on read, so earlier Runs get it and brief.json keeps its bytes
 
 
@@ -117,6 +119,7 @@ def _detail(view: RunView, handle: RunHandle | None) -> RunDetail:
         live_from=handle.log_start if handle else None,
         brief=state.brief if state else None,
         sample=sample,
+        recommendation=recommendation_of(state) if state and state.brief else None,
         glance=glance(state.brief, state.sample_postings) if state and state.brief else None,
     )
 
@@ -162,6 +165,7 @@ async def meta(request: Request) -> dict:
         "countries": sorted(ADZUNA_CURRENCY),
         "categories": sorted(ADZUNA_CATEGORIES),
         "confidence_key": CONFIDENCE_KEY,
+        "outlook_meaning": {k.value: v for k, v in OUTLOOK_MEANING.items()},
         "demo": request.app.state.settings.demo,
     }
 
@@ -201,14 +205,17 @@ async def cancel_run(thread_id: str, request: Request) -> Stopped:
     return await handle.cancel()
 
 
-@api.get("/runs/{thread_id}/brief.{kind}")
-async def download_brief(thread_id: str, kind: Literal["json", "md"], request: Request) -> FileResponse:
+@api.get("/runs/{thread_id}/{document}.{kind}")
+async def download_document(
+    thread_id: str, document: Literal["brief", "recommendation"], kind: Literal["json", "md"], request: Request,
+) -> FileResponse:
     controller = _controller(request)
     await controller.get_pause(thread_id)  # an unknown Run becomes a 404
-    path = controller.brief_paths(thread_id)[kind == "md"]
+    paths = controller.brief_paths(thread_id) if document == "brief" else controller.recommendation_paths(thread_id)
+    path = paths[kind == "md"]
     if not path.is_file():
         raise Refusal(404, "no_brief", "This Run has no Brief")
-    return FileResponse(path, filename=f"brief-{thread_id}.{kind}")
+    return FileResponse(path, filename=f"{document}-{thread_id}.{kind}")
 
 
 @api.get("/runs/{thread_id}/events", response_class=EventSourceResponse)

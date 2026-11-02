@@ -3,10 +3,10 @@ import re
 from pydantic import model_validator
 
 from talent_scout.brief.types import (
-    BandRecommendation, BriefDraft, BriefRevision, ClientRecommendations, Confidence, HiringOutlook, Insight, InsightDraft, OutlookRating,
+    BandRecommendation, BriefDraft, BriefRevision, Confidence, CustomerRecommendation, HiringOutlook, Insight, InsightDraft, OutlookRating,
     SkillsRecommendation, TitleRecommendation,
 )
-from talent_scout.kernel.state import LogKind, RunLogEntry
+from talent_scout.kernel.state import LogKind, RunLogEntry, State
 from talent_scout.kernel.text import employer_key, plural
 from talent_scout.kernel.types import Evidence, HiringRequest, MarketStats, Posting, Source, Stat
 
@@ -209,6 +209,14 @@ def request_level(request: HiringRequest) -> str | None:
     return next((level for level, names in LEVEL_WORDS.items() if words & names), None)
 
 
+# What each rating means for a job seeker, fixed so the Brief never improvises advice.
+OUTLOOK_MEANING = {
+    OutlookRating.favourable: "Few employers are competing for this role, so a job seeker should find it easier to get noticed.",
+    OutlookRating.competitive: "Employers compete for this role at a normal pace, so a job seeker should expect a typical search.",
+    OutlookRating.hard_to_fill: "Many employers want this role, so a job seeker with the right skills has strong bargaining power.",
+}
+
+
 def outlook(stats: MarketStats, request: HiringRequest) -> HiringOutlook:
     n = stats.sample_size
     if n < MIN_OUTLOOK_POSTINGS:
@@ -307,14 +315,19 @@ def _skills(stats: MarketStats, by_key: dict[str, Posting], has_adzuna: bool) ->
     return SkillsRecommendation(skills=[_name(s) for s in counts], reason=reason, stat_ids=[s.id for s in counts], evidence=_union(counts))
 
 
-def recommendations(stats: MarketStats, request: HiringRequest, sample: list[Posting]) -> ClientRecommendations:
+def recommendations(stats: MarketStats, request: HiringRequest, sample: list[Posting]) -> CustomerRecommendation:
     by_id, by_key = {s.id: s for s in stats.stats}, {p.key: p for p in sample}
     level = request_level(request)
-    return ClientRecommendations(
+    return CustomerRecommendation(
         job_title=_title(stats, by_key, level),
         salary_band=_band(by_id, sample, level),
         top_skills=_skills(stats, by_key, any(p.source == Source.adzuna for p in sample)),
     )
+
+
+def recommendation_of(state: State) -> CustomerRecommendation:
+    # A Run finished before the Customer Recommendation existed has none stored, and its Stats give the same answer.
+    return state.customer_recommendation or recommendations(state.stats, state.hiring_request, state.sample_postings)
 
 
 def match_totals(run_log: list[RunLogEntry]) -> list[str]:

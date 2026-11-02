@@ -758,7 +758,9 @@
    "status": "done",
    "paths": [
     "brief.json",
-    "brief.md"
+    "brief.md",
+    "recommendation.json",
+    "recommendation.md"
    ]
   }
  ]

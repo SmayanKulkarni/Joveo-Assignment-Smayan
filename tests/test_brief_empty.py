@@ -6,7 +6,7 @@ from pathlib import Path
 
 from talent_scout.brief.nodes import ROUTERS, _run_notes, after_critic, make_nodes
 from talent_scout.brief.rules import match_totals
-from talent_scout.brief.types import InsightVerdict
+from talent_scout.brief.types import NO_MATCHES, InsightVerdict
 from talent_scout.gateway.types import ATTRIBUTION
 from talent_scout.kernel.state import LogKind, RunLogEntry, State
 from talent_scout.kernel.testing import make_settings
@@ -62,13 +62,17 @@ def test_zero_postings_write_brief_makes_no_llm_call_and_render_says_there_are_n
     assert brief.summary == "No Relevant Postings were found for Data Analyst in Austin, so this Brief has no market findings."
     assert brief.insights == [] and brief.summary_stat_ids == []
     assert brief.outlook.rating == "competitive" and brief.outlook.stat_ids == []
-    assert brief.recommendations.model_dump() == {"job_title": None, "salary_band": None, "top_skills": None}
+    recommendation = update["customer_recommendation"]
+    assert recommendation.model_dump() == {"job_title": None, "salary_band": None, "top_skills": None, "matches_note": NO_MATCHES}
+    assert brief.run_notes.matches_note == NO_MATCHES and f"- **Matches:** {NO_MATCHES}" in md
+    assert update["recommendation_markdown"].startswith("# Customer Recommendation: Data Analyst, Austin")
     headings = [line for line in md.splitlines() if line.startswith("#")]
     assert headings == [
-        "# Market Brief: Data Analyst, Austin", "## Summary", "## Hiring Outlook", "## Client Recommendations", "## Insights",
+        "# Market Brief: Data Analyst, Austin", "## Summary", "## Hiring Outlook", "## Insights",
         "## Run Notes", "## Evidence", "## Market figures", "## Postings analysed",
     ]
-    assert md.count("Not enough evidence to suggest") == 3
+    assert "Not enough evidence to suggest" not in md  # that belongs to the other deliverable
+    assert update["recommendation_markdown"].count("Not enough evidence to suggest") == 3
     assert "Weak Sample: 0 Postings against a target of 30" in md
     assert not md.startswith(">")
     assert "Adzuna API" not in md
@@ -188,5 +192,7 @@ def test_a_run_on_stubs_with_the_real_brief_reaches_done_with_both_files(tmp_pat
     files = {p.name: p.read_text(encoding="utf-8") for p in terminal.paths}
     assert files["brief.md"].startswith("# Market Brief: Stub role, Stub city")
     assert '"No Relevant Postings were found' in files["brief.json"]
+    assert files["recommendation.md"].startswith("# Customer Recommendation: Stub role, Stub city")
+    assert '"matches_note"' in files["recommendation.json"]
     logged = [(e.node, e.kind) for e in view.state.run_log if e.node in ("write_brief", "critic", "render")]
     assert logged == [("write_brief", LogKind.note), ("critic", LogKind.route), ("render", LogKind.note)]

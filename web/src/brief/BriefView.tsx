@@ -1,7 +1,7 @@
 import { useRef } from "react"
-import { API } from "../api/client"
 import type { Brief, Glance, PostingRef } from "../api/types"
 import { DUR, EASE, gsap, useAnimate, useMotion } from "../motion"
+import { downloadUrl } from "./documents"
 import { Charts } from "./Charts"
 import { Insights } from "./Insights"
 import { RunNotes } from "./RunNotes"
@@ -62,10 +62,10 @@ export function BriefView({ id, brief, sample, glance }: Props) {
           Market Brief: {request.role}, {request.location}
         </h1>
         <div className="actions no-print">
-          <a href={`${API}/runs/${id}/brief.json`} download>
+          <a href={downloadUrl(id, "brief", "json")} download>
             Download JSON
           </a>
-          <a href={`${API}/runs/${id}/brief.md`} download>
+          <a href={downloadUrl(id, "brief", "md")} download>
             Download Markdown
           </a>
           <button type="button" onClick={() => window.print()}>

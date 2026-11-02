@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from talent_scout.kernel.types import (
     Assumption, ClarifyingQuestion, Dimension, Evidence, HiringRequest, MarketStats, Model, SearchPlan,
@@ -75,10 +75,15 @@ class SkillsRecommendation(_Recommendation):
     skills: list[str]
 
 
-class ClientRecommendations(Model):
+# No Resume exists yet, so every Run says why it has no Matches.
+NO_MATCHES = "No Resume was uploaded, so there are no Matches."
+
+
+class CustomerRecommendation(Model):
     job_title: TitleRecommendation | None
     salary_band: BandRecommendation | None
     top_skills: SkillsRecommendation | None
+    matches_note: str = NO_MATCHES
 
 
 class RunNotes(Model):
@@ -91,15 +96,21 @@ class RunNotes(Model):
     match_totals: list[str]  # labelled disclosure, never a Stat
     caveats: list[str]  # messages: state.py imports this file, so no RunLogEntry
     attribution: str | None
+    matches_note: str = NO_MATCHES  # defaulted, so an old Run still loads
 
 
 class MarketBrief(Model):
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_old_recommendations(cls, data):
+        # Runs finished before the Customer Recommendation held it here.
+        return {k: v for k, v in data.items() if k != "recommendations"} if isinstance(data, dict) else data
+
     hiring_request: HiringRequest
     replayed: bool
     summary: str
     summary_stat_ids: list[str]
     insights: list[Insight]  # no minimum: zero Postings gives none
-    recommendations: ClientRecommendations
     outlook: HiringOutlook
     run_notes: RunNotes
     stats: MarketStats  # whole, so every cited id can be checked

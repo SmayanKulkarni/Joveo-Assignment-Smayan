@@ -11,7 +11,7 @@ from talent_scout.analysis.types import (
     SkillMention,
 )
 from talent_scout.brief.types import (
-    BandRecommendation, BriefDraft, BriefRevision, ClientRecommendations, Confidence, Insight, InsightDraft, InsightVerdict,
+    BandRecommendation, BriefDraft, BriefRevision, CustomerRecommendation, Confidence, Insight, InsightDraft, InsightVerdict,
 )
 from talent_scout.collection.testing import posting, record
 from talent_scout.collection.types import LowDataAnswer, LowDataPayload
@@ -48,11 +48,11 @@ FULL_BRIEF = stub_brief().model_copy(update={
         text="t", dimension=Dimension.compensation, stat_ids=["a"], evidence=Evidence(posting_keys=["adzuna:1"]),
         confidence=Confidence.medium, confidence_reason="r",
     )],
-    "recommendations": ClientRecommendations(
-        job_title=None, top_skills=None,
-        salary_band=BandRecommendation(reason="r", stat_ids=["a"], evidence=Evidence(posting_keys=[]), low=1, high=2, unit="USD/year"),
-    ),
 })
+FULL_RECOMMENDATION = CustomerRecommendation(
+    job_title=None, top_skills=None,
+    salary_band=BandRecommendation(reason="r", stat_ids=["a"], evidence=Evidence(posting_keys=[]), low=1, high=2, unit="USD/year"),
+)
 PAUSES = [
     ClarifyPause(payload=ClarifyPayload(questions=[QUESTION])),
     PlanReviewPause(payload=PlanReviewPayload(plan=PLAN, assumptions=[])),
@@ -82,6 +82,7 @@ VALUES = [
     InsightVerdict(supported=True, p_yes=0.9),
     stub_brief(),
     FULL_BRIEF,
+    FULL_RECOMMENDATION,
 ]
 
 

@@ -7,7 +7,7 @@ Source tickets (each holds the full reasoning):
 - [The Market Brief schema](../../.scratch/brief-lld/issues/02-brief-schema.md)
 - [Confidence Tag rules](../../.scratch/brief-lld/issues/03-confidence-tag-rules.md)
 - [Hiring Outlook rules](../../.scratch/brief-lld/issues/04-hiring-outlook-rules.md)
-- [Client Recommendations](../../.scratch/brief-lld/issues/05-client-recommendations.md)
+- [Customer Recommendation](../../.scratch/brief-lld/issues/05-client-recommendations.md)
 - [What focus changes in the Brief](../../.scratch/brief-lld/issues/06-what-focus-changes.md)
 - [Thin and empty Samples](../../.scratch/brief-lld/issues/07-thin-and-empty-samples.md)
 - [Writer failures and bad citations](../../.scratch/brief-lld/issues/08-writer-failures-and-bad-citations.md)
@@ -25,7 +25,7 @@ It turns Stats, Caveats and the Run's slices into a Market Brief, as JSON and Ma
 | Summary and Insight text, and which Stats they cite | LLM |
 | Figure and citation checks | Code |
 | Whether an Insight is supported | Jev |
-| Confidence Tags, Hiring Outlook, Client Recommendations, Evidence, Run Notes, Markdown | Code |
+| Confidence Tags, Hiring Outlook, Customer Recommendation, Evidence, Run Notes, Markdown | Code |
 
 It owns:
 - `write_brief`, `critic`, `render`, `after_critic`
@@ -113,10 +113,11 @@ class TitleRecommendation(_Recommendation):  title: str
 class BandRecommendation(_Recommendation):   low: float; high: float; unit: str
 class SkillsRecommendation(_Recommendation): skills: list[str]
 
-class ClientRecommendations(Model):
+class CustomerRecommendation(Model):
     job_title: TitleRecommendation | None
     salary_band: BandRecommendation | None
     top_skills: SkillsRecommendation | None
+    matches_note: str                    # why there are no Matches yet
 
 class RunNotes(Model):
     questions: list[ClarifyingQuestion]
@@ -128,6 +129,7 @@ class RunNotes(Model):
     match_totals: list[str]              # labelled disclosure, never a Stat
     caveats: list[str]                   # messages: state.py imports this file, so no RunLogEntry
     attribution: str | None
+    matches_note: str                    # defaulted, so an old Run still loads
 
 class MarketBrief(Model):
     hiring_request: HiringRequest
@@ -135,7 +137,6 @@ class MarketBrief(Model):
     summary: str
     summary_stat_ids: list[str]
     insights: list[Insight]              # no minimum: zero Postings gives none
-    recommendations: ClientRecommendations
     outlook: HiringOutlook
     run_notes: RunNotes
     stats: MarketStats                   # whole, so every cited id can be checked
@@ -289,7 +290,9 @@ Only Insights are tagged. The Markdown key is in §12.
 
 **On the fixtures:** Competitive at 125, Hard to fill at the Adzuna 100, whose median is one year higher, and a default at 8. No fixture reaches Favourable. It will be rare, and the write-up says why.
 
-## 8. Client Recommendations
+## 8. Customer Recommendation
+
+A second deliverable, stored beside the Brief as `customer_recommendation` and `recommendation_markdown` and downloaded as `recommendation.json` and `.md`. It renders `## What to aim for` (each with its reason and Evidence, or "Not enough evidence to suggest…", a band reading `117,761 to 184,620 USD/year`), `## Matches`, `## Evidence` and the Postings table. A Run finished before this existed recomputes it from its Stats on read.
 
 All code, and each is `None` alone when it has no evidence. **The request's level** comes from words in `hiring_request.seniority`, first match:
 
@@ -395,13 +398,12 @@ The rest already follows: tags from §6, the outlook default from §7, and `None
 1. Replay banner as a quote, when `replayed` (Kernel §14). `replayed` is `settings.replay_cache is not None`.
 2. `# Market Brief: {role}, {location}`
 3. `## Summary`, then, when the Sample is under `final_plan.target_postings`: "Weak Sample: 8 Postings against a target of 30. Treat this Brief as directional."
-4. `## Hiring Outlook`: the rating in bold, then the reason.
-5. `## Client Recommendations`: each with its reason and Evidence, or "Not enough evidence to suggest…". A band reads `117,761 to 184,620 USD/year`.
-6. `## Insights`: `**[High]** text`, its reason and Evidence, then the key: "High: 30+ Postings from 10+ employers. Medium: 10+ from 5+, or capped because pay is estimated, skills come from snippets, data is old or the critic couldn't confirm it. Low: anything thinner, directional only. An Insight takes its weakest cited figure."
-7. `## Run Notes`
-8. `## Evidence`: each reference with its full keys.
-9. `## Market figures`: pay, skills, places and employers as plain lists, from `brief/glance.py` (Web UI §9), so the charts' data is in the record too.
-10. `## Postings analysed`: a table of key, title, company and link.
+4. `## Hiring Outlook`: the rating in bold, one fixed line on what it means for a job seeker, then the reason.
+5. `## Insights`: `**[High]** text`, its reason and Evidence, then the key: "High: 30+ Postings from 10+ employers. Medium: 10+ from 5+, or capped because pay is estimated, skills come from snippets, data is old or the critic couldn't confirm it. Low: anything thinner, directional only. An Insight takes its weakest cited figure."
+6. `## Run Notes`
+7. `## Evidence`: each reference with its full keys.
+8. `## Market figures`: pay, skills, places and employers as plain lists, from `brief/glance.py` (Web UI §9), so the charts' data is in the record too.
+9. `## Postings analysed`: a table of key, title, company and link.
 
 **Tracing.** Each part ends in `Evidence: 35 Postings [E3]`, so the first screen reads as a Brief, and every number reaches a real ad in two steps. `E` numbers count by first appearance, and parts with identical Postings share one. Posting text comes from outside, so `|` and newlines are removed from cells, and a link appears only for `http` and `https`.
 

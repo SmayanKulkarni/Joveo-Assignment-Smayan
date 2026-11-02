@@ -71,7 +71,7 @@ test("a reload lands where the live trace was at each Pause", () => {
     const pause = (feed.at(-1) as Extract<WireEvent, { type: "paused" }>).pause
     const detail = {
       record: { thread_id: "t", summary: "s", status: "paused", error: null, created_at: "", updated_at: "" },
-      request_text: "r", focus: [], pause, stopped_at: null, run_log, live_from: null, brief: null, sample: [], glance: null,
+      request_text: "r", focus: [], pause, stopped_at: null, run_log, live_from: null, brief: null, recommendation: null, sample: [], glance: null,
     } as RunDetail
     expect(shape(fromLog(detail))).toEqual(shape(play(feed)))
   }

@@ -107,7 +107,7 @@ def test_done_writes_both_brief_files_and_reconcile_writes_them_too(settings):
 
     first, terminal, view = asyncio.run(go())
 
-    assert set(first) == {"brief.json", "brief.md"}
+    assert set(first) == {"brief.json", "brief.md", "recommendation.json", "recommendation.md"}
     assert json.loads(first["brief.json"]) is not None
     assert first["brief.md"] == "# Stub brief"
     assert view.record.status is RunStatus.done
