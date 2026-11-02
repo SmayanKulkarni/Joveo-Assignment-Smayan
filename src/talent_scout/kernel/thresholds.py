@@ -10,6 +10,10 @@ CUTS: dict[str, dict[Placement, float]] = {
     "llm:cheap": {"clarity": 0.5, "relevance": 0.5, "critic": 0.5},
 }
 
+# A Posting whose text addresses an AI is dropped at this p_yes. On tests/fixtures/jobs/guard_postings.json (live, 2026-11-02)
+# benign text peaked at 0.45 and injected text started at 0.90.
+AI_ADDRESSED_CUT = 0.7
+
 
 class UnknownJevModel(LookupError):
     pass

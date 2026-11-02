@@ -76,6 +76,7 @@ class State(Model):
     broadened_plans: list[SearchPlan] = _owned_by(Owner.collection, default_factory=list)
     fetches: list[FetchRecord] = _owned_by(Owner.collection, default_factory=list)
     relevance_verdicts: dict[str, bool] = _owned_by(Owner.collection, default_factory=dict)
+    guard_flags: list[str] = _owned_by(Owner.collection, default_factory=list)  # Posting keys whose text addressed an AI
     fetch_blocked: str | None = _owned_by(Owner.collection, default=None)
     low_data_decision: Literal["broaden", "continue", "abort"] | None = _owned_by(Owner.collection, default=None)
     low_data_guidance: str | None = _owned_by(Owner.collection, default=None)

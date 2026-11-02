@@ -7,12 +7,13 @@ from langgraph.graph import END
 from langgraph.types import interrupt
 from pydantic import ValidationError
 
-from talent_scout.collection.prompts import BROADEN_SYSTEM, FETCH_SYSTEM, RELEVANT_NOUL
+from talent_scout.collection.prompts import ADDRESSES_AI_NOUL, BROADEN_SYSTEM, FETCH_SYSTEM, RELEVANT_NOUL
 from talent_scout.collection.types import FetchRecord, LowDataPayload
 from talent_scout.gateway.coalesce import coalesce
 from talent_scout.gateway.types import COVERAGE, CacheStatus, Fetch, GatewayError
 from talent_scout.kernel.events import emit
 from talent_scout.kernel.state import LogKind, RunLogEntry, State, log, log_entry
+from talent_scout.kernel.thresholds import AI_ADDRESSED_CUT
 from talent_scout.kernel.types import ADZUNA_CURRENCY, Posting, SearchPlan, Source
 from talent_scout.runtime.deps import Deps, Node, Router
 from talent_scout.runtime.pause import LowDataPause
@@ -168,7 +169,8 @@ def _broaden_input(state: State) -> str:
     for r in state.fetches:
         found = f"{_total(r):,} matches" if r.result else f"failed: {r.error}"
         lines.append(f'- {r.source} "{r.fetch.title}"{_in(r.fetch.location)} page {r.fetch.page}: {found}')
-    rejected = [p.title for k, p in state.postings.items() if not state.relevance_verdicts.get(k, True)]
+    # A flagged title is left out: broaden would read text an attacker wrote.
+    rejected = [p.title for k, p in state.postings.items() if not state.relevance_verdicts.get(k, True) and k not in state.guard_flags]
     if rejected:
         lines += ["Titles rejected as not the role:", *(f"- {t}" for t in rejected[:MAX_REJECTED_TITLES])]
     if state.low_data_guidance:
@@ -342,11 +344,15 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
     async def relevance(state: State) -> dict:
         # One request per Posting: a shared request would have to fit Jev's size limit. Verdicts last across Attempts.
         fresh = [p for k, p in state.postings.items() if k not in state.relevance_verdicts]
-        results = await asyncio.gather(*(deps.jev.judge("relevance", judged(state, p), {"relevant": RELEVANT_NOUL}) for p in fresh))
+        questions = {"relevant": RELEVANT_NOUL, "addressed_to_ai": ADDRESSES_AI_NOUL}
+        results = await asyncio.gather(*(deps.jev.judge("relevance", judged(state, p), questions) for p in fresh))
         verdicts = {**state.relevance_verdicts, **{p.key: r["relevant"].outcome for p, r in zip(fresh, results)}}
+        flagged = [p.key for p, r in zip(fresh, results) if r["addressed_to_ai"].p_yes >= AI_ADDRESSED_CUT]
+        flags = [*state.guard_flags, *flagged]
         update = {
             "relevance_verdicts": verdicts,
-            "sample": [k for k in state.postings if verdicts[k]],
+            "guard_flags": flags,
+            "sample": [k for k in state.postings if verdicts[k] and k not in flags],
             "fetch_blocked": _blocked(state, deps),
         }
         after = state.model_copy(update=update)
@@ -357,6 +363,8 @@ def make_nodes(deps: Deps) -> dict[str, Node]:
                 "relevance", LogKind.caveat,
                 f"Jev degraded: {len(degraded)} Postings were judged by the LLM fallback or from shortened text", keys=degraded,
             ))
+        if flagged:
+            entries.append(log_entry("relevance", LogKind.caveat, f"{len(flagged)} Postings removed: their text addressed an AI", keys=flagged))
         entries.append(log_entry("relevance", LogKind.result, f"{len(update['sample'])} are the role"))
         entries.append(log_entry(
             "relevance", LogKind.route,

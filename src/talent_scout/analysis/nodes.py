@@ -17,6 +17,8 @@ MAX_BATCH_CHARS = 20_000
 EXTRACT_MAX_TOKENS = 8192  # the cheap tier's default 2,048 fails on 10 Postings
 MAX_YEARS = 40
 MERGE_MAX_TOKENS = 8192
+MAX_SKILL_CHARS = 40  # a longer name is a sentence copied from the Posting, not a skill
+MAX_SKILL_WORDS = 4
 MAX_SKILLS_TO_MERGE = 300  # only 15 are reported, so the tail can't reach them
 
 
@@ -37,11 +39,15 @@ def fan_out(state: State) -> str | list[Send]:
     return [Send("batch_extract", ExtractBatch(postings=b)) for b in _batches(state.sample_postings)]
 
 
+def _skill_sized(name: str) -> bool:
+    return len(name) <= MAX_SKILL_CHARS and len(name.split()) <= MAX_SKILL_WORDS
+
+
 def _grounded(item: PostingFacts, p: Posting) -> Extraction:
     """Keeps only what the Posting's own text supports, so every number traces to real Postings."""
     text = f"{p.title} {p.description}"
     folded = fold(text)
-    skills = [s for s in item.skills if mentions(fold(s.name), folded)]
+    skills = [s for s in item.skills if _skill_sized(s.name) and mentions(fold(s.name), folded)]
     years = item.years_min
     if years is not None and not (years <= MAX_YEARS and re.search(rf"\b{years}\b", text)):
         years = None

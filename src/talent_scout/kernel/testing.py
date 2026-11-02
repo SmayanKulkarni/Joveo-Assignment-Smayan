@@ -24,6 +24,10 @@ class FakeToolChatModel(GenericFakeChatModel):
         return self
 
 
+# Questions a test needn't answer: nothing is flagged unless it says so.
+DEFAULT_ANSWERS = {"addressed_to_ai": 0.0}
+
+
 class FakeClassifier(Runnable):
     """Stands in for TypeSafeClassifier: canned p_yes per question id, after raising any queued errors."""
 
@@ -36,7 +40,7 @@ class FakeClassifier(Runnable):
             raise self.errors.pop(0)
         return ClassifierResponse(
             model=self.model,
-            answers={q: NoulAnswer(type="noul", noul=self.answers[q]) for q in input["questions"]},
+            answers={q: NoulAnswer(type="noul", noul=(DEFAULT_ANSWERS | self.answers)[q]) for q in input["questions"]},
         )
 
     async def ainvoke(self, input, config=None, **kwargs):
