@@ -1,4 +1,4 @@
-import type { Customer, Dimension, Me, Meta, Profile, ProfileField, ResumeInfo, RunDetail, RunRecord } from "./types"
+import type { Customer, Dimension, Me, Meta, Profile, ProfileField, ResumeInfo, ResumePatch, RunDetail, RunRecord } from "./types"
 
 export class ApiError extends Error {
   constructor(
@@ -49,6 +49,13 @@ export const editCustomer = (id: string, fields: { name?: string; note?: string 
 export const deleteCustomer = (id: string) => call<void>(`/customers/${id}`, { method: "DELETE" })
 
 export const getResume = (id: string) => call<ResumeInfo>(`/customers/${id}/resume`)
+
+// The server sniffs the bytes, so a file and pasted text go up the same way, raw.
+export const uploadResume = (id: string, body: Blob | string) => call<ResumeInfo>(`/customers/${id}/resume`, { method: "PUT", body })
+
+export const correctResume = (id: string, patch: ResumePatch) => call<ResumeInfo>(`/customers/${id}/resume`, json("PATCH", patch))
+
+export const deleteResume = (id: string) => call<void>(`/customers/${id}/resume`, { method: "DELETE" })
 
 export const getProfile = (id: string) => call<Profile>(`/customers/${id}/profile`)
 

@@ -51,6 +51,11 @@ POSTINGS = [
     _posting(Source.usajobs, "u1", "IT Specialist (Data Management)", "Department of Veterans Affairs", 98_000, 128_000),
     _posting(Source.adzuna, "a5", "Lead Data Engineer", "Pecan Street Labs", 140_000, 165_000, predicted=True),
 ]
+# Arbeitnow lists no salary, and its remote jobs carry no place, so this one shows both the remote label and a Posting with no pay.
+POSTINGS[5] = POSTINGS[5].model_copy(update={
+    "source": Source.arbeitnow, "source_id": "n1", "title": "Remote Data Engineer", "company": "Fernweh Data", "location": "Remote",
+    "region": ("Remote",), "domain": None, "url": "https://example.com/jobs/n1", "salary": None, "remote": True,
+})
 KEYS = [p.key for p in POSTINGS]
 FIRST_ATTEMPT = 3  # Postings the first search finds, too few until the plan is broadened
 
@@ -71,7 +76,7 @@ def _stat(id: str, dimension: Dimension, label: str, value: float | str, unit: s
 STATS = MarketStats(sample_size=len(POSTINGS), stats=[
     _stat("demand.postings", Dimension.demand, "Postings analysed", 6, "Postings", _evidence(*range(6))),
     _stat("demand.employers", Dimension.demand, "Distinct employers", 6, "employers", _evidence(*range(6))),
-    _stat("comp.median", Dimension.compensation, "Median salary midpoint", 124_000, "USD per year", _evidence(*range(6))),
+    _stat("comp.median", Dimension.compensation, "Median salary midpoint", 124_000, "USD per year", _evidence(*range(5))),
     _stat("skills.python", Dimension.skills, "Postings naming Python", 5, "Postings", _evidence(0, 1, 2, 3, 5)),
     _stat("skills.sql", Dimension.skills, "Postings naming SQL", 4, "Postings", _evidence(0, 1, 3, 4)),
     _stat("titles.senior", Dimension.titles_seniority, "Share of senior or lead titles", 0.33, "share", _evidence(1, 5)),
@@ -84,7 +89,7 @@ _INSIGHTS = [
     ("Six employers are hiring for this role in Austin, none of them more than once.", Dimension.demand,
      ["demand.postings", "demand.employers"], _evidence(*range(6)), Confidence.high, "6 Postings from 6 employers"),
     ("The middle of the pay range is about 124,000 USD a year.", Dimension.compensation,
-     ["comp.median"], _evidence(*range(6)), Confidence.medium, "Two of the salaries are estimated by the source"),
+     ["comp.median"], _evidence(*range(5)), Confidence.medium, "One of the salaries is estimated by the source, and one Posting states none"),
     (REVISED, Dimension.skills, ["skills.python"], _evidence(0, 1, 2, 3, 5), Confidence.low, "Only 5 Postings carry the skill"),
 ]
 _SUMMARY = "Hiring for data engineers in Austin is steady across six employers, paying about 124,000 USD a year."
@@ -98,7 +103,8 @@ def demo_brief() -> MarketBrief:
             titles=["Data Engineer"], country="us", locations=[DEMO_LOCATION], radius_km=40, max_days_old=30,
             target_postings=20, category="it-jobs",
         ),
-        earlier_plans=[], postings_analysed=_evidence(*range(6)), match_totals=[], caveats=[DEMO_CAVEAT], attribution=None,
+        earlier_plans=[], postings_analysed=_evidence(*range(6)), match_totals=[], caveats=[DEMO_CAVEAT],
+        attribution="Jobs data provided by The Adzuna API, USAJOBS and Arbeitnow (arbeitnow.com)",
     )
     return MarketBrief(
         hiring_request=_request(None, DEMO_LOCATION), replayed=False, summary=_SUMMARY,
@@ -123,7 +129,7 @@ def demo_recommendation() -> CustomerRecommendation:
         ),
         salary_band=BandRecommendation(
             low=105_000, high=132_000, unit="USD per year", reason="The middle of the salaries stated",
-            stat_ids=["comp.median"], evidence=_evidence(*range(6)),
+            stat_ids=["comp.median"], evidence=_evidence(*range(5)),
         ),
         top_skills=SkillsRecommendation(
             skills=["Python", "SQL"], reason="Named by most Postings", stat_ids=["skills.python", "skills.sql"],
@@ -232,7 +238,7 @@ def demo_nodes(delay: float) -> dict[str, Node]:
         return {"search_plan": search_plan, **log(state, "plan", LogKind.note, f"plan: {', '.join(search_plan.titles)}, target 20")}
 
     async def plan_review(state: State) -> dict:
-        answer = interrupt(PlanReviewPause(payload=PlanReviewPayload(plan=state.search_plan, assumptions=state.assumptions, calls_left=21)))
+        answer = interrupt(PlanReviewPause(payload=PlanReviewPayload(plan=state.search_plan, assumptions=state.assumptions, calls_left=21, from_profile=[])))
         update = {"plan_decision": answer.action, "plan_feedback": answer.feedback}
         if answer.action == PlanAction.edit:
             update["search_plan"] = answer.plan
@@ -245,8 +251,10 @@ def demo_nodes(delay: float) -> dict[str, Node]:
             text, call = f"Starting with Adzuna, searching for {title}.", ("search_adzuna", "adzuna-1")
         elif rounds == 1:
             text, call = "Adzuna answered. USAJOBS may hold federal roles, so checking it too.", ("search_usajobs", "usajobs-1")
+        elif rounds == 2:
+            text, call = "USAJOBS answered. Arbeitnow lists remote roles, so checking it last.", ("search_arbeitnow", "arbeitnow-1")
         else:
-            text, call = "Both sources have answered, so the search is complete.", None
+            text, call = "All three sources have answered, so the search is complete.", None
         await say(reasoning="Which source covers this role best?" if rounds == 0 else "", text=text)
         calls = [{"name": call[0], "args": {"title": title, "page": 1}, "id": call[1], "type": "tool_call"}] if call else []
         return {"messages": [*state.messages, AIMessage(content=text, tool_calls=calls)]}
@@ -258,7 +266,7 @@ def demo_nodes(delay: float) -> dict[str, Node]:
             emit({"type": "tool_called", "name": call["name"], "summary": f'"{call["args"]["title"]}" page 1'})
             await beat()
             cached = source == "usajobs"
-            count = 14 if cached else 63
+            count = {"adzuna": 63, "usajobs": 14, "arbeitnow": 9}[source]
             emit({"type": "api_called", "source": source, "cached": cached, "count": count})
             emit({"type": "tool_returned", "name": call["name"], "summary": f"{count} Postings"})
             messages.append(ToolMessage(content=f"{count} Postings", tool_call_id=call["id"], name=call["name"]))
@@ -270,9 +278,14 @@ def demo_nodes(delay: float) -> dict[str, Node]:
         title = state.current_plan.titles[0]
         entries = [
             log_entry("collect", LogKind.note, f"kept {len(found)} Postings, merged 0 Duplicates", kept=len(found), duplicates=0),
-            log_entry("collect", LogKind.note, "source totals", totals={title: {"adzuna": 1_240, "usajobs": 38}}),
+            log_entry("collect", LogKind.note, "source totals", totals={title: {"adzuna": 1_240, "usajobs": 38, "arbeitnow": 9}}),
             log_entry("collect", LogKind.result, f"Found {len(found)} postings", kept=len(found)),
         ]
+        if remote := sum(p.remote for p in found):
+            entries.insert(2, log_entry(
+                "collect", LogKind.caveat,
+                f"Includes remote: {remote} of {len(found)} Postings are remote jobs that may be based outside US", remote=remote,
+            ))
         return {"postings": {p.key: p for p in found}, "run_log": [*state.run_log, *entries]}
 
     async def relevance(state: State) -> dict:

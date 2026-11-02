@@ -234,3 +234,7 @@ marker path { fill: var(--line); } marker.taken path { fill: var(--warn); }
 .profile table { border-collapse: collapse; width: 100%; font-size: 14px; }
 .profile th, .profile td { text-align: left; padding: 4px 8px; vertical-align: top; }
 .profile .inline { display: inline-flex; gap: 4px; margin-right: 6px; }
+.dropzone { border: 2px dashed var(--edge); border-radius: 12px; padding: 16px; margin-top: 12px; }
+.dropzone textarea { display: block; width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+.resume .inline { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.chips-edit ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }

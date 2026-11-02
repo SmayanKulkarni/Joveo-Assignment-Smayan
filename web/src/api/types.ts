@@ -94,7 +94,18 @@ export type Match = {
   level_reason: string
 }
 
-export type ResumeInfo = { uploaded_at: string }
+export type ResumeSeniority = "entry" | "mid" | "senior" | "lead" | "executive" | "unknown"
+export type ResumeRole = { title: string; start: string; end: string }
+export type ResumeFacts = {
+  roles: ResumeRole[]
+  skills: { name: string; added: boolean }[]
+  seniority: ResumeSeniority
+  locations: string[]
+  years: number | null // computed by the server from the role dates
+}
+export type ResumeInfo = { facts: ResumeFacts; uploaded_at: string; replaced: boolean }
+// What a correction sends: skills go as names, because the server decides which ones were added.
+export type ResumePatch = { roles?: ResumeRole[]; skills?: string[]; seniority?: ResumeSeniority; locations?: string[] }
 
 export type ProfileField = "role" | "country" | "currency" | "seniority" | "employment_type" | "work_mode" | "places" | "focus" | "titles"
 export type Profile = {

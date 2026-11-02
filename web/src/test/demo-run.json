@@ -432,6 +432,43 @@
   },
   {
    "type": "node_started",
+   "node": "tools"
+  },
+  {
+   "type": "tool_called",
+   "name": "search_arbeitnow",
+   "summary": "\"Data Engineer\" page 1"
+  },
+  {
+   "type": "api_called",
+   "source": "arbeitnow",
+   "cached": false,
+   "count": 9,
+   "failed": false
+  },
+  {
+   "type": "tool_returned",
+   "name": "search_arbeitnow",
+   "summary": "9 Postings"
+  },
+  {
+   "type": "node_done",
+   "node": "tools",
+   "notes": [],
+   "results": []
+  },
+  {
+   "type": "node_started",
+   "node": "fetch_agent"
+  },
+  {
+   "type": "node_done",
+   "node": "fetch_agent",
+   "notes": [],
+   "results": []
+  },
+  {
+   "type": "node_started",
    "node": "collect"
   },
   {
@@ -608,6 +645,43 @@
   },
   {
    "type": "node_started",
+   "node": "tools"
+  },
+  {
+   "type": "tool_called",
+   "name": "search_arbeitnow",
+   "summary": "\"Data Engineer\" page 1"
+  },
+  {
+   "type": "api_called",
+   "source": "arbeitnow",
+   "cached": false,
+   "count": 9,
+   "failed": false
+  },
+  {
+   "type": "tool_returned",
+   "name": "search_arbeitnow",
+   "summary": "9 Postings"
+  },
+  {
+   "type": "node_done",
+   "node": "tools",
+   "notes": [],
+   "results": []
+  },
+  {
+   "type": "node_started",
+   "node": "fetch_agent"
+  },
+  {
+   "type": "node_done",
+   "node": "fetch_agent",
+   "notes": [],
+   "results": []
+  },
+  {
+   "type": "node_started",
    "node": "collect"
   },
   {
@@ -616,6 +690,7 @@
    "notes": [
     "kept 6 Postings, merged 0 Duplicates",
     "source totals",
+    "Includes remote: 1 of 6 Postings are remote jobs that may be based outside US",
     "Found 6 postings"
    ],
    "results": [

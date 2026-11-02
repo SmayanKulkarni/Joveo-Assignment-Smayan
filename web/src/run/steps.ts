@@ -16,7 +16,7 @@ export const STEPS: Step[] = [
   { id: "ask", label: "Ask you", nodes: ["clarify"], sub: "Only if something is unclear", weight: 0, optional: true, wait: "Waiting for your answer" },
   { id: "plan", label: "Plan the search", nodes: ["plan"], sub: "Titles, area, dates", weight: 1 },
   { id: "approve", label: "Your approval", nodes: ["plan_review"], sub: "You review the plan", weight: 0.5, wait: "Waiting for you to approve" },
-  { id: "search", label: "Search job boards", nodes: ["fetch_agent", "tools"], sub: "Adzuna, USAJOBS", weight: 3 },
+  { id: "search", label: "Search job boards", nodes: ["fetch_agent", "tools"], sub: "Adzuna, USAJOBS, Arbeitnow", weight: 3 },
   { id: "filter", label: "Filter postings", nodes: ["collect", "relevance"], sub: "Drop duplicates and misfits", weight: 1 },
   { id: "widen", label: "Widen the search", nodes: ["broaden"], sub: "Only if too few postings", weight: 0, optional: true },
   { id: "few", label: "Too few postings?", nodes: ["low_data_review"], sub: "You decide", weight: 0, optional: true, wait: "Waiting for you to decide" },

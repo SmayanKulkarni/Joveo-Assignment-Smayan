@@ -8,8 +8,9 @@ import { RunList } from "../sidebar/RunList"
 import { refreshCustomers } from "../sidebar/useCustomers"
 import { CustomerHeader } from "./CustomerHeader"
 import { ProfilePanel } from "./ProfilePanel"
+import { ResumePanel } from "./ResumePanel"
 
-const TABS = [["runs", "Runs"], ["profile", "Profile"]] as const
+const TABS = [["runs", "Runs"], ["resume", "Resume"], ["profile", "Profile"]] as const
 
 function Edit({ customer, onDone }: { customer: Customer; onDone: () => void }) {
   const [name, setName] = useState(customer.name)
@@ -70,6 +71,8 @@ export function CustomerPage({ customer, runs }: { customer: Customer; runs: Run
       </div>
       {tab === "profile" ? (
         <ProfilePanel customerId={customer.id} />
+      ) : tab === "resume" ? (
+        <ResumePanel customerId={customer.id} />
       ) : (
         <>
           <Composer customerId={customer.id} />
