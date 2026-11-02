@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import shutil
 import sqlite3
 from collections import deque
 from collections.abc import AsyncIterator
@@ -26,6 +27,7 @@ from talent_scout.kernel.llm import check_balance, make_tiers
 from talent_scout.kernel.settings import Settings
 from talent_scout.kernel.state import State
 from talent_scout.kernel.types import Dimension, Model
+from talent_scout.runtime.accounts import Accounts
 from talent_scout.runtime.deps import Deps
 from talent_scout.runtime.events import LIVE_ONLY, ChunkMapper, Done, Paused, RunEvent, Stopped
 from talent_scout.brief.markdown import render_recommendation
@@ -51,6 +53,11 @@ class UnknownRun(Exception):
     def __init__(self, thread_id: str):
         super().__init__(f"No Run {thread_id}")
         self.thread_id = thread_id
+
+
+class RunLive(Exception):
+    def __init__(self, thread_id: str):
+        super().__init__(f"Run {thread_id} is still running")
 
 
 class NotResumable(Exception):
@@ -219,6 +226,8 @@ class RunController:
         self._registry = registry
         self._saver = saver
         self._live: dict[str, RunHandle] = {}
+        # Beside the Runs for the clients' sake: the Controller only stores and filters by an id, and never checks who owns a Run.
+        self.accounts = Accounts(registry.run)
 
     @classmethod
     @asynccontextmanager
@@ -226,18 +235,21 @@ class RunController:
         storage = _postgres_storage if settings.database_url else _sqlite_storage
         async with open_deps(settings) as deps, storage(settings) as (saver, store, registry):
             controller = cls(settings, build_graph(deps, saver, store), registry, saver)
+            await controller.accounts.setup()
+            if not settings.sign_in:
+                await controller.accounts.adopt_local_runs()
             try:
                 yield controller
             finally:
                 # The connections close next, and a live task still needs them to record its end.
                 await asyncio.gather(*(h.cancel() for h in list(controller._live.values())), return_exceptions=True)
 
-    async def start(self, request_text: str, focus: list[Dimension] = []) -> RunHandle:
+    async def start(self, request_text: str, focus: list[Dimension] = [], customer_id: str | None = None) -> RunHandle:
         await self._check_balance()
         thread_id = uuid4().hex[:8]
         lock = take_lock(self._settings.lock_folder, thread_id)
         try:
-            await self._registry.insert(thread_id, request_text)
+            await self._registry.insert(thread_id, request_text, customer_id)
         except BaseException:
             lock.close()
             raise
@@ -282,11 +294,23 @@ class RunController:
             stopped_at=_stopped_node(snapshot) if record.status is RunStatus.failed else None,
         )
 
-    async def list_runs(self, resumable_only: bool = False) -> list[RunRecord]:
-        records = [await self._reconciled(record) for record in await self._registry.list_all()]
+    async def list_runs(
+        self, resumable_only: bool = False, csm_id: str | None = None, customer_id: str | None = None
+    ) -> list[RunRecord]:
+        records = [await self._reconciled(record) for record in await self._registry.list_all(csm_id, customer_id)]
         if resumable_only:
             return [r for r in records if r.status in RESUMABLE]
         return records
+
+    async def delete_run(self, thread_id: str) -> None:
+        record = await self._reconciled(await self._record(thread_id))
+        if thread_id in self._live or record.status is RunStatus.running:
+            raise RunLive(thread_id)
+        # The row goes last, so a delete that is interrupted can simply be repeated.
+        if self._saver is not None:
+            await self._saver.adelete_thread(thread_id)
+        shutil.rmtree(self._settings.runs_dir / thread_id, ignore_errors=True)
+        await self._registry.delete(thread_id)
 
     async def _check_balance(self) -> None:
         # A replayed or Demo Run makes no LLM calls, so it must work without OpenRouter.

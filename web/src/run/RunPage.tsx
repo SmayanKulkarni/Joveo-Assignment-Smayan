@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react"
-import { ApiError } from "../api/client"
+import { ApiError, deleteRun } from "../api/client"
 import { useMeta } from "../api/useMeta"
-import type { RunDetail, RunRecord } from "../api/types"
+import type { Customer, RunDetail, RunRecord } from "../api/types"
+import { CustomerHeader } from "../customers/CustomerHeader"
 import { Deliverables } from "../brief/Deliverables"
 import { PauseCard } from "../pause/PauseCard"
 import { AnimateContext } from "../motion"
-import { go } from "../router"
+import { go, navigate } from "../router"
+import { refreshRuns } from "../sidebar/useRuns"
 import { ProgressBar } from "../trace/ProgressBar"
 import { StageStrip } from "../trace/StageStrip"
 import { TracePanel } from "../trace/TracePanel"
@@ -29,25 +31,25 @@ function announcement({ turns, pause, ending }: RunState) {
   return pause ? `Waiting for you: ${step}` : (step ?? "")
 }
 
-export function RunPage({ id, listed }: { id: string; listed: RunRecord | undefined }) {
+export function RunPage({ id, listed, customer }: { id: string; listed: RunRecord | undefined; customer: Customer | undefined }) {
   const run = useRun(id, listed)
   const { detail, error } = run
 
   if (error instanceof ApiError && error.status === 404) {
     return (
       <p>
-        Run not found. <a href="/" onClick={go}>Start a new Run</a>
+        Run not found. <a href="/" onClick={go}>Back to Customers</a>
       </p>
     )
   }
   if (error) return <p className="error">{error.message}</p>
   if (!detail) return null
-  return <RunView {...run} id={id} detail={detail} />
+  return <RunView {...run} id={id} detail={detail} customer={customer} />
 }
 
-type Loaded = Omit<ReturnType<typeof useRun>, "detail"> & { id: string; detail: RunDetail }
+type Loaded = Omit<ReturnType<typeof useRun>, "detail"> & { id: string; detail: RunDetail; customer: Customer | undefined }
 
-function RunView({ id, detail, state, notice, streaming, answer, resume, stop }: Loaded) {
+function RunView({ id, detail, customer, state, notice, streaming, answer, resume, stop }: Loaded) {
   const { ending, pause } = state
   const live = streaming && !pause && !ending
   const { end, away, stuck, jump } = useAutoScroll(ending?.kind !== "done", state)
@@ -78,6 +80,7 @@ function RunView({ id, detail, state, notice, streaming, answer, resume, stop }:
             <ProgressBar trace={state.trace} />
           </div>
         )}
+        {customer && <CustomerHeader customer={customer} />}
         <div className="run-head">
           <div className="request">{detail.request_text ?? detail.record.summary}</div>
           {live && (
@@ -94,6 +97,20 @@ function RunView({ id, detail, state, notice, streaming, answer, resume, stop }:
             </button>
           )}
         </div>
+        {!live && detail.record.status !== "running" && (
+          <button
+            type="button"
+            className="danger no-print"
+            onClick={async () => {
+              if (!confirm("Delete this Run? This can't be undone.")) return
+              await deleteRun(id)
+              refreshRuns()
+              navigate(customer ? `/customers/${customer.id}` : "/")
+            }}
+          >
+            Delete Run
+          </button>
+        )}
         <p className="sr-only" aria-live="polite">{announcement(state)}</p>
         <Stream state={state} live={live} />
         {elsewhere && <p className="notice">Running in another window</p>}
@@ -105,7 +122,7 @@ function RunView({ id, detail, state, notice, streaming, answer, resume, stop }:
           <div className="card">
             <h2>This Run ended without a Brief</h2>
             {reason && <p>{reason}</p>}
-            <a href="/" onClick={go}>Start a new Run</a>
+            <a href="/" onClick={go}>Back to Customers</a>
           </div>
         )}
         {ending?.kind === "stopped" && <StoppedBanner ending={ending} resume={resume} />}

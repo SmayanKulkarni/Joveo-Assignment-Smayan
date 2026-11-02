@@ -17,7 +17,9 @@ def seed_runs(settings: Settings) -> None:
         new = [r[0] for r in db.execute("SELECT thread_id FROM seed.runs WHERE thread_id NOT IN (SELECT thread_id FROM main.runs)")]
         marks = ",".join("?" * len(new))
         for table in TABLES if new else ():
-            db.execute(f"INSERT OR IGNORE INTO main.{table} SELECT * FROM seed.{table} WHERE thread_id IN ({marks})", new)
+            # Named columns, because the live runs table has gained ones the seed was exported without.
+            cols = ",".join(r[1] for r in db.execute(f"PRAGMA seed.table_info({table})"))
+            db.execute(f"INSERT OR IGNORE INTO main.{table} ({cols}) SELECT {cols} FROM seed.{table} WHERE thread_id IN ({marks})", new)
     for thread_id in new:
         if (briefs := src / "briefs" / thread_id).is_dir():
             shutil.copytree(briefs, settings.runs_dir / thread_id, dirs_exist_ok=True)

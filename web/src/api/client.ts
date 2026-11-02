@@ -1,4 +1,4 @@
-import type { Dimension, Meta, RunDetail, RunRecord } from "./types"
+import type { Customer, Dimension, Me, Meta, RunDetail, RunRecord } from "./types"
 
 export class ApiError extends Error {
   constructor(
@@ -14,47 +14,39 @@ export class ApiError extends Error {
 // Empty locally, where the app and API share an origin; set at build time on a separate frontend host.
 export const API = `${(import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "")}/api`
 
-const CODE_KEY = "talent-scout-access-code"
-
-// Storage can throw or be missing (a private window), and then the code just lasts for this one request.
-function storedCode(): string | null {
-  try {
-    return localStorage.getItem(CODE_KEY)
-  } catch {
-    return null
-  }
-}
-
-function storeCode(code: string) {
-  try {
-    localStorage.setItem(CODE_KEY, code)
-  } catch {}
-}
+export const SIGNED_OUT = "signed-out"
 
 type Init = Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
 
-async function call<T>(path: string, init?: Init, code = storedCode(), retried = false): Promise<T> {
-  const headers = init?.method && code ? { ...init.headers, "X-Access-Code": code } : init?.headers
-  const response = await fetch(`${API}${path}`, { ...init, headers })
-  if (response.ok) return response.json()
+async function call<T>(path: string, init?: Init): Promise<T> {
+  // The session is a cookie, so the browser sends it; nothing is added here.
+  const response = await fetch(`${API}${path}`, { ...init, credentials: "same-origin" })
+  if (response.ok) return response.status === 204 ? (undefined as T) : response.json()
   // Refusals carry {code, message}; anything else (a proxy error, say) still becomes an ApiError.
   const body = await response.json().catch(() => ({}))
-  if (body.code === "access_denied" && !retried) {
-    const answer = window.prompt("Enter the access code to continue")
-    if (answer) {
-      storeCode(answer)
-      return call(path, init, answer, true)
-    }
-  }
+  if (body.code === "signed_out") dispatchEvent(new Event(SIGNED_OUT))
   throw new ApiError(response.status, body.code ?? "unknown", body.message ?? response.statusText, body.errors)
 }
 
-export const startRun = (request_text: string, focus: Dimension[]) =>
-  call<{ thread_id: string }>("/runs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ request_text, focus }),
-  })
+const json = (method: string, body: object): Init => ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+
+export const startRun = (customer_id: string, request_text: string, focus: Dimension[]) =>
+  call<{ thread_id: string }>("/runs", json("POST", { customer_id, request_text, focus }))
+
+export const deleteRun = (id: string) => call<void>(`/runs/${id}`, { method: "DELETE" })
+
+export const getMe = () => call<Me>("/me")
+
+export const logOut = () => call<void>("/auth/logout", { method: "POST" })
+
+export const listCustomers = () => call<Customer[]>("/customers")
+
+export const addCustomer = (name: string, note: string) => call<Customer>("/customers", json("POST", { name, note }))
+
+export const editCustomer = (id: string, fields: { name?: string; note?: string }) =>
+  call<Customer>(`/customers/${id}`, json("PATCH", fields))
+
+export const deleteCustomer = (id: string) => call<void>(`/customers/${id}`, { method: "DELETE" })
 
 export const listRuns = () => call<RunRecord[]>("/runs")
 
@@ -63,10 +55,6 @@ export const getRun = (id: string) => call<RunDetail>(`/runs/${id}`)
 export const getMeta = () => call<Meta>("/meta")
 
 export const resumeRun = (id: string, answer: object | null) =>
-  call<{ thread_id: string }>(`/runs/${id}/resume`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ answer }),
-  })
+  call<{ thread_id: string }>(`/runs/${id}/resume`, json("POST", { answer }))
 
 export const cancelRun = (id: string) => call<{ node: string | null; reason: string }>(`/runs/${id}/cancel`, { method: "POST" })

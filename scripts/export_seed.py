@@ -35,5 +35,7 @@ for thread_id in sys.argv[1:]:
     copy("checkpoints", "thread_id = ? AND checkpoint_id = ?", (thread_id, last))
     copy("writes", "thread_id = ? AND checkpoint_id = ?", (thread_id, last))
     shutil.copytree(settings.runs_dir / thread_id, out / "briefs" / thread_id)
+# The Customer stays behind, so a seeded Run is filed under "Local" when it is loaded.
+seed.execute("UPDATE runs SET customer_id = NULL")
 seed.commit()
 print(f"seeded {len(sys.argv) - 1} Runs, {(out / 'seed.sqlite').stat().st_size // 1024} KB")

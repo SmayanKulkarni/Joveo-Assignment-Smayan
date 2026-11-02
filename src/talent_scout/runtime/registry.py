@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 
 import aiosqlite
+from psycopg.errors import UndefinedColumn
 from psycopg_pool import AsyncConnectionPool
 
 from talent_scout.kernel.types import Model
@@ -16,7 +17,8 @@ CREATE TABLE IF NOT EXISTS runs (
   status     TEXT NOT NULL,
   error      TEXT,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  customer_id TEXT
 )
 """
 
@@ -37,6 +39,7 @@ class RunRecord(Model):
     summary: str
     status: RunStatus
     error: str | None
+    customer_id: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -65,7 +68,7 @@ class Registry:
             db.row_factory = sqlite3.Row
         self._db = db
 
-    async def _run(self, sql: str, params: tuple = ()) -> list[dict]:
+    async def run(self, sql: str, params: tuple = ()) -> list[dict]:
         # One statement per call, so each commits alone on either database.
         if isinstance(self._db, AsyncConnectionPool):
             async with self._db.connection() as conn:
@@ -77,33 +80,48 @@ class Registry:
         return rows
 
     async def setup(self) -> None:
-        await self._run(SCHEMA)
+        await self.run(SCHEMA)
+        try:
+            await self.run("SELECT customer_id FROM runs LIMIT 0")
+        except (sqlite3.OperationalError, UndefinedColumn):  # a table made before Customers existed
+            await self.run("ALTER TABLE runs ADD COLUMN customer_id TEXT")
 
-    async def insert(self, thread_id: str, request_text: str) -> None:
+    async def insert(self, thread_id: str, request_text: str, customer_id: str | None = None) -> None:
         now = _now()
-        await self._run(
-            "INSERT INTO runs (thread_id, summary, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-            (thread_id, request_text[:80], RunStatus.running.value, now, now),
+        await self.run(
+            "INSERT INTO runs (thread_id, summary, status, created_at, updated_at, customer_id) VALUES (?, ?, ?, ?, ?, ?)",
+            (thread_id, request_text[:80], RunStatus.running.value, now, now, customer_id),
         )
+
+    async def delete(self, thread_id: str) -> None:
+        await self.run("DELETE FROM runs WHERE thread_id = ?", (thread_id,))
 
     async def transition(self, thread_id: str, status: RunStatus, error: str | None = None) -> None:
         # One UPDATE, never a read then a write, so two processes can't interleave a transition.
-        await self._run(
+        await self.run(
             "UPDATE runs SET status = ?, error = ?, updated_at = ? WHERE thread_id = ?",
             (status.value, error, _now(), thread_id),
         )
 
     async def reconcile(self, thread_id: str, status: RunStatus, error: str | None) -> None:
         # Only a still-running row: another process may have moved it since the lock probe.
-        await self._run(
+        await self.run(
             "UPDATE runs SET status = ?, error = ?, updated_at = ? WHERE thread_id = ? AND status = ?",
             (status.value, error, _now(), thread_id, RunStatus.running.value),
         )
 
     async def get(self, thread_id: str) -> RunRecord | None:
-        rows = await self._run("SELECT * FROM runs WHERE thread_id = ?", (thread_id,))
+        rows = await self.run("SELECT * FROM runs WHERE thread_id = ?", (thread_id,))
         return RunRecord.model_validate(rows[0]) if rows else None
 
-    async def list_all(self) -> list[RunRecord]:
-        rows = await self._run("SELECT * FROM runs ORDER BY created_at DESC")
+    async def list_all(self, csm_id: str | None = None, customer_id: str | None = None) -> list[RunRecord]:
+        where, params = [], []
+        if customer_id:
+            where.append("customer_id = ?")
+            params.append(customer_id)
+        if csm_id:
+            where.append("customer_id IN (SELECT id FROM customers WHERE csm_id = ?)")
+            params.append(csm_id)
+        clause = f" WHERE {' AND '.join(where)}" if where else ""
+        rows = await self.run(f"SELECT * FROM runs{clause} ORDER BY created_at DESC", tuple(params))
         return [RunRecord.model_validate(row) for row in rows]

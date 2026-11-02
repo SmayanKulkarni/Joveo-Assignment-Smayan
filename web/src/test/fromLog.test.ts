@@ -6,7 +6,7 @@ const line = (node: string, message = node) => ({ node, kind: "note", message })
 
 function detail(status: RunStatus, over: Partial<RunDetail> = {}): RunDetail {
   return {
-    record: { thread_id: "t", summary: "s", status, error: null, created_at: "", updated_at: "" },
+    record: { thread_id: "t", summary: "s", status, error: null, customer_id: null, created_at: "", updated_at: "" },
     request_text: "r", focus: [], pause: null, stopped_at: null, run_log: [], live_from: null, brief: null, recommendation: null, sample: [], glance: null, ...over,
   }
 }

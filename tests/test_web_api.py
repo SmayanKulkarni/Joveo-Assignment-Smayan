@@ -22,8 +22,12 @@ def client(tmp_path):
         yield client
 
 
+def local_customer(client) -> str:
+    return client.get("/api/customers").json()[0]["id"]
+
+
 def start(client, text="Data Engineer") -> str:
-    response = client.post("/api/runs", json={"request_text": text, "focus": ["skills"]})
+    response = client.post("/api/runs", json={"request_text": text, "focus": ["skills"], "customer_id": local_customer(client)})
     assert response.status_code == 201
     return response.json()["thread_id"]
 
@@ -53,10 +57,11 @@ def test_start_then_stream_to_the_first_pause(client):
 
     events = sse(client.get(f"/api/runs/{thread_id}/events"))
     types = [e["type"] for e in events]
-    assert types.count("caught_up") == 1 and types[-1] == "paused"
+    # How much is replayed depends on how far the Run got first, so the Pause may come before or after the marker.
+    assert types.count("caught_up") == 1 and "paused" in types[-2:]
     # Token and Reasoning are queue-only, so none can come before the replay ends.
     assert not {"token", "reasoning"} & set(types[: types.index("caught_up")])
-    assert events[-1]["pause"]["kind"] == "clarify"
+    assert next(e for e in events if e["type"] == "paused")["pause"]["kind"] == "clarify"
 
     detail = wait_for(client, thread_id, "paused")
     assert detail["request_text"] == "Data Engineer" and detail["focus"] == ["skills"]
@@ -69,63 +74,53 @@ def test_start_then_stream_to_the_first_pause(client):
 def test_unknown_run_is_a_404_in_the_one_body(client):
     for path in ("/api/runs/nope", "/api/runs/nope/events"):
         response = client.get(path)
-        assert response.status_code == 404 and response.json()["code"] == "unknown_run"
+        assert response.status_code == 404 and response.json()["code"] == "not_found"
 
 
 def test_invalid_requests_are_reshaped(client):
     for body in ({"request_text": "  "}, {}):
-        response = client.post("/api/runs", json=body)
+        response = client.post("/api/runs", json={**body, "customer_id": local_customer(client)})
         assert response.status_code == 422
         assert response.json()["code"] == "invalid_request"
         assert response.json()["errors"][0]["loc"][-1] == "request_text"
+    assert client.post("/api/runs", json={"request_text": "x"}).json()["errors"][0]["loc"][-1] == "customer_id"
 
 
 def test_guards_refuse_a_foreign_host_and_origin(client):
     assert client.get("/api/meta", headers={"Host": "evil.example"}).status_code == 400
-    with_body = client.post("/api/runs", json={"request_text": "x"}, headers=FOREIGN)
+    body = {"request_text": "x", "customer_id": local_customer(client)}
+    with_body = client.post("/api/runs", json=body, headers=FOREIGN)
     assert with_body.status_code == 403 and with_body.json()["code"] == "foreign_origin"
     assert client.post("/api/runs", headers=FOREIGN).status_code == 403
     assert client.get("/api/runs").json() == []  # neither created a Run
-    assert client.post("/api/runs", json={"request_text": "x"}, headers={"Origin": "http://127.0.0.1"}).status_code == 201
+    assert client.post("/api/runs", json=body, headers={"Origin": "http://127.0.0.1"}).status_code == 201
 
 
 def test_same_origin_passes_through_the_vite_dev_proxy(client):
     # changeOrigin: false leaves the browser's Host, so it still matches the Origin.
     proxied = {"Host": "localhost:5173", "Origin": "http://localhost:5173"}
-    assert client.post("/api/runs", json={"request_text": "x"}, headers=proxied).status_code == 201
+    body = {"request_text": "x", "customer_id": local_customer(client)}
+    assert client.post("/api/runs", json=body, headers=proxied).status_code == 201
 
 
 @pytest.fixture
 def public(tmp_path):
     settings = make_settings(
         demo=True, demo_delay=0.02, runs_db=tmp_path / "runs.sqlite", runs_dir=tmp_path / "runs",
-        access_code="sesame", web_origin="https://scout.example/", render_external_hostname="api.example",
+        web_origin="https://scout.example/", render_external_hostname="api.example",
+        google_client_id="id", google_client_secret="secret", allowed_emails=["csm@example.com"],
     )
     with TestClient(web.make_app(settings), base_url="https://api.example") as client:
         yield client
 
 
-def test_a_public_host_needs_the_code_to_write_but_not_to_read(public):
-    body = {"request_text": "x"}
-    for headers in ({}, {"X-Access-Code": "wrong"}, {"X-Access-Code": "sésame".encode()}):
-        response = public.post("/api/runs", json=body, headers=headers)
-        assert response.status_code == 401 and response.json()["code"] == "access_denied"
-    assert public.get("/api/runs").json() == []
-    assert public.post("/api/runs", json=body, headers={"X-Access-Code": "sesame"}).status_code == 201
-
-
 def test_a_public_host_allows_only_the_web_origin(public):
-    allowed = {"Origin": "https://scout.example", "X-Access-Code": "sesame"}
-    response = public.post("/api/runs", json={"request_text": "x"}, headers=allowed)
-    assert response.status_code == 201 and response.headers["access-control-allow-origin"] == "https://scout.example"
-    assert public.post("/api/runs", json={"request_text": "x"}, headers={**allowed, **FOREIGN}).status_code == 403
+    # Signed out, so only Meta answers; the CORS headers don't depend on a session.
+    allowed = {"Origin": "https://scout.example"}
+    assert public.get("/api/meta", headers=allowed).headers["access-control-allow-origin"] == "https://scout.example"
     assert "access-control-allow-origin" not in public.get("/api/meta", headers=FOREIGN).headers
 
-    preflight = {
-        "Origin": "https://scout.example",
-        "Access-Control-Request-Method": "POST",
-        "Access-Control-Request-Headers": "content-type,x-access-code",
-    }
+    preflight = {"Origin": "https://scout.example", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type"}
     assert public.options("/api/runs", headers=preflight).status_code == 200
     assert public.options("/api/runs", headers={**preflight, **FOREIGN}).status_code == 400
 
@@ -211,7 +206,7 @@ def test_abort_ends_the_run_with_no_brief(client):
     for kind in ("json", "md"):
         response = client.get(f"/api/runs/{thread_id}/brief.{kind}")
         assert response.status_code == 404 and response.json()["code"] == "no_brief"
-    assert client.get("/api/runs/nope/brief.md").json()["code"] == "unknown_run"
+    assert client.get("/api/runs/nope/brief.md").json()["code"] == "not_found"
 
 
 def test_an_answer_for_a_run_that_is_not_waiting_is_refused(client):
@@ -237,8 +232,9 @@ def test_resume_refusals_use_the_one_body(client, monkeypatch, error, status, co
     async def refuse(*args, **kwargs):
         raise error
 
+    thread_id = start(client)
     monkeypatch.setattr(client.app.state.controller, "resume", refuse)
-    response = client.post("/api/runs/abc/resume", json={"answer": None})
+    response = client.post(f"/api/runs/{thread_id}/resume", json={"answer": None})
     assert response.status_code == status and response.json()["code"] == code
 
 
@@ -282,7 +278,7 @@ def test_cancel_with_nothing_live_is_not_live(client):
     wait_for(client, thread_id, "paused")
     refused = client.post(f"/api/runs/{thread_id}/cancel")
     assert refused.status_code == 409 and refused.json()["code"] == "not_live"
-    assert client.post("/api/runs/nope/cancel").json()["code"] == "unknown_run"
+    assert client.post("/api/runs/nope/cancel").json()["code"] == "not_found"
     assert client.post(f"/api/runs/{thread_id}/cancel", headers=FOREIGN).status_code == 403
 
 

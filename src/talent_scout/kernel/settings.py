@@ -55,17 +55,24 @@ class Settings(BaseSettings):
     default_country: str = "us"
     demo: bool = False
     demo_delay: float = 0.4  # seconds each Demo node waits, so a person can follow the Run
-    # All three stay unset locally, which leaves the loopback guards exactly as they are.
-    access_code: str | None = None
+    # All stay unset locally, which leaves the loopback guards exactly as they are.
     web_origin: str | None = None
     render_external_hostname: str | None = None  # Render sets this itself
     # Neon services; all optional so a deploy without them runs exactly as before.
     database_url: str | None = None
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
+    allowed_emails: Annotated[list[str], NoDecode] = []  # who may sign in; compared lowercased
     neon_auth_jwks_url: str | None = None
     aws_endpoint_url_s3: str | None = None
     aws_region: str | None = None
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
+
+    @property
+    def sign_in(self) -> bool:
+        # Hosted means a database_url; a local `scout web` stays login-free unless Google is set up.
+        return bool(self.database_url or self.google_client_id)
 
     @property
     def lock_folder(self) -> Path:
@@ -89,12 +96,17 @@ class Settings(BaseSettings):
         # A pasted URL often ends in a slash, and an Origin header never does.
         return v.rstrip("/") if v else v
 
-    @field_validator("llm_cheap", "llm_strong", mode="before")
+    @field_validator("llm_cheap", "llm_strong", "allowed_emails", mode="before")
     @classmethod
     def _split_chain(cls, v):
         if isinstance(v, str):
             return [m.strip() for m in v.split(",") if m.strip()]
         return v
+
+    @field_validator("allowed_emails")
+    @classmethod
+    def _lowered(cls, v):
+        return [email.lower() for email in v]
 
 
 @lru_cache

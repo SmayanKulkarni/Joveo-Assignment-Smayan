@@ -20,3 +20,5 @@ const subscribe = (notify: () => void) => {
 export const usePath = () => useSyncExternalStore(subscribe, () => location.pathname)
 
 export const runIdOf = (path: string) => path.match(/^\/runs\/([^/]+)$/)?.[1] ?? null
+
+export const customerIdOf = (path: string) => path.match(/^\/customers\/([^/]+)$/)?.[1] ?? null

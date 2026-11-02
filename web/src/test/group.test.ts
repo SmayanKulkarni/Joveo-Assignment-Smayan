@@ -6,7 +6,7 @@ import { groupRuns } from "../sidebar/group"
 const NOW = new Date(2026, 10, 15, 0, 30)
 const at = (daysAgo: number, hour: number, minute = 0) => new Date(2026, 10, 15 - daysAgo, hour, minute).toISOString()
 const run = (id: string, status: RunStatus, updated_at: string): RunRecord => ({
-  thread_id: id, summary: id, status, error: null, created_at: updated_at, updated_at,
+  thread_id: id, summary: id, status, error: null, customer_id: null, created_at: updated_at, updated_at,
 })
 
 test("days are calendar days in local time, so 23:59 yesterday is not Today", () => {

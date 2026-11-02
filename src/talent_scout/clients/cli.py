@@ -150,9 +150,13 @@ async def _follow(handle: RunHandle) -> RunEvent:
         view.close()  # a raised error must not leave the spinner thread running
 
 
-async def drive_start(settings: Settings, request: str, focus: list[Dimension]) -> tuple[str, RunEvent]:
+async def drive_start(
+    settings: Settings, request: str, focus: list[Dimension], customer: str = "Local"
+) -> tuple[str, RunEvent]:
     async with RunController.open(settings) as controller:
-        handle = await controller.start(request, focus)
+        # The CLI has no sign-in, so its Runs belong to the local CSM.
+        filed = await controller.accounts.customer_named(await controller.accounts.local_csm(), customer)
+        handle = await controller.start(request, focus, filed.id)
         return handle.thread_id, await _follow(handle)
 
 
@@ -297,7 +301,7 @@ def _converse(settings: Settings, thread_id: str, outcome: RunEvent) -> int:
 def _run(args) -> int:
     settings = get_settings()
     focus = [Dimension("compensation" if f == "salary" else f) for f in args.focus]
-    thread_id, outcome = asyncio.run(drive_start(settings, args.request, focus))
+    thread_id, outcome = asyncio.run(drive_start(settings, args.request, focus, args.customer))
     return _converse(settings, thread_id, outcome)
 
 
@@ -398,6 +402,7 @@ def _parser() -> argparse.ArgumentParser:
 
     run = commands.add_parser("run", help="start a Run")
     run.add_argument("request", type=_request)
+    run.add_argument("--customer", default="Local", metavar="NAME", help="file the Run under this Customer")
     run.add_argument("--focus", action="append", choices=FOCUS_CHOICES, default=[], help="repeat for several")
     run.set_defaults(command=_run)
 

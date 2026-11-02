@@ -241,3 +241,15 @@ def test_the_low_data_pause_shows_counts_every_plan_and_the_block_reason():
     assert "Only 3 relevant Postings found, the target is 20." in text
     assert "Fetched 9, rejected 6" in text and "Blocked: Adzuna is down" in text
     assert "Attempt 1:" in text and "Attempt 2:" in text and "radius_km: 60" in text
+
+
+def test_a_run_is_filed_under_local_unless_a_customer_is_named(settings):
+    async def go():
+        await cli.drive_start(settings, "one", [])
+        await cli.drive_start(settings, "two", [], customer="Acme")
+        async with RunController.open(settings) as controller:
+            csm = await controller.accounts.local_csm()
+            names = {c.id: c.name for c in await controller.accounts.customers(csm)}
+            return {r.summary: names[r.customer_id] for r in await controller.list_runs(csm_id=csm.id)}
+
+    assert asyncio.run(go()) == {"one": "Local", "two": "Acme"}

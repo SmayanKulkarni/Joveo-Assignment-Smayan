@@ -15,6 +15,18 @@ export type Meta = {
   confidence_key: string
   outlook_meaning: Record<Brief["outlook"]["rating"], string>
   demo: boolean
+  sign_in: boolean
+}
+
+export type Me = { id: string; email: string }
+
+export type Customer = {
+  id: string
+  csm_id: string
+  name: string
+  note: string | null
+  created_at: string
+  updated_at: string
 }
 
 export type RunRecord = {
@@ -22,6 +34,7 @@ export type RunRecord = {
   summary: string
   status: RunStatus
   error: string | null
+  customer_id: string | null
   created_at: string
   updated_at: string
 }
