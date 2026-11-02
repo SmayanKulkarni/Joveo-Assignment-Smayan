@@ -4,6 +4,7 @@ import type { Me } from "./api/types"
 import { useMeta } from "./api/useMeta"
 import { WakeNotice } from "./api/WakeNotice"
 import { SignIn } from "./auth/SignIn"
+import { ThemeToggle } from "./ThemeToggle"
 import { CustomerPage } from "./customers/CustomerPage"
 import { customerIdOf, go, runIdOf, usePath } from "./router"
 import { RunPage } from "./run/RunPage"
@@ -53,6 +54,7 @@ function Signed({ me, signIn }: { me: Me; signIn: boolean }) {
           Customers{waiting > 0 && <span className="count">{waiting}</span>}
         </button>
         <a href="/" onClick={go}>Talent Scout</a>
+        <ThemeToggle />
       </header>
       <Sidebar customers={customers} activeId={customerId} open={open} me={me} signIn={signIn} />
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
@@ -63,7 +65,10 @@ function Signed({ me, signIn }: { me: Me; signIn: boolean }) {
         ) : customerIdOf(path) ? (
           customer ? <CustomerPage customer={customer} runs={runs.filter((run) => run.customer_id === customer.id)} key={customer.id} /> : customers && <p>Customer not found. <a href="/" onClick={go}>Back</a></p>
         ) : (
-          <div className="column"><h1>Choose a Customer</h1><p className="muted">Pick one in the list, or add a new one, then start a Run from their page.</p></div>
+          <div className="column empty-state">
+            <h1>Choose a Customer</h1>
+            <p className="muted">Pick one from the list on the left, or add a new one. From their page you can upload a Resume and start a Run.</p>
+          </div>
         )}
       </main>
     </div>

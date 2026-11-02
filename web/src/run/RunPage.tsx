@@ -18,6 +18,7 @@ import type { RunState } from "./reducer"
 import { useAutoScroll } from "./useAutoScroll"
 import { useNarrow } from "./useNarrow"
 import { useRun } from "./useRun"
+import { ask } from "../confirm"
 
 // The last log line, else the registry's error: what `scout show` prints for an aborted Run.
 const abortReason = (detail: RunDetail) => detail.run_log.at(-1)?.message ?? detail.record.error
@@ -102,7 +103,7 @@ function RunView({ id, detail, customer, state, notice, streaming, answer, resum
             type="button"
             className="danger no-print"
             onClick={async () => {
-              if (!confirm("Delete this Run? This can't be undone.")) return
+              if (!(await ask("Delete this Run? This can't be undone.", "Delete Run"))) return
               await deleteRun(id)
               refreshRuns()
               navigate(customer ? `/customers/${customer.id}` : "/")

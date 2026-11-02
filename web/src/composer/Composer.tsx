@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import type { KeyboardEvent } from "react"
+import { ArrowRight } from "lucide-react"
 import { getResume, startRun } from "../api/client"
 import type { Dimension } from "../api/types"
 import { DIMENSIONS } from "../dimensions"
@@ -64,12 +65,12 @@ export function Composer({ customerId }: { customerId: string }) {
               </button>
             ))}
           </div>
-          <button type="button" className="start" disabled={blank || busy} onClick={submit}>
-            Start
+          <button type="button" className="primary" disabled={blank || busy} onClick={submit}>
+            {busy ? "Starting…" : "Start Run"} <ArrowRight size={16} aria-hidden />
           </button>
         </div>
       </div>
-      <label className="muted">
+      <label className="muted check-line">
         <input type="checkbox" checked={useProfile} onChange={(e) => setUseProfile(e.target.checked)} /> Use profile
       </label>
       {uploaded && <p className="muted">Using the Resume uploaded on {new Date(uploaded).toLocaleDateString()}</p>}

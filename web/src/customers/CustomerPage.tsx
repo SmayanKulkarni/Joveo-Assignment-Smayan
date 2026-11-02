@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { FormEvent } from "react"
+import { FileText, History, Pencil, SlidersHorizontal, Trash2 } from "lucide-react"
 import { ApiError, deleteCustomer, editCustomer } from "../api/client"
 import type { Customer, RunRecord } from "../api/types"
 import { Composer } from "../composer/Composer"
@@ -9,8 +10,9 @@ import { refreshCustomers } from "../sidebar/useCustomers"
 import { CustomerHeader } from "./CustomerHeader"
 import { ProfilePanel } from "./ProfilePanel"
 import { ResumePanel } from "./ResumePanel"
+import { ask } from "../confirm"
 
-const TABS = [["runs", "Runs"], ["resume", "Resume"], ["profile", "Profile"]] as const
+const TABS = [["runs", "Runs", History], ["resume", "Resume", FileText], ["profile", "Profile", SlidersHorizontal]] as const
 
 function Edit({ customer, onDone }: { customer: Customer; onDone: () => void }) {
   const [name, setName] = useState(customer.name)
@@ -33,7 +35,10 @@ function Edit({ customer, onDone }: { customer: Customer; onDone: () => void }) 
       <input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} aria-label="Customer name" />
       <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} aria-label="Customer note" placeholder="Note" />
       {error && <p className="error">{error}</p>}
-      <button type="submit" className="start">Save</button> <button type="button" onClick={onDone}>Cancel</button>
+      <div className="actions">
+        <button type="submit" className="primary">Save</button>
+        <button type="button" className="ghost" onClick={onDone}>Cancel</button>
+      </div>
     </form>
   )
 }
@@ -44,7 +49,7 @@ export function CustomerPage({ customer, runs }: { customer: Customer; runs: Run
   const [tab, setTab] = useState<(typeof TABS)[number][0]>("runs")
 
   async function remove() {
-    if (!confirm(`Delete ${customer.name} and all of their Runs? This can't be undone.`)) return
+    if (!(await ask(`Delete ${customer.name} and all of their Runs? This can't be undone.`, "Delete Customer"))) return
     try {
       await deleteCustomer(customer.id)
       refreshCustomers()
@@ -56,27 +61,34 @@ export function CustomerPage({ customer, runs }: { customer: Customer; runs: Run
 
   return (
     <div className="column">
-      <CustomerHeader customer={customer} />
-      <div className="customer-tools no-print">
-        {editing ? <Edit customer={customer} onDone={() => setEditing(false)} /> : <button type="button" onClick={() => setEditing(true)}>Rename</button>}
-        <button type="button" className="danger" onClick={remove}>Delete Customer</button>
-      </div>
+      <CustomerHeader customer={customer}>
+        <div className="actions no-print">
+          <button type="button" onClick={() => setEditing(true)}>
+            <Pencil size={16} aria-hidden /> Edit
+          </button>
+          <button type="button" className="danger" onClick={remove}>
+            <Trash2 size={16} aria-hidden /> Delete
+          </button>
+        </div>
+      </CustomerHeader>
+      {editing && <Edit customer={customer} onDone={() => setEditing(false)} />}
       {error && <p className="error">{error}</p>}
       <div role="tablist" className="tabs no-print">
-        {TABS.map(([key, label]) => (
+        {TABS.map(([key, label, Icon]) => (
           <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
-            {label}
+            <Icon size={16} aria-hidden /> {label}
+            {key === "runs" && runs.length > 0 && <span className="count-muted">{runs.length}</span>}
           </button>
         ))}
       </div>
       {tab === "profile" ? (
-        <ProfilePanel customerId={customer.id} />
+        <ProfilePanel customerId={customer.id} finished={runs.filter((r) => r.status === "done").map((r) => r.thread_id).join()} />
       ) : tab === "resume" ? (
         <ResumePanel customerId={customer.id} />
       ) : (
         <>
           <Composer customerId={customer.id} />
-          <h2>Runs</h2>
+          <h2>Past Runs</h2>
           <RunList runs={runs} activeId={null} />
         </>
       )}

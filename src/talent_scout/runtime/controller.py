@@ -324,9 +324,9 @@ class RunController:
             await self._saver.adelete_thread(thread_id)
         shutil.rmtree(self._settings.runs_dir / thread_id, ignore_errors=True)
         await self._registry.delete(thread_id)
-        await self._relearn(record.customer_id)
+        await self.relearn(record.customer_id)
 
-    async def _relearn(self, customer_id: str | None) -> None:
+    async def relearn(self, customer_id: str | None) -> None:
         """Rebuild the Customer's learned profile from their last Done Runs. Housekeeping, so a failure is logged and never fails a Run."""
         if customer_id is None:
             return
@@ -397,7 +397,7 @@ class RunController:
                 logger.exception("Pruning Run %s failed", thread_id)
         record = await self._registry.get(thread_id)
         if status is RunStatus.done:
-            await self._relearn(record.customer_id)
+            await self.relearn(record.customer_id)
         return record
 
     def brief_paths(self, thread_id: str) -> list[Path]:
