@@ -21,15 +21,14 @@ The agent made these decisions alone while charting [the map](map.md) on 2026-11
 - **Basic auth means email and password only.** Password reset and email verification would need an email provider, so they are out of scope. OAuth too.
 - **One kind of account.** The same signed-in user can research a market for a client (the existing Market Brief flow) or find jobs that match their own resume. There is no separate "recruiter" or "candidate" account type.
 - **The existing access code is up for replacement, not assumed kept.** [Accounts and sign-in](issues/14-accounts-and-sign-in.md) decides whether accounts replace it or sit beside it.
-- **Every API the user listed gets researched, but none is assumed in.** Arbeitnow is in because the user asked for it outright. The RapidAPI and Fantastic Jobs APIs join only if [What Arbeitnow does in the gateway](issues/10-what-arbeitnow-does-in-the-gateway.md) finds they're worth the quota, latency and terms. Glassdoor Real-Time is a salary API, not a postings API, so it raises its own question: [Salary benchmarks in the Brief](issues/13-salary-benchmarks-in-the-brief.md).
+- **Arbeitnow is the only new source**, because the user asked for it outright.
 - **The honesty rules carry over.** Stats are computed by code, Advertised and Estimated pay are never pooled, and every Assumption goes in the Run Notes. A profile or resume that changes a Run must show up in the Run Notes the same way an Assumption does.
 
 ## Shape of the map
 
-- **Research first, in parallel.** There are eight research tickets: one per vendor family (Arbeitnow, JSearch, Fantastic Jobs, Indeed Scraper, Glassdoor), one for durable storage, one for cross-site sign-in, and one for reading resume files. They are AFK and unblocked, so they run in parallel at charting.
+- **Research first, in parallel.** There are four research tickets: one for Arbeitnow, one for durable storage, one for cross-site sign-in, and one for reading resume files. They are AFK and unblocked, so they run in parallel at charting.
 - **Durable storage is its own research ticket**, because Deployment decided that nothing on Render's free disk survives a restart. Accounts and profiles that vanish on a redeploy would make item 2 pointless.
 - **Cross-site sign-in is its own research ticket**, because the SPA (Vercel) and API (Render) are on different sites, `EventSource` can't send an auth header, and browsers are restricting third-party cookies.
-- **A HITL task for API keys.** Judging data quality and real quotas needs live calls, and RapidAPI keys need a human to sign up and subscribe. Research can go ahead from the docs alone. The source decision waits for the keys.
 - **Resume purpose is on the frontier.** Whether a resume starts a new kind of Run (ranked Matches) or only seeds a Hiring Request is the biggest fork in item 1, and it needs no research. So it can be grilled while research runs.
 - **The last ticket writes the LLDs and cuts build tickets**, the same pattern as the Web UI and Deployment maps.
 
@@ -44,7 +43,3 @@ The user asked to research guardrails for every LLM node, preferring open-source
 - **No guard on a node is assumed.** Strict schemas, `_grounded` and the Jev critic already cover a lot, so "none, because..." is a valid answer for a node.
 - **Render's 512 MB limit is a constraint from the start.** It probably rules out loading transformers locally, so both research tickets must report memory.
 - **Hosted vendor guardrails are out of scope**, by the user's preference. Open-weight models served through OpenRouter are not vendor guardrails, so they stay in.
-
-## Dropping RapidAPI (2026-11-02)
-
-- **Arbeitnow is the only new source.** The user dropped every RapidAPI source and the direct Fantastic Jobs portal. The destination item for them is gone, the source ticket became [What Arbeitnow does in the gateway](issues/10-what-arbeitnow-does-in-the-gateway.md), and the API-key task and the salary benchmark ticket are closed as out of scope. The Scope and Shape bullets above that name those APIs describe the first charting, not the current map.

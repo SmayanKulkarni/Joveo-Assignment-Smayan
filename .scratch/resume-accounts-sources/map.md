@@ -50,5 +50,5 @@ When the map is done, nothing is left to decide. Writing the code is the next ef
 - Applying to jobs, writing cover letters, or rewriting the resume for the user.
 - Scraping job sites ourselves. Only APIs.
 - Billing, or paid plans for users.
-- Every RapidAPI source (JSearch, Active Jobs DB, LinkedIn Job Search API, Indeed Scraper API, Glassdoor Real-Time) and the direct Fantastic Jobs portal. The user dropped them on 2026-11-02 and kept only Arbeitnow. Their research tickets ([JSearch](issues/02-research-jsearch.md), [Fantastic Jobs](issues/03-research-fantastic-jobs-apis.md), [Indeed Scraper](issues/04-research-indeed-scraper-api.md), [Glassdoor](issues/05-research-glassdoor-real-time.md)) stay as a record. [Subscribe to the job APIs and add keys](issues/09-subscribe-to-the-job-apis.md) and [Salary benchmarks in the Brief](issues/13-salary-benchmarks-in-the-brief.md) are closed with them.
+- Every RapidAPI job source. The user dropped them on 2026-11-02 and kept only Arbeitnow.
 - Hosted vendor guardrails: AWS Bedrock Guardrails, Azure AI Content Safety, Lakera and the like. The user asked for open-source frameworks. Open-weight guard models served by OpenRouter are still in.
