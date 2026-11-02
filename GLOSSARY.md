@@ -1,8 +1,30 @@
 # Talent Market Scout
 
-An agent that turns a client's hiring request into an evidence-backed market brief a customer success manager can hand to the client.
+An agent a customer success manager uses for the job seekers they look after: it turns a hiring request and resume into an evidence-backed market brief and a personal recommendation to pass on.
 
 ## Language
+
+### People
+
+**CSM**:
+A customer success manager, the only person who signs in. A CSM keeps many Customers and works on their behalf.
+_Avoid_: User (when a specific role is meant), account
+
+**Customer**:
+One job seeker a CSM works for. A Customer belongs to exactly one CSM, never signs in, and owns the resumes, findings, Assumptions and preferences kept about them.
+_Avoid_: Candidate, Client
+
+### Resumes
+
+**Resume**:
+The one current record of what a Customer has done: their roles, skills and years. A new upload replaces it.
+
+**Match**:
+One Posting judged against a Resume, with the reasons for its place in the ranking.
+
+**Customer Profile**:
+The defaults learned from a Customer's earlier Runs, such as their usual role, places and currency, which their CSM can see, change and clear. It holds only what Runs show, never the Resume's facts.
+_Avoid_: Preferences, memory
 
 ### Inputs
 
@@ -15,7 +37,7 @@ One of 1–3 targeted questions the agent asks when a Hiring Request is too ambi
 _Avoid_: Follow-up, prompt
 
 **Assumption**:
-A gap in the Hiring Request the agent filled itself (because the user's answer stayed vague) and recorded in the Run Notes.
+A gap in the Hiring Request the agent filled itself (because the user's answer stayed vague, or from the Resume or Customer Profile) and recorded in the Run Notes.
 
 **Search Plan**:
 The title variants, one or more places (or the whole country) and radius, date range and target number of Postings the agent intends to fetch.
@@ -26,6 +48,9 @@ _Avoid_: Query plan, strategy
 **Posting**:
 One real job advertisement returned by a jobs source, identified by its source and source ID.
 _Avoid_: Job, listing, ad, result
+
+**Remote Posting**:
+A Posting from Arbeitnow marked as remote work. It is shown to users anywhere, whatever the job's location, and doesn't promise that the employer can hire there.
 
 **Relevant Posting**:
 A Posting judged to actually match the researched role, as opposed to a keyword collision.
@@ -67,15 +92,15 @@ _Avoid_: Area, geography
 ### Output
 
 **Market Brief**:
-The final structured deliverable: Summary, Insights, Client Recommendations, Hiring Outlook and Run Notes.
+One of a Run's two deliverables, about the market rather than the person: Summary, Insights, Hiring Outlook and Run Notes.
 _Avoid_: Report, analysis, output
 
 **Insight**:
 A single finding in the Market Brief, carrying a Confidence Tag and the Evidence it rests on.
 _Avoid_: Finding, observation
 
-**Client Recommendation**:
-A suggested job title, salary band or set of top skills for the client's job ad, tied to the Evidence behind it.
+**Customer Recommendation**:
+One of a Run's two deliverables, personal to the Customer: the job title, salary band and top skills to aim for, tied to the Evidence behind them, plus ranked Matches when the Customer has a Resume.
 _Avoid_: Advice, suggestion
 
 **Evidence**:
@@ -100,7 +125,7 @@ _Avoid_: Warning, error, disclaimer
 ### Process
 
 **Run**:
-One end-to-end attempt to answer a Hiring Request, which may span several sessions across Pauses.
+One end-to-end attempt to answer a Hiring Request, filed under one Customer, which may span several sessions across Pauses.
 _Avoid_: Job, session, execution
 
 **Attempt**:

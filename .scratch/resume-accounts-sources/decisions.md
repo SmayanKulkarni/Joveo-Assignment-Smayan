@@ -1,6 +1,6 @@
 # Decisions: Resumes, accounts and more job sources
 
-The agent made these decisions alone while charting [the map](map.md) on 2026-11-02, because the user asked it to. Each one fixes scope or shape before any ticket is worked. Decisions made later, inside tickets, live in their own ticket and get a one-line pointer in the map's Decisions so far. They are not copied here.
+The agent made these decisions alone while charting [the map](map.md) on 2026-11-02, because the user asked it to. Each one fixes scope or shape before any ticket is worked. Decisions made later, inside tickets, live in their own ticket and get a one-line pointer in the map's Decisions so far. They are not copied here. The tickets the agent decided alone at the end are in [Final decisions](final-decisions.md).
 
 ## Process
 
@@ -17,9 +17,9 @@ The agent made these decisions alone while charting [the map](map.md) on 2026-11
 
 ## Scope
 
-- **"User level" means data scoped per user**: every Run, resume and profile belongs to exactly one user, and a user sees only their own. Roles and admins are out of scope. If the user meant roles, the destination needs redrawing.
-- **Basic auth means email and password only.** Password reset and email verification would need an email provider, so they are out of scope. OAuth too.
-- **One kind of account.** The same signed-in user can research a market for a client (the existing Market Brief flow) or find jobs that match their own resume. There is no separate "recruiter" or "candidate" account type.
+- **"User level" means data scoped per Customer inside a CSM**: see the recharting section below, which replaces the earlier per-user reading. Roles and admins stay out of scope.
+- **Sign in with Google only.** The user replaced email and password with this on 2026-11-02, during [Accounts and sign-in](issues/14-accounts-and-sign-in.md). The charting decision had been email and password, with OAuth out of scope.
+- **One kind of account: the CSM.** Replaced by the recharting section below. There is no separate "recruiter" or "candidate" account type.
 - **The existing access code is up for replacement, not assumed kept.** [Accounts and sign-in](issues/14-accounts-and-sign-in.md) decides whether accounts replace it or sit beside it.
 - **Arbeitnow is the only new source**, because the user asked for it outright.
 - **The honesty rules carry over.** Stats are computed by code, Advertised and Estimated pay are never pooled, and every Assumption goes in the Run Notes. A profile or resume that changes a Run must show up in the Run Notes the same way an Assumption does.
@@ -39,7 +39,23 @@ The user asked to research guardrails for every LLM node, preferring open-source
 - **Guardrails join this map as a fifth destination item**, not a map of their own, because the new resume and profile nodes need them and the same LLDs and build tickets carry them.
 - **The node inventory is an asset, not a ticket.** [LLM nodes](assets/llm-nodes.md) records facts read from the code, so the tickets can be precise. It decides nothing.
 - **Two research tickets in parallel**: one for frameworks (NeMo Guardrails, Guardrails AI, LLM Guard, LangChain middleware) and one for guard models and PII filters (Prompt Guard, Llama Guard and others, Jev as a guard, Presidio). Each fits one session, and neither waits on the other.
-- **Two grilling tickets**: the existing nodes first, because they exist and their inputs are known. The resume and profile nodes come second, because those nodes are shaped by [Matching Postings to a Resume](issues/18-matching-postings-to-a-resume.md) and [What a User Profile holds](issues/16-what-a-user-profile-holds.md), and they reuse the pattern the first ticket sets.
+- **Two grilling tickets**: the existing nodes first, because they exist and their inputs are known. The resume and profile nodes come second, because those nodes are shaped by [Matching Postings to a Resume](issues/18-matching-postings-to-a-resume.md) and [What a Customer Profile holds](issues/16-what-a-customer-profile-holds.md), and they reuse the pattern the first ticket sets.
 - **No guard on a node is assumed.** Strict schemas, `_grounded` and the Jev critic already cover a lot, so "none, because..." is a valid answer for a node.
 - **Render's 512 MB limit is a constraint from the start.** It probably rules out loading transformers locally, so both research tickets must report memory.
 - **Hosted vendor guardrails are out of scope**, by the user's preference. Open-weight models served through OpenRouter are not vendor guardrails, so they stay in.
+
+## Recharted around the CSM (later on 2026-11-02)
+
+The user corrected the map's central assumption: the signed-in person is the CSM, not the job seeker. The first three decisions below are the user's. The agent made the rest while recharting.
+
+- **The CSM signs in. The Customer doesn't.** One CSM holds many Customers, each with their own resumes, findings, Assumptions and preferences. Nothing learned is stored against the CSM.
+- **A Customer is one job seeker.** The user's choice. This was a different thing from the Client, the employer in the old glossary, a term [What a Resume is for](issues/17-what-a-resume-is-for.md) later retired.
+- **Every Run belongs to one Customer, Market Brief Runs too, and a Customer belongs to exactly one CSM.** The user's choices. [What a Resume is for](issues/17-what-a-resume-is-for.md) settled this: a Run has two deliverables, the Market Brief and a Customer Recommendation.
+- **Customers get their own ticket**, [Customers and what a CSM can do with them](issues/26-customers-and-what-a-csm-can-do-with-them.md), placed between sign-in and Run ownership.
+- **Research that still holds:** [durable storage](issues/06-research-durable-storage-for-accounts-and-runs.md), [cross-site sign-in](issues/07-research-signing-in-across-vercel-and-render.md), [reading resume files](issues/08-research-reading-resume-files.md) as far as the mechanics go, [guardrail frameworks](issues/22-research-open-source-guardrail-frameworks.md) and [guard models](issues/23-research-guard-models-and-pii-filters.md). They turn on the hosting stack, files and models, not on who signs in.
+- **Research that doesn't hold, so it gets new tickets:**
+  - The Arbeitnow judgement in [What Arbeitnow does in the gateway](issues/10-what-arbeitnow-does-in-the-gateway.md) rested on the project being free and non-commercial. A CSM serving customers may not be. See [Research: job source terms for CSM use](issues/27-research-job-source-terms-for-csm-use.md).
+  - The personal-data thinking assumed people upload their own resume. See [Research: holding Customers' personal data](issues/28-research-holding-customers-personal-data.md).
+- **Tickets keep their numbers.** Three files were renamed to match the new language.
+- **Job source terms don't block anything.** The user said on 2026-11-02 that this is a personal project, so licences block nothing. The findings stay in [the ticket](issues/27-research-job-source-terms-for-csm-use.md) in case that changes.
+- **Test resumes only.** The user said on 2026-11-02 that only test resumes will be used, never real people's. So the personal-data fog is ruled out of scope, except for the three features named in [Research: holding Customers' personal data](issues/28-research-holding-customers-personal-data.md).

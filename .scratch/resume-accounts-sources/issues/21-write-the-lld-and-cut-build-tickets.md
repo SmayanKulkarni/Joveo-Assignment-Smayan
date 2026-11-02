@@ -3,7 +3,7 @@
 Type: task
 Status: open
 Assignee: none
-Blocked by: [One gateway for many sources](11-one-gateway-for-many-sources.md), [Choosing among the search tools](12-choosing-among-many-search-tools.md), [Matching Postings to a Resume](18-matching-postings-to-a-resume.md), [How a User Profile shapes a Run](19-how-a-user-profile-shapes-a-run.md), [Resume, profile and sign-in screens](20-resume-profile-and-sign-in-screens.md), [Guardrails for the existing LLM nodes](24-guardrails-for-the-existing-llm-nodes.md), [Guardrails for the resume and profile nodes](25-guardrails-for-the-resume-and-profile-nodes.md)
+Blocked by: [Accounts and sign-in](14-accounts-and-sign-in.md), [Test SSE and sign-in through the Vercel rewrite](29-test-sse-and-sign-in-through-the-vercel-rewrite.md), [Research: job source terms for CSM use](27-research-job-source-terms-for-csm-use.md), [Research: holding Customers' personal data](28-research-holding-customers-personal-data.md), [One gateway for many sources](11-one-gateway-for-many-sources.md), [Choosing among the search tools](12-choosing-among-many-search-tools.md), [Matching Postings to a Resume](18-matching-postings-to-a-resume.md), [How a Customer Profile shapes a Run](19-how-a-customer-profile-shapes-a-run.md), [Resume, profile and sign-in screens](20-resume-profile-and-sign-in-screens.md), [Guardrails for the existing LLM nodes](24-guardrails-for-the-existing-llm-nodes.md), [Guardrails for the resume and profile nodes](25-guardrails-for-the-resume-and-profile-nodes.md)
 
 ## Question
 

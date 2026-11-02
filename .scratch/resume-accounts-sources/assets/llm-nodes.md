@@ -25,9 +25,9 @@ There is no input screening, no prompt-injection check, no PII filter on model i
 | `clarity_check` | `request_plan/nodes.py` | Jev `Noul` per field, `jev_fallback` | The draft and request text | Which fields are ambiguous | Jev cuts in `kernel/thresholds.py`, a Caveat when the fallback or a shortened text is used |
 | `question` (in `clarify`) | `request_plan/nodes.py` | cheap, structured `QuestionDraft` | The draft and request text | A Clarifying Question shown to the user | Schema |
 | `plan` | `request_plan/nodes.py` | strong, structured `SearchPlan` | The Hiring Request, Assumptions, and plan rejection feedback typed by the user | Search Plan | Schema, plan approval Pause |
-| `fetch_agent` | `collection/nodes.py` | cheap, tool calling | The plan and tool summaries (counts, not Posting text) | Tool calls to jobs APIs | `_bound`, `MAX_FETCHES`, `_cap`, arg errors as `ToolMessage` |
+| `fetch_agent` | `collection/nodes.py` | cheap, tool calling | The plan and tool summaries (counts, plus up to 5 raw Posting titles per fetch) | Tool calls to jobs APIs | `_bound`, `MAX_FETCHES`, `_cap`, arg errors as `ToolMessage` |
 | `relevance` | `collection/nodes.py` | Jev `RELEVANT_NOUL` per Posting, `jev_fallback` | **Posting title and description from third-party APIs** | Relevant or not | Jev cuts, a Caveat on degraded verdicts |
-| `broaden` | `collection/nodes.py` | strong, structured `SearchPlan` | The plan and fetch totals | A wider Search Plan | Schema |
+| `broaden` | `collection/nodes.py` | strong, structured `SearchPlan` | The plan, fetch totals and the titles of rejected Postings | A wider Search Plan | Schema |
 | `batch_extract` | `analysis/nodes.py` | cheap, structured `BatchFacts` | **Posting descriptions, many per batch** | Skills, seniority, years, employer type | Schema, `_grounded`, `ref` range check |
 | `normalise_skills` | `analysis/nodes.py` | cheap, structured `SkillGroups` | Skill names that came from Posting text | Skill aliases | Schema, alias only names shown |
 | `write_brief` | `brief/nodes.py` | strong, structured | The Hiring Request, Caveats and Stats (never Posting text) | Insights and Recommendations | Schema, Insight cap, Jev critic |
@@ -39,7 +39,7 @@ There is no input screening, no prompt-injection check, no PII filter on model i
 
 - **Resume parse**: one cheap structured call on the resume text, with contact details redacted first ([Research: reading resume files](../issues/08-research-reading-resume-files.md)). The resume is untrusted text from the user.
 - **Resume matching**: scoring and explaining Matches, shaped by [Matching Postings to a Resume](../issues/18-matching-postings-to-a-resume.md). It reads Posting text and resume facts side by side.
-- **Profile learning**: maybe an LLM summary of earlier Runs, depending on [What a User Profile holds](../issues/16-what-a-user-profile-holds.md). If the profile is written by an LLM and read by later Runs, injected text could persist across Runs.
+- **Profile learning**: maybe an LLM summary of earlier Runs, depending on [What a Customer Profile holds](../issues/16-what-a-customer-profile-holds.md). If the profile is written by an LLM and read by later Runs, injected text could persist across Runs.
 
 ## Where injected text can reach a model
 

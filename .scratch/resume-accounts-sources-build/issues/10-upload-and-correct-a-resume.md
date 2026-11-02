@@ -16,3 +16,5 @@
 - [x] Deleting a Customer now also removes their Resume
 - [x] Red-team fixtures pass, all fictional: white-text injection, stated sensitive traits, and invented skills
 - [x] One live check of field quality on a fictional Resume, since the research couldn't run one
+
+**Gap found later:** none of the screens were built. The Resume tab is now [16: The Resume tab](16-the-resume-tab.md).

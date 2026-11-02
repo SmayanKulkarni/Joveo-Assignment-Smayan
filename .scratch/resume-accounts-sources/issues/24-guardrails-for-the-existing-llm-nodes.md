@@ -1,8 +1,8 @@
 # Guardrails for the existing LLM nodes
 
 Type: grilling
-Status: open
-Assignee: none
+Status: resolved
+Assignee: smayankulkarni05
 Blocked by: [Research: open-source guardrail frameworks](22-research-open-source-guardrail-frameworks.md), [Research: guard models and PII filters](23-research-guard-models-and-pii-filters.md)
 
 ## Question
@@ -20,3 +20,7 @@ Go through the table in [LLM nodes](../assets/llm-nodes.md) one row at a time: `
 - **Tracing**: guard inputs follow the same LangSmith rules as the text they check.
 
 Load `langchain-router` first: this touches the model wrapper and graph nodes.
+
+## Answer
+
+Decided by the agent alone on 2026-11-02, at the user's request, with no grilling. The decisions are in [Final decisions](../final-decisions.md#guardrails-for-the-existing-llm-nodes).

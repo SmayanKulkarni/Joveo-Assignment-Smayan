@@ -7,7 +7,7 @@ Blocked by: none
 
 ## Question
 
-Where can accounts, User Profiles, resumes and Run history live so they survive a Render restart, at no cost?
+Where can accounts, Customer Profiles, resumes and Run history live so they survive a Render restart, at no cost?
 
 - Today everything is SQLite on Render's ephemeral disk: the LangGraph checkpointer, the Store, the run registry and the gateway cache (`runtime/controller.py`, `gateway/store.py`). [What survives a restart](../../deployment/issues/04-what-survives-a-restart.md) decided that nothing is guaranteed.
 - Compare free tiers: Render Postgres (does the free database still expire?), Neon, Supabase Postgres, and Turso/libSQL. For each: storage cap, connection limits, cold starts, latency to Render's region, and whether it expires or pauses.
@@ -24,7 +24,7 @@ Researched 2026-11-02. Long notes, measurements and every source: [research-dura
 ### Recommendation
 
 - **Neon Free Postgres**, one project in `aws-us-west-2` (US West, Oregon), next to Render's default Oregon region. It doesn't expire, wakes itself, and gives 1 GB.
-- Move checkpoints to `AsyncPostgresSaver` and the Store to `AsyncPostgresStore` from `langgraph-checkpoint-postgres==3.2.0`. Move the run registry, accounts, User Profiles and resume text into the same database.
+- Move checkpoints to `AsyncPostgresSaver` and the Store to `AsyncPostgresStore` from `langgraph-checkpoint-postgres==3.2.0`. Move the run registry, accounts, Customer Profiles and resume text into the same database.
 - Share one `psycopg_pool.AsyncConnectionPool` (small `max_size`, `check=AsyncConnectionPool.check_connection`, `autocommit=True`, `row_factory=dict_row`, `prepare_threshold=0`), because Neon drops connections when it suspends after 5 idle minutes.
 - Prune finished Runs to their latest checkpoint (`aprune(..., strategy="keep_latest")`) so 1 GB lasts.
 - Keep the gateway cache and budget on local SQLite. Keep the resume guard on a local file lock, but give it its own folder setting.
