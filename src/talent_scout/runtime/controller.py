@@ -116,7 +116,6 @@ async def _sqlite_storage(settings: Settings):
         ):
             registry = Registry(registry_conn)
             await registry.setup()
-            seed_runs(settings)
             store = AsyncSqliteStore(store_conn)
             await _setup_with_retry(store)
             yield saver, store, registry
@@ -237,6 +236,7 @@ class RunController:
         async with open_deps(settings) as deps, storage(settings) as (saver, store, registry):
             controller = cls(settings, build_graph(deps, saver, store), registry, saver)
             await controller.accounts.setup()
+            await seed_runs(settings, saver, registry.run)
             if not settings.sign_in:
                 await controller.accounts.adopt_local_runs()
             try:

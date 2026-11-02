@@ -15,7 +15,7 @@ def make_client(tmp_path, delay=0.02):
     settings = make_settings(
         demo=True, demo_delay=delay, runs_db=tmp_path / "runs.sqlite", runs_dir=tmp_path / "runs",
         web_origin="https://scout.example", render_external_hostname="api.example",
-        google_client_id="id", google_client_secret="secret", allowed_emails=[ALICE.upper(), BOB],
+        sign_in=True, google_client_id="id", google_client_secret="secret", allowed_emails=[ALICE.upper(), BOB],
     )
     return TestClient(web.make_app(settings), base_url="https://api.example")
 

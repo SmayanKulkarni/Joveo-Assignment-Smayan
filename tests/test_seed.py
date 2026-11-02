@@ -32,6 +32,18 @@ def test_a_fresh_install_starts_with_the_sample_runs_and_reopening_adds_no_more(
                 view = await controller.get_run(thread_id)
                 assert view.state.brief is not None
                 assert controller.brief_paths(thread_id)[0].is_file()
+                # Filed under its own Customer, which the login-free CSM can see.
+                assert await controller.accounts.owner_of_run(thread_id) == "local"
 
     asyncio.run(go())
     asyncio.run(go())  # the second open must not duplicate or fail
+
+
+def test_a_deleted_sample_run_stays_deleted_after_a_restart(settings):
+    async def open_and(action):
+        async with RunController.open(settings) as controller:
+            return await action(controller)
+
+    gone = asyncio.run(open_and(lambda c: c.list_runs()))[0].thread_id
+    asyncio.run(open_and(lambda c: c.delete_run(gone)))
+    assert gone not in {r.thread_id for r in asyncio.run(open_and(lambda c: c.list_runs()))}

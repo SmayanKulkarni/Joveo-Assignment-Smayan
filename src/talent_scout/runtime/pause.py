@@ -10,7 +10,8 @@ from talent_scout.collection.types import FetchRecord, LowDataAnswer, LowDataPay
 from talent_scout.gateway.types import CacheStatus
 from talent_scout.kernel.state import LogKind, RunLogEntry
 from talent_scout.kernel.types import (
-    ClarifyingQuestion, Dimension, Earlier, HiringRequest, MarketStats, Model, PayPeriod, RequestField, RunProfile, SearchPlan, Source, WorkMode,
+    Assumption, ClarifyingQuestion, Dimension, Earlier, HiringRequest, MarketStats, Model, PayPeriod, Posting, RequestField, RunProfile,
+    SearchPlan, Source, WorkMode,
 )
 from talent_scout.request_plan.types import (
     ClarifyAnswer,
@@ -49,6 +50,6 @@ ALLOWED_MSGPACK = [
         FetchRecord, CacheStatus, Source, PayPeriod, ExtractBatch, Extraction, Seniority, EmployerType, Requirement,
         ResumeFacts, ResumeSkill, Role, Match, MatchedSkill, Level,
         BriefDraft, BriefRevision, InsightVerdict, MarketBrief, CustomerRecommendation, Confidence, OutlookRating, Dimension,
-        HiringRequest, LogKind, RunLogEntry, ClarifyingQuestion, SearchPlan, MarketStats, RunProfile, Earlier,
+        HiringRequest, LogKind, RunLogEntry, ClarifyingQuestion, SearchPlan, MarketStats, RunProfile, Earlier, Posting, Assumption,
     )
 ]

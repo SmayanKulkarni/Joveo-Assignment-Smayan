@@ -1,0 +1,760 @@
+{
+  "hiring_request": {
+    "role": "AI Intern",
+    "location": "Mumbai (incl. Navi Mumbai, Thane), Bangalore, Hyderabad",
+    "country": "in",
+    "seniority": "Intern",
+    "employment_type": null,
+    "work_mode": null,
+    "currency": null,
+    "purpose": null
+  },
+  "replayed": false,
+  "summary": "The sample of AI Intern roles in Mumbai, Bangalore, and Hyderabad includes 8 postings from 7 employers, with 8 distinct job titles. Python appeared in 3 postings, the most common skill mentioned. However, the sample is small and pay data is too limited for reliable analysis.",
+  "summary_stat_ids": [
+    "demand.sample_size",
+    "competition.distinct_employers",
+    "titles.distinct",
+    "skills.python.count"
+  ],
+  "insights": [
+    {
+      "text": "The 8 postings cover 8 distinct job titles, showing variety in role descriptions.",
+      "dimension": "titles_seniority",
+      "stat_ids": [
+        "titles.distinct",
+        "demand.sample_size"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5889556368",
+          "adzuna:5913666436",
+          "adzuna:5920456744",
+          "adzuna:5925630121",
+          "adzuna:5928019585",
+          "adzuna:5930417242",
+          "adzuna:5935329993",
+          "adzuna:5946793966"
+        ]
+      },
+      "confidence": "low",
+      "confidence_reason": "Low: weakest cited Stat has 8 Postings from 7 employers"
+    },
+    {
+      "text": "Zirodigital posted the most postings, with 2 of the 8 in the sample.",
+      "dimension": "competition",
+      "stat_ids": [
+        "competition.employer.zirodigital",
+        "demand.sample_size"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5889556368",
+          "adzuna:5913666436",
+          "adzuna:5920456744",
+          "adzuna:5925630121",
+          "adzuna:5928019585",
+          "adzuna:5930417242",
+          "adzuna:5935329993",
+          "adzuna:5946793966"
+        ]
+      },
+      "confidence": "low",
+      "confidence_reason": "Low: weakest cited Stat has 2 Postings from 1 employer"
+    },
+    {
+      "text": "Python appears in 3 of 8 extracted Postings from 2 employers. The count undercounts skills due to the use of short snippets.",
+      "dimension": "skills",
+      "stat_ids": [
+        "skills.python.count",
+        "demand.sample_size"
+      ],
+      "evidence": {
+        "posting_keys": [
+          "adzuna:5889556368",
+          "adzuna:5913666436",
+          "adzuna:5920456744",
+          "adzuna:5925630121",
+          "adzuna:5928019585",
+          "adzuna:5930417242",
+          "adzuna:5935329993",
+          "adzuna:5946793966"
+        ]
+      },
+      "confidence": "low",
+      "confidence_reason": "Low: weakest cited Stat has 3 Postings from 2 employers; skills come from snippets"
+    }
+  ],
+  "outlook": {
+    "rating": "competitive",
+    "reason": "Only 8 Postings, too few to judge the talent market, so Competitive is a default rather than a finding. Postings show demand, not candidates, so this is an estimate of the talent market.",
+    "stat_ids": [],
+    "evidence": {
+      "posting_keys": []
+    }
+  },
+  "run_notes": {
+    "questions": [
+      {
+        "about": "location",
+        "text": "Which city or region in India are you targeting?",
+        "options": [
+          "Bangalore",
+          "Mumbai (incl. Navi Mumbai, Thane)",
+          "Delhi-NCR",
+          "Hyderabad"
+        ],
+        "answer": "Mumbai (incl. Navi Mumbai, Thane), Bangalore, Hyderabad"
+      }
+    ],
+    "assumptions": [],
+    "focus": [],
+    "final_plan": {
+      "titles": [
+        "AI Intern",
+        "Deep Learning Intern",
+        "Computer Vision Intern",
+        "NLP Intern"
+      ],
+      "country": "in",
+      "locations": [
+        "Mumbai (50km)",
+        "Bangalore",
+        "Hyderabad"
+      ],
+      "radius_km": 100,
+      "max_days_old": 60,
+      "target_postings": 30,
+      "category": null
+    },
+    "earlier_plans": [
+      {
+        "titles": [
+          "AI Intern",
+          "Artificial Intelligence Intern",
+          "AI/ML Intern",
+          "Machine Learning Intern"
+        ],
+        "country": "in",
+        "locations": [
+          "Mumbai (50km)",
+          "Bangalore",
+          "Hyderabad"
+        ],
+        "radius_km": 50,
+        "max_days_old": 30,
+        "target_postings": 30,
+        "category": "it-jobs"
+      },
+      {
+        "titles": [
+          "AI Intern",
+          "Machine Learning Intern",
+          "ML Intern",
+          "Deep Learning Intern"
+        ],
+        "country": "in",
+        "locations": [
+          "Mumbai (50km)",
+          "Bangalore",
+          "Hyderabad"
+        ],
+        "radius_km": 100,
+        "max_days_old": 45,
+        "target_postings": 30,
+        "category": "it-jobs"
+      }
+    ],
+    "postings_analysed": {
+      "posting_keys": [
+        "adzuna:5889556368",
+        "adzuna:5913666436",
+        "adzuna:5920456744",
+        "adzuna:5925630121",
+        "adzuna:5928019585",
+        "adzuna:5930417242",
+        "adzuna:5935329993",
+        "adzuna:5946793966"
+      ]
+    },
+    "match_totals": [
+      "Adzuna reported about 0 matches for ai intern in mumbai (50km). This is its own count, not a measure of demand.",
+      "Arbeitnow reported about 0 matches for ai intern in mumbai (50km). This is its own count, not a measure of demand.",
+      "Adzuna reported about 7 matches for ai intern in bangalore. This is its own count, not a measure of demand.",
+      "Arbeitnow reported about 0 matches for ai intern in bangalore. This is its own count, not a measure of demand.",
+      "Adzuna reported about 7 matches for ai intern in hyderabad. This is its own count, not a measure of demand.",
+      "Arbeitnow reported about 0 matches for ai intern in hyderabad. This is its own count, not a measure of demand.",
+      "Adzuna reported about 0 matches for deep learning intern in mumbai (50km). This is its own count, not a measure of demand.",
+      "Arbeitnow reported about 0 matches for deep learning intern in mumbai (50km). This is its own count, not a measure of demand.",
+      "Adzuna reported about 0 matches for deep learning intern in bangalore. This is its own count, not a measure of demand.",
+      "Arbeitnow reported about 0 matches for deep learning intern in bangalore. This is its own count, not a measure of demand.",
+      "Adzuna reported about 0 matches for deep learning intern in hyderabad. This is its own count, not a measure of demand.",
+      "Arbeitnow reported about 0 matches for deep learning intern in hyderabad. This is its own count, not a measure of demand.",
+      "Adzuna reported about 0 matches for computer vision intern in mumbai (50km). This is its own count, not a measure of demand.",
+      "Arbeitnow reported about 0 matches for computer vision intern in mumbai (50km). This is its own count, not a measure of demand.",
+      "Adzuna reported about 0 matches for computer vision intern in bangalore. This is its own count, not a measure of demand."
+    ],
+    "caveats": [
+      "Broadened 2 time(s): titles: ['AI Intern', 'Artificial Intelligence Intern', 'AI/ML Intern', 'Machine Learning Intern'] -> ['AI Intern', 'Machine Learning Intern', 'ML Intern', 'Deep Learning Intern']; radius_km: 50 -> 100; max_days_old: 30 -> 45 | titles: ['AI Intern', 'Machine Learning Intern', 'ML Intern', 'Deep Learning Intern'] -> ['AI Intern', 'Deep Learning Intern', 'Computer Vision Intern', 'NLP Intern']; max_days_old: 45 -> 60; category: it-jobs -> None",
+      "Too few Postings: 8 relevant of a target of 30",
+      "Skills from snippets: 8 Adzuna Postings give 500-character snippets, which undercount skills",
+      "Too little pay data: no pay group has 5 salaries",
+      "Pay period assumed: treated as annual for 5 advertised figures with no pay period",
+      "Implausible pay excluded: 1 figure with no pay period, too low to be annual pay"
+    ],
+    "attribution": "Jobs data provided by The Adzuna API",
+    "matches_note": "No Resume was uploaded, so there are no Matches.",
+    "resume_note": "Resume uploaded on 2026-11-02",
+    "from_profile": []
+  },
+  "stats": {
+    "sample_size": 8,
+    "stats": [
+      {
+        "id": "demand.sample_size",
+        "dimension": "demand",
+        "label": "Postings in the Sample",
+        "value": 8.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368",
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "demand.posted_7d",
+        "dimension": "demand",
+        "label": "Postings from the last 7 days",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "demand.posted_30d",
+        "dimension": "demand",
+        "label": "Postings from the last 30 days",
+        "value": 7.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "demand.median_age_days",
+        "dimension": "demand",
+        "label": "Median age of Postings in the Sample",
+        "value": 19.0,
+        "unit": "days",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368",
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "comp.disclosed_share",
+        "dimension": "compensation",
+        "label": "Adzuna Postings with advertised pay: 62.5% (5 of 8)",
+        "value": 0.625,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368",
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "comp.estimated_share",
+        "dimension": "compensation",
+        "label": "Adzuna Postings with Adzuna-estimated pay: 0.0% (0 of 8)",
+        "value": 0.0,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368",
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.python.count",
+        "dimension": "skills",
+        "label": "Python: 3 of 8 extracted Postings, from 2 employers",
+        "value": 3.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.ai-agents.count",
+        "dimension": "skills",
+        "label": "AI agents: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935329993"
+          ]
+        }
+      },
+      {
+        "id": "skills.classification.count",
+        "dimension": "skills",
+        "label": "classification: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.claude.count",
+        "dimension": "skills",
+        "label": "Claude: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5930417242"
+          ]
+        }
+      },
+      {
+        "id": "skills.computer-vision.count",
+        "dimension": "skills",
+        "label": "computer vision: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.deep-learning.count",
+        "dimension": "skills",
+        "label": "deep learning: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.gemini.count",
+        "dimension": "skills",
+        "label": "Gemini: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5930417242"
+          ]
+        }
+      },
+      {
+        "id": "skills.generative-ai.count",
+        "dimension": "skills",
+        "label": "Generative AI: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935329993"
+          ]
+        }
+      },
+      {
+        "id": "skills.llm-apis.count",
+        "dimension": "skills",
+        "label": "LLM APIs: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5930417242"
+          ]
+        }
+      },
+      {
+        "id": "skills.machine-learning.count",
+        "dimension": "skills",
+        "label": "machine learning: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.nlp.count",
+        "dimension": "skills",
+        "label": "NLP: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.numpy.count",
+        "dimension": "skills",
+        "label": "NumPy: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.openai.count",
+        "dimension": "skills",
+        "label": "OpenAI: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5930417242"
+          ]
+        }
+      },
+      {
+        "id": "skills.pandas.count",
+        "dimension": "skills",
+        "label": "Pandas: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "skills.prompt-engineering.count",
+        "dimension": "skills",
+        "label": "prompt engineering: 1 of 8 extracted Postings, from 1 employer",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5930417242"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.zirodigital",
+        "dimension": "competition",
+        "label": "Zirodigital: 2 of 8 Postings in the Sample",
+        "value": 2.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5930417242",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.electronic-arts",
+        "dimension": "competition",
+        "label": "Electronic Arts: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5913666436"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.ixg",
+        "dimension": "competition",
+        "label": "IXG Inc: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5920456744"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.pgagi",
+        "dimension": "competition",
+        "label": "PGAGI: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5925630121"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.stylumia-intelligence-technology",
+        "dimension": "competition",
+        "label": "Stylumia Intelligence Technology: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.techolution",
+        "dimension": "competition",
+        "label": "techolution: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935329993"
+          ]
+        }
+      },
+      {
+        "id": "competition.employer.vivusoft-technologies",
+        "dimension": "competition",
+        "label": "Vivusoft Technologies Pvt. Ltd.: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5928019585"
+          ]
+        }
+      },
+      {
+        "id": "competition.distinct_employers",
+        "dimension": "competition",
+        "label": "Distinct employers in the Sample",
+        "value": 7.0,
+        "unit": "employers",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368",
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "competition.direct_share",
+        "dimension": "competition",
+        "label": "Postings from direct employers: 100.0% (8 of 8 in the Sample)",
+        "value": 1.0,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368",
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.ai-agent-engineer-full-time-intern-2026-2027-graduates",
+        "dimension": "titles_seniority",
+        "label": "AI Agent Engineer: Full-Time Intern (2026/2027 Graduates): 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5928019585"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.ai-architecture-intern",
+        "dimension": "titles_seniority",
+        "label": "AI Architecture Intern: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5925630121"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.ai-engineering-intern",
+        "dimension": "titles_seniority",
+        "label": "Ai Engineering Intern: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.ai-intern",
+        "dimension": "titles_seniority",
+        "label": "AI Intern: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5930417242"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.ai-ml-mentor-intern-internship-to-full-time",
+        "dimension": "titles_seniority",
+        "label": "AI/ML Mentor Intern (Internship to Full-time): 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.ai-native-software-developer-intern",
+        "dimension": "titles_seniority",
+        "label": "AI-native Software Developer Intern: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5920456744"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.ai-software-engineer-intern",
+        "dimension": "titles_seniority",
+        "label": "AI Software Engineer Intern: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5913666436"
+          ]
+        }
+      },
+      {
+        "id": "titles.variant.python-ai-intern",
+        "dimension": "titles_seniority",
+        "label": "Python AI Intern: 1 of 8 Postings in the Sample",
+        "value": 1.0,
+        "unit": "postings",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5935329993"
+          ]
+        }
+      },
+      {
+        "id": "titles.distinct",
+        "dimension": "titles_seniority",
+        "label": "Distinct titles in the Sample",
+        "value": 8.0,
+        "unit": "titles",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368",
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      },
+      {
+        "id": "seniority.unknown",
+        "dimension": "titles_seniority",
+        "label": "Share of extracted Postings at unknown level: 100.0% (8 of 8)",
+        "value": 1.0,
+        "unit": "share",
+        "evidence": {
+          "posting_keys": [
+            "adzuna:5889556368",
+            "adzuna:5913666436",
+            "adzuna:5920456744",
+            "adzuna:5925630121",
+            "adzuna:5928019585",
+            "adzuna:5930417242",
+            "adzuna:5935329993",
+            "adzuna:5946793966"
+          ]
+        }
+      }
+    ]
+  }
+}

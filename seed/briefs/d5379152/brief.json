@@ -1,0 +1,141 @@
+{
+  "hiring_request": {
+    "role": "Machine Learning Researcher",
+    "location": "San Francisco Bay Area, New York City metro",
+    "country": "us",
+    "seniority": null,
+    "employment_type": null,
+    "work_mode": null,
+    "currency": null,
+    "purpose": null
+  },
+  "replayed": false,
+  "summary": "No Relevant Postings were found for Machine Learning Researcher in San Francisco Bay Area, New York City metro, so this Brief has no market findings.",
+  "summary_stat_ids": [],
+  "insights": [],
+  "recommendations": {
+    "job_title": null,
+    "salary_band": null,
+    "top_skills": null
+  },
+  "outlook": {
+    "rating": "competitive",
+    "reason": "Only 0 Postings, too few to judge the talent market, so Competitive is a default rather than a finding. Postings show demand, not candidates, so this is an estimate of the talent market.",
+    "stat_ids": [],
+    "evidence": {
+      "posting_keys": []
+    }
+  },
+  "run_notes": {
+    "questions": [
+      {
+        "about": "location",
+        "text": "Which specific US location should the search focus on?",
+        "options": [
+          "San Francisco Bay Area",
+          "New York City metro",
+          "Seattle area",
+          "Remote anywhere in the US"
+        ],
+        "answer": "San Francisco Bay Area, New York City metro, Seattle area"
+      },
+      {
+        "about": "location",
+        "text": "Which location should the search use for this role?",
+        "options": [
+          "San Francisco Bay Area",
+          "New York City metro",
+          "Seattle area",
+          "All three"
+        ],
+        "answer": "San Francisco Bay Area, New York City metro"
+      }
+    ],
+    "assumptions": [
+      {
+        "about": "location",
+        "value": "San Francisco Bay Area, New York City metro",
+        "reason": "still ambiguous after two questions, so it is used as given"
+      }
+    ],
+    "focus": [],
+    "final_plan": {
+      "titles": [
+        "Machine Learning Researcher",
+        "ML Researcher",
+        "Machine Learning Scientist",
+        "AI Researcher",
+        "Research Scientist",
+        "Applied Scientist",
+        "Deep Learning Researcher",
+        "AI Research Scientist",
+        "Machine Learning Research Engineer",
+        "Research Engineer, Machine Learning"
+      ],
+      "country": "us",
+      "locations": [
+        "San Francisco",
+        "New York"
+      ],
+      "radius_km": 100,
+      "max_days_old": 60,
+      "target_postings": 30,
+      "category": null
+    },
+    "earlier_plans": [
+      {
+        "titles": [
+          "Machine Learning Researcher",
+          "ML Researcher",
+          "Machine Learning Scientist",
+          "AI Researcher"
+        ],
+        "country": "us",
+        "locations": [
+          "San Francisco",
+          "New York"
+        ],
+        "radius_km": 50,
+        "max_days_old": 30,
+        "target_postings": 30,
+        "category": null
+      },
+      {
+        "titles": [
+          "Machine Learning Researcher",
+          "ML Researcher",
+          "Machine Learning Scientist",
+          "AI Researcher",
+          "Machine Learning Research Scientist",
+          "Research Scientist, Machine Learning",
+          "AI Research Scientist",
+          "Deep Learning Researcher"
+        ],
+        "country": "us",
+        "locations": [
+          "San Francisco",
+          "New York"
+        ],
+        "radius_km": 100,
+        "max_days_old": 60,
+        "target_postings": 30,
+        "category": null
+      }
+    ],
+    "postings_analysed": {
+      "posting_keys": []
+    },
+    "match_totals": [],
+    "caveats": [
+      "One source failed: adzuna",
+      "One source failed: adzuna",
+      "Broadened 2 time(s): titles: ['Machine Learning Researcher', 'ML Researcher', 'Machine Learning Scientist', 'AI Researcher'] -> ['Machine Learning Researcher', 'ML Researcher', 'Machine Learning Scientist', 'AI Researcher', 'Machine Learning Research Scientist', 'Research Scientist, Machine Learning', 'AI Research Scientist', 'Deep Learning Researcher']; radius_km: 50 -> 100; max_days_old: 30 -> 60 | titles: ['Machine Learning Researcher', 'ML Researcher', 'Machine Learning Scientist', 'AI Researcher', 'Machine Learning Research Scientist', 'Research Scientist, Machine Learning', 'AI Research Scientist', 'Deep Learning Researcher'] -> ['Machine Learning Researcher', 'ML Researcher', 'Machine Learning Scientist', 'AI Researcher', 'Research Scientist', 'Applied Scientist', 'Deep Learning Researcher', 'AI Research Scientist', 'Machine Learning Research Engineer', 'Research Engineer, Machine Learning']",
+      "Too few Postings: 0 relevant of a target of 30"
+    ],
+    "attribution": null
+  },
+  "stats": {
+    "sample_size": 0,
+    "stats": []
+  }
+}
