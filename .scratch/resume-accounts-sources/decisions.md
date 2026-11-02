@@ -32,3 +32,15 @@ The agent made these decisions alone while charting [the map](map.md) on 2026-11
 - **A HITL task for API keys.** Judging data quality and real quotas needs live calls, and RapidAPI keys need a human to sign up and subscribe. Research can go ahead from the docs alone. The source decision waits for the keys.
 - **Resume purpose is on the frontier.** Whether a resume starts a new kind of Run (ranked Matches) or only seeds a Hiring Request is the biggest fork in item 1, and it needs no research. So it can be grilled while research runs.
 - **The last ticket writes the LLDs and cuts build tickets**, the same pattern as the Web UI and Deployment maps.
+
+## Guardrails (added later on 2026-11-02)
+
+The user asked to research guardrails for every LLM node, preferring open-source frameworks such as NeMo Guardrails over hosted ones such as AWS Bedrock Guardrails, and to chart the map further. The agent charted this part alone too.
+
+- **Guardrails join this map as a fifth destination item**, not a map of their own, because the new resume and profile nodes need them and the same LLDs and build tickets carry them.
+- **The node inventory is an asset, not a ticket.** [LLM nodes](assets/llm-nodes.md) records facts read from the code, so the tickets can be precise. It decides nothing.
+- **Two research tickets in parallel**: one for frameworks (NeMo Guardrails, Guardrails AI, LLM Guard, LangChain middleware) and one for guard models and PII filters (Prompt Guard, Llama Guard and others, Jev as a guard, Presidio). Each fits one session, and neither waits on the other.
+- **Two grilling tickets**: the existing nodes first, because they exist and their inputs are known. The resume and profile nodes come second, because those nodes are shaped by [Matching Postings to a Resume](issues/18-matching-postings-to-a-resume.md) and [What a User Profile holds](issues/16-what-a-user-profile-holds.md), and they reuse the pattern the first ticket sets.
+- **No guard on a node is assumed.** Strict schemas, `_grounded` and the Jev critic already cover a lot, so "none, because..." is a valid answer for a node.
+- **Render's 512 MB limit is a constraint from the start.** It probably rules out loading transformers locally, so both research tickets must report memory.
+- **Hosted vendor guardrails are out of scope**, by the user's preference. Open-weight models served through OpenRouter are not vendor guardrails, so they stay in.
