@@ -20,7 +20,7 @@ def test_the_graph_fixture_the_web_tests_use_matches_the_real_graph():
 
 
 def demo_run_feed(tmp_path) -> dict:
-    settings = make_settings(demo=True, demo_delay=0, runs_db=tmp_path / "runs.sqlite", runs_dir=tmp_path / "runs")
+    settings = make_settings(demo=True, demo_delay=0.05, runs_db=tmp_path / "runs.sqlite", runs_dir=tmp_path / "runs")
     with TestClient(web.make_app(settings), base_url="http://127.0.0.1") as client:
         meta = client.get("/api/meta").json()
         thread_id = start(client)
