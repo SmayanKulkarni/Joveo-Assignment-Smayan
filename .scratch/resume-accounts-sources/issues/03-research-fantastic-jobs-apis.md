@@ -56,3 +56,7 @@ Researched 2026-11-02. This answer comes from docs only, with no live call. The 
 - Whether the RapidAPI LinkedIn listing also serves Wellfound and Y Combinator through `source`.
 - How much of either feed duplicates Adzuna.
 - Whether RapidAPI BASIC needs a card, and RapidAPI's own terms on top of Fantastic Jobs' terms.
+
+## Out of scope
+
+On 2026-11-02 the user dropped every RapidAPI source and kept only Arbeitnow. This research stays as a record and feeds no decision.

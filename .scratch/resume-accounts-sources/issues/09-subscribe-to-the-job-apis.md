@@ -1,7 +1,7 @@
 # Subscribe to the job APIs and add keys
 
 Type: task
-Status: open
+Status: out of scope
 Assignee: none
 Blocked by: none
 
@@ -17,3 +17,7 @@ Checklist for the user (HITL):
 4. Record here the free quota per month or per day for each API, and whether overage is billed or blocked. The RapidAPI pricing tab shows both.
 
 The agent then makes one live call per API from a throwaway script outside the repo. It records the real response shape and latency, and never pastes a key or a full URL.
+
+## Out of scope
+
+Closed 2026-11-02: the user dropped every RapidAPI source and kept only Arbeitnow. Arbeitnow is keyless, so there is nothing to subscribe to.

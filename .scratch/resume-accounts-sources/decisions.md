@@ -21,7 +21,7 @@ The agent made these decisions alone while charting [the map](map.md) on 2026-11
 - **Basic auth means email and password only.** Password reset and email verification would need an email provider, so they are out of scope. OAuth too.
 - **One kind of account.** The same signed-in user can research a market for a client (the existing Market Brief flow) or find jobs that match their own resume. There is no separate "recruiter" or "candidate" account type.
 - **The existing access code is up for replacement, not assumed kept.** [Accounts and sign-in](issues/14-accounts-and-sign-in.md) decides whether accounts replace it or sit beside it.
-- **Every API the user listed gets researched, but none is assumed in.** Arbeitnow is in because the user asked for it outright. The RapidAPI and Fantastic Jobs APIs join only if [Which job sources join the gateway](issues/10-which-job-sources-join-the-gateway.md) finds they're worth the quota, latency and terms. Glassdoor Real-Time is a salary API, not a postings API, so it raises its own question: [Salary benchmarks in the Brief](issues/13-salary-benchmarks-in-the-brief.md).
+- **Every API the user listed gets researched, but none is assumed in.** Arbeitnow is in because the user asked for it outright. The RapidAPI and Fantastic Jobs APIs join only if [What Arbeitnow does in the gateway](issues/10-what-arbeitnow-does-in-the-gateway.md) finds they're worth the quota, latency and terms. Glassdoor Real-Time is a salary API, not a postings API, so it raises its own question: [Salary benchmarks in the Brief](issues/13-salary-benchmarks-in-the-brief.md).
 - **The honesty rules carry over.** Stats are computed by code, Advertised and Estimated pay are never pooled, and every Assumption goes in the Run Notes. A profile or resume that changes a Run must show up in the Run Notes the same way an Assumption does.
 
 ## Shape of the map
@@ -44,3 +44,7 @@ The user asked to research guardrails for every LLM node, preferring open-source
 - **No guard on a node is assumed.** Strict schemas, `_grounded` and the Jev critic already cover a lot, so "none, because..." is a valid answer for a node.
 - **Render's 512 MB limit is a constraint from the start.** It probably rules out loading transformers locally, so both research tickets must report memory.
 - **Hosted vendor guardrails are out of scope**, by the user's preference. Open-weight models served through OpenRouter are not vendor guardrails, so they stay in.
+
+## Dropping RapidAPI (2026-11-02)
+
+- **Arbeitnow is the only new source.** The user dropped every RapidAPI source and the direct Fantastic Jobs portal. The destination item for them is gone, the source ticket became [What Arbeitnow does in the gateway](issues/10-what-arbeitnow-does-in-the-gateway.md), and the API-key task and the salary benchmark ticket are closed as out of scope. The Scope and Shape bullets above that name those APIs describe the first charting, not the current map.

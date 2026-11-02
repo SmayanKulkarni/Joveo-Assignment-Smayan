@@ -13,7 +13,7 @@ What does the Indeed Scraper API (border-line, on RapidAPI: <https://rapidapi.co
 - Parameters (query, location, country or Indeed domain, radius, date posted, job type, page or max results) and how they map onto `Fetch`.
 - Field mapping to `Posting`, including salary (Indeed's own estimate or Advertised) and a stable `source_id`.
 - Quota, price and how a task is counted. Error and timeout behaviour.
-- Terms: it scrapes a site whose terms forbid scraping. Record what the listing says, so [Which job sources join the gateway](10-which-job-sources-join-the-gateway.md) can weigh it.
+- Terms: it scrapes a site whose terms forbid scraping. Record what the listing says, so [What Arbeitnow does in the gateway](10-what-arbeitnow-does-in-the-gateway.md) can weigh it.
 
 Docs and playground are enough. A live call needs the key from [Subscribe to the job APIs and add keys](09-subscribe-to-the-job-apis.md). Capture findings in this ticket's Answer, with long notes in `../assets/`.
 
@@ -80,3 +80,7 @@ All of these come from the [listing](https://rapidapi.com/border-line-border-lin
 - Which `salaryType` and `salaryCurrency` values come back outside the US, UK and EU, and whether Indeed's own salary estimates ever appear.
 - The status codes for rate-limit and quota errors (RapidAPI usually returns 429). Whether a failed scrape or a POST that times out still counts as a request.
 - That the backend is BullMQ. This is an inference from the response shape.
+
+## Out of scope
+
+On 2026-11-02 the user dropped every RapidAPI source and kept only Arbeitnow. This research stays as a record and feeds no decision.

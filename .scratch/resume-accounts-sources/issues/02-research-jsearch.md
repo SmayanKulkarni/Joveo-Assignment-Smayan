@@ -55,3 +55,7 @@ Researched 2026-11-02. This answer comes from docs only, with no live call. The 
 - Whether a salary in a foreign currency, or a salary Google estimated rather than the employer, ever reaches `job_min_salary` and `job_max_salary`.
 - How often Adzuna listings appear as an `apply_options` publisher.
 - That `avgLatency` is in milliseconds.
+
+## Out of scope
+
+On 2026-11-02 the user dropped every RapidAPI source and kept only Arbeitnow. This research stays as a record and feeds no decision.

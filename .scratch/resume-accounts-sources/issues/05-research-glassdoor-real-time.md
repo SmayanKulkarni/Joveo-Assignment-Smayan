@@ -44,3 +44,7 @@ Researched 2026-11-02. Docs only, no key, no live call. Long notes: [research-gl
 - Whether `jobs/search` returns full descriptions or needs a `jobs/details` call per posting, and how much it overlaps Adzuna and JSearch.
 - Whether RapidAPI's hub-wide bandwidth fee (10,240 MB free, then USD 0.001 per MB) applies to these plans.
 - What Glassdoor's own Terms of Use say about scraped data. Not read.
+
+## Out of scope
+
+On 2026-11-02 the user dropped every RapidAPI source and kept only Arbeitnow. This research stays as a record and feeds no decision.
